@@ -152,6 +152,7 @@ For high quality calibration make sure to have a limited quantity of motion blur
 	If you prepared a large number of calibration objects but if only a few appears in your calibration sequence, you can specify the list of boards' indexes in ```boards_index```. Specifying the board indexes avoids trying to detect all the boards and will speed-up your calibration.
 
 	* *advanced setup:*
+	For a general calibration setup, for the sake of robustness, we recommend to set ```min_perc_pts``` to at least 0.4 (40% of the points of the board should appear to be considered). However, in case of a calibration of limited field-of-view overlapping with a single board, this parameter can be reduced significantly. Our automatic colinear points check should avoid most degenerated configurations.
 	The provided example configuration files contains a few additional paramters which can be tuned. Letting these parameters by default should lead to a correct calibration of your system, however, you can adjust them if needed. These parameters are quite self explicit and described in the configuration files.
 
 7. **Run the calibration**
@@ -256,9 +257,9 @@ camera_1: # all the calibration parameters (intrinsic/extrinsic) for the camera 
           2.6315580610037459e-03, 0. ]
    distortion_type: 1 # type of distortion model (0: perspective, 1: fisheye)
    camera_group: 0
-   img_wid #4x4 extrinsic matrixth: 1280
+   img_width: 1280
    img_height: 512
-   camera_pose_matrix: !!opencv-matrix
+   camera_pose_matrix: !!opencv-matrix #4x4 extrinsic matrix
       rows: 4
       cols: 4
       dt: d

@@ -244,10 +244,27 @@ void Calibration::detectBoards(cv::Mat image, int cam_idx, int frame_idx,
           charuco_corners[i][j].y = refined[j].y;
         }
       }
-      // Add the board to the datastructures
-      int board_idx = i;
-      insertNewBoard(cam_idx, frame_idx, board_idx, charuco_corners[board_idx],
+
+      // Check for colinnerarity
+      std::vector<cv::Point2f> pts_on_board_2d;
+      for (unsigned int k=0; k<charuco_idx[i].size();k++)
+      {
+        cv::Point2f temp_pts;
+        temp_pts.x = boards_3d_[i]->pts_3d_[charuco_idx[i][k]].x;
+        temp_pts.y = boards_3d_[i]->pts_3d_[charuco_idx[i][k]].y;
+        pts_on_board_2d.push_back(temp_pts);
+      }
+      double dum_a, dum_b, dum_c;
+      double residual;
+      calcLinePara(pts_on_board_2d, dum_a, dum_b, dum_c, residual);
+      
+      // Add the board to the datastructures (if it passes the collinearity check)
+      if ((residual>boards_3d_[i]->square_size_*0.1) &  (charuco_corners[i].size()>4))
+      {
+        int board_idx = i;
+        insertNewBoard(cam_idx, frame_idx, board_idx, charuco_corners[board_idx],
                      charuco_idx[board_idx], frame_path);
+      }
     }
   }
 }

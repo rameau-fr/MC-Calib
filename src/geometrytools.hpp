@@ -18,6 +18,7 @@ cv::Point3f triangulateNViewLinearEigen(std::vector<cv::Point2f> Pts2D,
                                         std::vector<cv::Mat> RotationVec,
                                         std::vector<cv::Mat> TranslationVec,
                                         cv::Mat Intrinsic);
+void calcLinePara(std::vector<cv::Point2f> pts, double &a, double &b, double &c, double &res);
 void ransacTriangulation(std::vector<cv::Point2f> point2d,
                          std::vector<cv::Mat> rotation_vec,
                          std::vector<cv::Mat> translation_Vec,
