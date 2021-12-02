@@ -1,6 +1,6 @@
 Contributing
 ============
-All development is done on GitHub: https://github.com/rameau-fr/MultiCamCalib
+All development is done on GitHub: https://github.com/rameau-fr/MC-Calib
 
 
 Git Workflow
@@ -9,7 +9,7 @@ Git Workflow
 - ``feature/feature-name`` is a branch for any improvement, bugs, refactoring or documentation. This branch is the one used to push changes to ``master`` through Pull Requests (PR).
 
 To create a pull request:
-=======================
+=========================
 
 1. Clone the repo.
 
@@ -27,7 +27,8 @@ To create a pull request:
 
     docker run -it --rm --workdir /src -v $(pwd):/src clang-format-lint --clang-format-executable /clang-format/clang-format11 -r --inplace True --exclude '.git ./libs' .
 
-5. Make sure new changes pass the tests:
+5. Make sure new changes pass the tests. The end-to-end tests rely on `Synthetic Data <https://bosch.frameau.xyz/index.php/s/pLc2T9bApbeLmSz>`_. 
+Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
 .. code-block:: bash
 
@@ -40,6 +41,6 @@ Naming convention:
 =======================
 
 - variable: the_variable
-- member variable: the_variable_
+- member variable: the_variable\_
 - Our classes/type: CamelCase
 - function: camelCase
