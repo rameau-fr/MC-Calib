@@ -32,7 +32,9 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
 .. code-block:: bash
 
-    ./build/tests/boost_tests_run
+    mkdir build
+    cd build
+    ./tests/boost_tests_run
 
 6. Create pull request.
 

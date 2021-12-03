@@ -1,6 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <iomanip>
+#include <math.h>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
@@ -12,21 +13,27 @@
 #include <../src/CameraObs.hpp>
 #include <../src/Frame.hpp>
 
-// Reference: https://stackoverflow.com/a/17503436
-#define CHECK_CLOSE_COLLECTION(aa, bb, tolerance)                              \
-  {                                                                            \
-    using std::distance;                                                       \
-    using std::begin;                                                          \
-    using std::end;                                                            \
-    auto a = begin(aa), ae = end(aa);                                          \
-    auto b = begin(bb);                                                        \
-    BOOST_REQUIRE_EQUAL(distance(a, ae), distance(b, end(bb)));                \
-    for (; a != ae; ++a, ++b) {                                                \
-      BOOST_CHECK_CLOSE(*a, *b, tolerance);                                    \
-    }                                                                          \
-  }
+#define PI 3.14159265
+
+double INTRINSICS_TOLERANCE = 4.0;          // in percentage
+double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
+double ROTATION_ERROR_TOLERANCE = 1.0;      // in degrees
+
+double getTranslationError(cv::Mat a, cv::Mat b) {
+  double dist = cv::norm(a, b, cv::NORM_L2);
+  return dist;
+}
+
+double getRotationError(cv::Mat a, cv::Mat b) {
+  cv::Mat a_inverse(3, 3, CV_64F);
+  cv::invert(a, a_inverse);
+  double trace = cv::trace(a_inverse * b).val[0];
+  double rot_error = std::acos(0.5 * (trace - 1.0)) * 180.0 / PI;
+  return rot_error;
+}
 
 void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
+  // calibrate
   Calibration Calib;
   Calib.initialization(config_path);
   Calib.boardExtraction();
@@ -46,101 +53,111 @@ void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
   Calib.estimatePoseAllObjects();
   Calib.computeAllObjPoseInCameraGroup();
   Calib.refineAllCameraGroupAndObjects();
+  if (Calib.fix_intrinsic_ == 0)
+    Calib.refineAllCameraGroupAndObjectsAndIntrinsic();
   Calib.reproErrorAllCamGroup();
-  Calib.saveCamerasParams();
 
+  // read ground truth
   cv::FileStorage fs;
   fs.open(gt_path, cv::FileStorage::READ);
-  for (std::map<int, std::shared_ptr<Camera>>::iterator it =
-           Calib.cams_.begin();
-       it != Calib.cams_.end(); ++it) {
-    cv::FileNode loaded_cam_params = fs["camera_" + std::to_string(it->first)];
-
+  int num_cameras;
+  fs["nb_camera"] >> num_cameras;
+  for (int camera_idx = 1; camera_idx <= num_cameras; ++camera_idx) {
+    // get ground truth values
     cv::Mat camera_matrix_gt;
-    cv::Mat distortion_coeffs_gt;
-    int distortion_type_gt;
-    int camera_group_gt;
-    int img_width_gt;
-    int img_height_gt;
     cv::Mat camera_pose_matrix_gt;
+    fs["K_" + std::to_string(camera_idx)] >> camera_matrix_gt;
+    fs["P_" + std::to_string(camera_idx)] >> camera_pose_matrix_gt;
 
-    loaded_cam_params["camera_matrix"] >> camera_matrix_gt;
-    loaded_cam_params["distortion_vector"] >> distortion_coeffs_gt;
-    loaded_cam_params["distortion_type"] >> distortion_type_gt;
-    loaded_cam_params["camera_group_gt"] >> camera_group_gt;
-    loaded_cam_params["img_width"] >> img_width_gt;
-    loaded_cam_params["img_height"] >> img_height_gt;
-    loaded_cam_params["camera_pose_matrix"] >> camera_pose_matrix_gt;
+    double fx_gt = camera_matrix_gt.at<double>(0, 0);
+    double fy_gt = camera_matrix_gt.at<double>(1, 0);
+    double cx_gt = camera_matrix_gt.at<double>(0, 2);
+    double cy_gt = camera_matrix_gt.at<double>(1, 2);
+    cv::Mat rot_gt(3, 3, CV_64F);
+    rot_gt = camera_pose_matrix_gt(cv::Range(0, 3), cv::Range(0, 3));
+    cv::Mat tran_gt(3, 1, CV_64F);
+    tran_gt = camera_pose_matrix_gt(cv::Range(0, 3), cv::Range(3, 4));
 
-    cv::Mat camera_matrix_pred;
-    cv::Mat distortion_coeffs_pred;
-    int distortion_type_pred;
-    int img_width_pred;
-    int img_height_pred;
-    cv::Mat camera_pose_matrix_pred;
+    // get calibrated values
+    std::shared_ptr<Camera> cur_cam = Calib.cams_[camera_idx - 1];
+    int camera_group_idx = 0; // specific to the setup with single camera group
+    cv::Mat camera_matrix_pred = cur_cam->getCameraMat();
+    cv::Mat camera_pose_matrix_pred =
+        Calib.cam_group_[camera_group_idx]->getCameraPoseMat(camera_idx - 1);
 
-    std::shared_ptr<Camera> cur_cam = it->second;
-    cur_cam->getIntrinsics(camera_matrix_pred, distortion_coeffs_pred);
-    distortion_type_pred = cur_cam->distortion_model_;
-    img_width_pred = cur_cam->im_cols_;
-    img_height_pred = cur_cam->im_rows_;
-    camera_pose_matrix_pred =
-        Calib.cam_group_[camera_group_gt]->getCameraPoseMat(cur_cam->cam_idx_);
+    double fx_pred = camera_matrix_pred.at<double>(0, 0);
+    double fy_pred = camera_matrix_pred.at<double>(1, 0);
+    double cx_pred = camera_matrix_pred.at<double>(0, 2);
+    double cy_pred = camera_matrix_pred.at<double>(1, 2);
+    cv::Mat rot_pred(3, 3, CV_64F);
+    rot_pred = camera_pose_matrix_pred(cv::Range(0, 3), cv::Range(0, 3));
+    cv::Mat tran_pred(3, 1, CV_64F);
+    tran_pred = camera_pose_matrix_pred(cv::Range(0, 3), cv::Range(3, 4));
 
-    BOOST_REQUIRE_EQUAL(img_width_gt, img_width_pred);
-    BOOST_REQUIRE_EQUAL(img_height_gt, img_height_pred);
-    BOOST_REQUIRE_EQUAL(distortion_type_gt, distortion_type_pred);
+    double tran_error = getTranslationError(tran_pred, tran_gt);
+    double rot_error = getRotationError(rot_pred, rot_gt);
 
-    // TODO: switch to proper error metrics
-    // std::vector<double>
-    // camera_matrix_gt_vec(camera_matrix_gt.begin<double>(),
-    //                                          camera_matrix_gt.end<double>());
-    // std::vector<double> camera_matrix_pred_vec(
-    //     camera_matrix_pred.begin<double>(),
-    //     camera_matrix_pred.end<double>());
-    // std::vector<double>
-    // distortion_coeffs_gt_vec(distortion_coeffs_gt.begin<double>(),
-    //                                        distortion_coeffs_gt.end<double>());
-    // std::vector<double>
-    // distortion_coeffs_pred_vec(distortion_coeffs_pred.begin<double>(),
-    //                                          distortion_coeffs_pred.end<double>());
-    // std::vector<double> camera_pose_matrix_gt_vec(
-    //     camera_pose_matrix_gt.begin<double>(),
-    //     camera_pose_matrix_gt.end<double>());
-    // std::vector<double> camera_pose_matrix_pred_vec(
-    //     camera_pose_matrix_pred.begin<double>(),
-    //     camera_pose_matrix_pred.end<double>());
-
-    // CHECK_CLOSE_COLLECTION(camera_matrix_gt_vec, camera_matrix_pred_vec,
-    //                        1); // tolerance in percentage
-    // CHECK_CLOSE_COLLECTION(distortion_coeffs_gt_vec,
-    // distortion_coeffs_pred_vec,
-    //                        1); // tolerance in percentage
-    // CHECK_CLOSE_COLLECTION(camera_pose_matrix_gt_vec,
-    //                        camera_pose_matrix_pred_vec,
-    //                        1); // tolerance in percentage
-
-    BOOST_REQUIRE(Calib.computeAvgReprojectionError() <
-                  1.0); // reprojection error less than 1 pixel
+    // perform verifications
+    BOOST_CHECK_CLOSE(fx_pred, fx_gt, INTRINSICS_TOLERANCE);
+    BOOST_CHECK_CLOSE(fy_pred, fy_gt, INTRINSICS_TOLERANCE);
+    BOOST_CHECK_CLOSE(cx_pred, cx_gt, INTRINSICS_TOLERANCE);
+    BOOST_CHECK_CLOSE(cy_pred, cy_gt, INTRINSICS_TOLERANCE);
+    BOOST_CHECK_SMALL(tran_error, TRANSLATION_ERROR_TOLERANCE);
+    BOOST_CHECK_SMALL(rot_error, ROTATION_ERROR_TOLERANCE);
   }
 }
 
 BOOST_AUTO_TEST_SUITE(CheckCalibration)
 
-BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario1) {
-  std::string config_path = "../configs/calib_param_synth_Scenario1.yml";
-  std::string gt_path =
-      "../tests/calibration_gts/synth_Scenario1_calibrated_cameras_data.yml";
-  calibrateAndCheckGt(config_path, gt_path);
+BOOST_AUTO_TEST_CASE(CheckBlenderDatasetIsPlacedCorrectly) {
+  std::string blender_images_path = "../data/Blender_Images";
+  bool is_path_existent = boost::filesystem::exists(blender_images_path);
+  BOOST_REQUIRE_EQUAL(is_path_existent, true);
 }
 
-// BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario3) {
-//   std::string config_path = "../configs/calib_param_synth_Scenario3.yml";
-//   std::string gt_path =
-//       "../tests/calibration_gts/synth_Scenario3_calibrated_cameras_data.yml";
+// BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario1) {
+//   std::string config_path =
+//   "../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml";
+//   std::string gt_path = "../data/Blender_Images/Scenario_1/GroundTruth.yml";
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(config_path), true);
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(gt_path), true);
 //   calibrateAndCheckGt(config_path, gt_path);
 // }
 
-// TODO: need more tests
+// BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario2) {
+//   std::string config_path =
+//   "../tests/configs_for_end2end_tests/calib_param_synth_Scenario2.yml";
+//   std::string gt_path = "../data/Blender_Images/Scenario_2/GroundTruth.yml";
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(config_path), true);
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(gt_path), true);
+//   calibrateAndCheckGt(config_path, gt_path);
+// }
+
+// BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario3) {
+//   std::string config_path =
+//   "../tests/configs_for_end2end_tests/calib_param_synth_Scenario3.yml";
+//   std::string gt_path = "../data/Blender_Images/Scenario_3/GroundTruth.yml";
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(config_path), true);
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(gt_path), true);
+//   calibrateAndCheckGt(config_path, gt_path);
+// }
+
+// BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario4) {
+//   std::string config_path =
+//   "../tests/configs_for_end2end_tests/calib_param_synth_Scenario4.yml";
+//   std::string gt_path = "../data/Blender_Images/Scenario_4/GroundTruth.yml";
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(config_path), true);
+//   BOOST_REQUIRE_EQUAL(boost::filesystem::exists(gt_path), true);
+//   calibrateAndCheckGt(config_path, gt_path);
+// }
+
+BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario5) {
+  std::string config_path =
+      "../tests/configs_for_end2end_tests/calib_param_synth_Scenario5.yml";
+  std::string gt_path = "../data/Blender_Images/Scenario_5/GroundTruth.yml";
+  BOOST_REQUIRE_EQUAL(boost::filesystem::exists(config_path), true);
+  BOOST_REQUIRE_EQUAL(boost::filesystem::exists(gt_path), true);
+  calibrateAndCheckGt(config_path, gt_path);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
