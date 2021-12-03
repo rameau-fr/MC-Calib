@@ -51,7 +51,7 @@ void Calibration::initialization(std::string config_path) {
   fs["resolution_y_per_board"] >> resolution_y_per_board_;
   fs["he_approach"] >> he_approach_;
   fs["fix_intrinsic"] >> fix_intrinsic_;
-  
+
   fs.release(); // close the input file
 
   // Check if multi-size boards are used or not
@@ -75,7 +75,7 @@ void Calibration::initialization(std::string config_path) {
            << "   Distortion mode : " << distortion_model;
 
   // check if the save dir exist and create it if it does not
-  if (!boost::filesystem::exists(save_path_)) {
+  if (!boost::filesystem::exists(save_path_) && save_path_.length() > 0) {
     boost::filesystem::create_directories(save_path_);
   }
 
@@ -247,8 +247,7 @@ void Calibration::detectBoards(cv::Mat image, int cam_idx, int frame_idx,
 
       // Check for colinnerarity
       std::vector<cv::Point2f> pts_on_board_2d;
-      for (unsigned int k=0; k<charuco_idx[i].size();k++)
-      {
+      for (unsigned int k = 0; k < charuco_idx[i].size(); k++) {
         cv::Point2f temp_pts;
         temp_pts.x = boards_3d_[i]->pts_3d_[charuco_idx[i][k]].x;
         temp_pts.y = boards_3d_[i]->pts_3d_[charuco_idx[i][k]].y;
@@ -257,13 +256,15 @@ void Calibration::detectBoards(cv::Mat image, int cam_idx, int frame_idx,
       double dum_a, dum_b, dum_c;
       double residual;
       calcLinePara(pts_on_board_2d, dum_a, dum_b, dum_c, residual);
-      
-      // Add the board to the datastructures (if it passes the collinearity check)
-      if ((residual>boards_3d_[i]->square_size_*0.1) &  (charuco_corners[i].size()>4))
-      {
+
+      // Add the board to the datastructures (if it passes the collinearity
+      // check)
+      if ((residual > boards_3d_[i]->square_size_ * 0.1) &
+          (charuco_corners[i].size() > 4)) {
         int board_idx = i;
-        insertNewBoard(cam_idx, frame_idx, board_idx, charuco_corners[board_idx],
-                     charuco_idx[board_idx], frame_path);
+        insertNewBoard(cam_idx, frame_idx, board_idx,
+                       charuco_corners[board_idx], charuco_idx[board_idx],
+                       frame_path);
       }
     }
   }
@@ -489,7 +490,7 @@ void Calibration::insertNewObjectObservation(
  *
  */
 void Calibration::initializeCalibrationAllCam() {
-  if (!cam_params_path_.empty() & cam_params_path_ != "None") {
+  if (!cam_params_path_.empty() && cam_params_path_ != "None") {
     cv::FileStorage fs;
     fs.open(cam_params_path_, cv::FileStorage::READ);
 
@@ -1927,10 +1928,10 @@ void Calibration::saveReprojection(int cam_id) {
   std::string path_save = path_root + cam_folder + "/";
 
   // check if the file exist and create it if it does not
-  if (!boost::filesystem::exists(path_root)) {
+  if (!boost::filesystem::exists(path_root) && path_root.length() > 0) {
     boost::filesystem::create_directories(path_root);
   }
-  if (!boost::filesystem::exists(path_save)) {
+  if (!boost::filesystem::exists(path_save) && path_root.length() > 0) {
     boost::filesystem::create_directory(path_save);
   }
 
@@ -2039,10 +2040,10 @@ void Calibration::saveDetection(int cam_id) {
   std::string path_save = path_root + cam_folder + "/";
 
   // check if the file exist and create it if it does not
-  if (!boost::filesystem::exists(path_root)) {
+  if (!boost::filesystem::exists(path_root) && path_root.length() > 0) {
     boost::filesystem::create_directories(path_root);
   }
-  if (!boost::filesystem::exists(path_save)) {
+  if (!boost::filesystem::exists(path_save) && path_root.length() > 0) {
     boost::filesystem::create_directory(path_save);
   }
 
@@ -2116,8 +2117,7 @@ void Calibration::saveDetectionAllCam() {
 void Calibration::initIntrinsic() {
   initializeCalibrationAllCam();
   estimatePoseAllBoards();
-  if (fix_intrinsic_ == 0)
-  {
+  if (fix_intrinsic_ == 0) {
     refineIntrinsicAndPoseAllCam();
   }
   computeReproErrAllBoard();
