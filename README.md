@@ -13,41 +13,39 @@ There are several ways to get the environment ready. Choose any of them:
 
 1. The easiest way to get the environment is to pull it from the Docker Hub:
 
-   - [Install](https://docs.docker.com/engine/install/) docker
+   - [Install](https://docs.docker.com/engine/install/) docker.
 
    - Pull the image:
 
-      ```bash
-      docker pull frameau/opencv-ceres
-      ```
+     ```bash
+     docker pull frameau/opencv-ceres
+     ```
 
    - Run pulled image:
-
+   
       ```bash
       xhost +si:localuser:root
       docker run \
-                   --runtime=nvidia \
-                   -ti --rm \
-                   --network host \
-                   --gpus all \
-                   --env="DISPLAY" \
-                   --env="QT_X11_NO_MITSHM=1" \
-                   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-                   --volume="$HOME/.Xauthority:/home/$USER/.Xauthority:rw" \
-                   --volume="${PWD}:/home/$USER/MultiCamCalib" \
-                   --volume="PATH_TO_DATA:/home/$USER/MultiCamCalib/data" \
-                   frameau/opencv-ceres
-
-      # xhost -local:root  # resetting permissions
+                  --runtime=nvidia \
+                  -ti --rm \
+                  --network host \
+                  --gpus all \
+                  --env="DISPLAY" \
+                  --env="QT_X11_NO_MITSHM=1" \
+                  --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+                  --volume="$HOME/.Xauthority:/home/$USER/.Xauthority:rw" \
+                  --volume="${PWD}:/home/$USER/MultiCamCalib" \
+                  --volume="PATH_TO_DATA:/home/$USER/MultiCamCalib/data" \
+                  frameau/opencv-ceres
+      #xhost -local:root  # resetting permissions
       ```
-
+      
 2. It is also possible to build the docker environment manually:
    
    - [Install](https://docs.docker.com/engine/install/) docker
 
-
    - Create the image:
-
+   
       ```bash
       docker build - < Dockerfile -t SPECIFY_YOUR_NAME
       ```
@@ -59,12 +57,13 @@ There are several ways to get the environment ready. Choose any of them:
    - Follow [installation guidelines](http://ceres-solver.org/installation.html#linux) to install Ceres.
 
    - Install boost:
-      
-      ```
+
+      ```bash
       sudo apt install libboost-all-dev
       ```
 
 Then the following should do the job of compiling the code: 
+
    ```bash
    mkdir build
    cd build
@@ -91,7 +90,6 @@ Then the following should do the job of compiling the code:
       make
       make install # optional
       ```
-
    - Doxygen is already added to the `CmakeLists.txt` and is auto-generated if dependencies are satisfied. However, it is also possible to set it up manually:
 
       ```bash
@@ -101,7 +99,7 @@ Then the following should do the job of compiling the code:
       #set INPUT = ../src in Doxyfile
       doxygen
       ```
-
+      
 # Usage
 
 ## Calibration procedure
