@@ -182,49 +182,52 @@ void Object3D::refineObject(int nb_iterations) {
            object_observations_.begin();
        it_obj_obs != object_observations_.end(); ++it_obj_obs) {
     std::shared_ptr<Object3DObs> current_object_obs = it_obj_obs->second.lock();
-    for (std::map<int, std::weak_ptr<BoardObs>>::iterator it_board_obs =
-             current_object_obs->board_observations_.begin();
-         it_board_obs != current_object_obs->board_observations_.end();
-         ++it_board_obs) {
-      if (it_board_obs->second.lock()->valid_ == true) {
-        std::shared_ptr<Board> board_3d_ptr =
-            it_board_obs->second.lock()->board_3d_.lock();
-        std::vector<cv::Point3f> board_pts_3d = board_3d_ptr->pts_3d_;
-        std::vector<int> board_pts_idx =
-            it_board_obs->second.lock()->charuco_id_;
-        std::vector<cv::Point2f> board_pts_2d =
-            it_board_obs->second.lock()->pts_2d_;
-        std::shared_ptr<Camera> cam_ptr =
-            it_board_obs->second.lock()->cam_.lock();
-        double fx = cam_ptr->intrinsics_[0];
-        double fy = cam_ptr->intrinsics_[1];
-        double u0 = cam_ptr->intrinsics_[2];
-        double v0 = cam_ptr->intrinsics_[3];
-        double r1 = cam_ptr->intrinsics_[4];
-        double r2 = cam_ptr->intrinsics_[5];
-        double t1 = cam_ptr->intrinsics_[6];
-        double t2 = cam_ptr->intrinsics_[7];
-        double r3 = cam_ptr->intrinsics_[8];
-        bool refine_board = true;
-        // We do not refine the board pose if only one board is visible or if
-        // it is the ref board
-        if (ref_board_id_ == it_board_obs->second.lock()->board_id_) {
-          refine_board = false;
-        }
-        for (int i = 0; i < board_pts_idx.size(); i++) {
-          cv::Point3f current_pts_3d =
-              board_pts_3d[board_pts_idx[i]];           // Current 3D pts
-          cv::Point2f current_pts_2d = board_pts_2d[i]; // Current 2D pts
-          ceres::CostFunction *reprojection_error =
-              ReprojectionError_3DObjRef::Create(
-                  double(current_pts_2d.x), double(current_pts_2d.y),
-                  double(current_pts_3d.x), double(current_pts_3d.y),
-                  double(current_pts_3d.z), fx, fy, u0, v0, r1, r2, r3, t1, t2,
-                  refine_board, cam_ptr->distortion_model_);
-          problem.AddResidualBlock(
-              reprojection_error, new ceres::HuberLoss(1.0),
-              it_obj_obs->second.lock()->pose_,
-              relative_board_pose_[it_board_obs->second.lock()->board_id_]);
+    if (current_object_obs) {
+      for (std::map<int, std::weak_ptr<BoardObs>>::iterator it_board_obs =
+               current_object_obs->board_observations_.begin();
+           it_board_obs != current_object_obs->board_observations_.end();
+           ++it_board_obs) {
+        auto board_obs_ptr = it_board_obs->second.lock();
+        if (board_obs_ptr && board_obs_ptr->valid_ == true) {
+          std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
+          if (board_3d_ptr) {
+            std::vector<cv::Point3f> board_pts_3d = board_3d_ptr->pts_3d_;
+            std::vector<int> board_pts_idx = board_obs_ptr->charuco_id_;
+            std::vector<cv::Point2f> board_pts_2d = board_obs_ptr->pts_2d_;
+            std::shared_ptr<Camera> cam_ptr = board_obs_ptr->cam_.lock();
+            if (cam_ptr) {
+              double fx = cam_ptr->intrinsics_[0];
+              double fy = cam_ptr->intrinsics_[1];
+              double u0 = cam_ptr->intrinsics_[2];
+              double v0 = cam_ptr->intrinsics_[3];
+              double r1 = cam_ptr->intrinsics_[4];
+              double r2 = cam_ptr->intrinsics_[5];
+              double t1 = cam_ptr->intrinsics_[6];
+              double t2 = cam_ptr->intrinsics_[7];
+              double r3 = cam_ptr->intrinsics_[8];
+              bool refine_board = true;
+              // We do not refine the board pose if only one board is visible or
+              // if it is the ref board
+              if (ref_board_id_ == board_obs_ptr->board_id_)
+                refine_board = false;
+
+              for (int i = 0; i < board_pts_idx.size(); i++) {
+                cv::Point3f current_pts_3d =
+                    board_pts_3d[board_pts_idx[i]];           // Current 3D pts
+                cv::Point2f current_pts_2d = board_pts_2d[i]; // Current 2D pts
+                ceres::CostFunction *reprojection_error =
+                    ReprojectionError_3DObjRef::Create(
+                        double(current_pts_2d.x), double(current_pts_2d.y),
+                        double(current_pts_3d.x), double(current_pts_3d.y),
+                        double(current_pts_3d.z), fx, fy, u0, v0, r1, r2, r3,
+                        t1, t2, refine_board, cam_ptr->distortion_model_);
+                problem.AddResidualBlock(
+                    reprojection_error, new ceres::HuberLoss(1.0),
+                    current_object_obs->pose_,
+                    relative_board_pose_[board_obs_ptr->board_id_]);
+              }
+            }
+          }
         }
       }
     }
@@ -240,17 +243,20 @@ void Object3D::refineObject(int nb_iterations) {
   // Update the pts3d in the object
   for (std::map<int, std::weak_ptr<Board>>::iterator it_board = boards_.begin();
        it_board != boards_.end(); ++it_board) {
-    int board_idx = it_board->second.lock()->board_id_;
+    auto board_ptr = it_board->second.lock();
+    if (board_ptr) {
+      int board_idx = board_ptr->board_id_;
 
-    // Transform the 3D pts to push in the object 3D
-    std::vector<cv::Point3f> trans_pts =
-        transform3DPts(it_board->second.lock()->pts_3d_,
-                       getBoardRotVec(board_idx), getBoardTransVec(board_idx));
+      // Transform the 3D pts to push in the object 3D
+      std::vector<cv::Point3f> trans_pts =
+          transform3DPts(board_ptr->pts_3d_, getBoardRotVec(board_idx),
+                         getBoardTransVec(board_idx));
 
-    // Replace the keypoints
-    for (int i = 0; i < trans_pts.size(); i++) {
-      std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
-      pts_3d_[pts_board_2_obj_[board_id_pts_id]] = trans_pts[i];
+      // Replace the keypoints
+      for (int i = 0; i < trans_pts.size(); i++) {
+        std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
+        pts_3d_[pts_board_2_obj_[board_id_pts_id]] = trans_pts[i];
+      }
     }
   }
 }
@@ -263,17 +269,20 @@ void Object3D::updateObjectPts() {
   // Update the pts3d in the object
   for (std::map<int, std::weak_ptr<Board>>::iterator it_board = boards_.begin();
        it_board != boards_.end(); ++it_board) {
-    int board_idx = it_board->second.lock()->board_id_;
+    auto board_ptr = it_board->second.lock();
+    if (board_ptr) {
+      int board_idx = board_ptr->board_id_;
 
-    // Transform the 3D pts to push in the object 3D
-    std::vector<cv::Point3f> trans_pts =
-        transform3DPts(it_board->second.lock()->pts_3d_,
-                       getBoardRotVec(board_idx), getBoardTransVec(board_idx));
+      // Transform the 3D pts to push in the object 3D
+      std::vector<cv::Point3f> trans_pts =
+          transform3DPts(board_ptr->pts_3d_, getBoardRotVec(board_idx),
+                         getBoardTransVec(board_idx));
 
-    // Replace the keypoints
-    for (int i = 0; i < trans_pts.size(); i++) {
-      std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
-      pts_3d_[pts_board_2_obj_[board_id_pts_id]] = trans_pts[i];
+      // Replace the keypoints
+      for (int i = 0; i < trans_pts.size(); i++) {
+        std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
+        pts_3d_[pts_board_2_obj_[board_id_pts_id]] = trans_pts[i];
+      }
     }
   }
 }
