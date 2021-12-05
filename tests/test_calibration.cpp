@@ -25,14 +25,14 @@ double getTranslationError(cv::Mat a, cv::Mat b) {
 }
 
 double getRotationError(cv::Mat a, cv::Mat b) {
-  cv::Mat a_inverse(3, 3, CV_64F);
-  cv::invert(a, a_inverse);
-  double trace = cv::trace(a_inverse * b).val[0];
+  cv::Mat a_transpose(3, 3, CV_64F);
+  cv::transpose(a, a_transpose);
+  double trace = cv::trace(a_transpose * b).val[0];
   double rot_error = std::acos(0.5 * (trace - 1.0)) * 180.0 / PI;
   return rot_error;
 }
 
-void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
+Calibration calibrate(std::string config_path) {
   // calibrate
   Calibration Calib;
   Calib.initialization(config_path);
@@ -56,6 +56,12 @@ void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
   if (Calib.fix_intrinsic_ == 0)
     Calib.refineAllCameraGroupAndObjectsAndIntrinsic();
   Calib.reproErrorAllCamGroup();
+
+  return Calib;
+}
+
+void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
+  Calibration Calib = calibrate(config_path);
 
   // read ground truth
   cv::FileStorage fs;
