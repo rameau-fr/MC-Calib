@@ -36,7 +36,30 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
     cd build
     ./tests/boost_tests_run
 
-6. Create pull request.
+6. Perform valgrind test and fix introduced memory leaks:
+
+.. code-block:: bash
+
+    cd build
+    apt install valgrind
+    valgrind --leak-check=full \
+      --leak-check=full \
+      --track-origins=yes \
+      --verbose \
+      --log-file=valgrind-out.txt \
+      --suppressions=../tests/valgrind_suppress/opencv_valgrind.supp \
+      --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
+      ./calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
+
+    # current state of this repository:
+    ==1616== LEAK SUMMARY:
+    ==1616==    definitely lost: 0 bytes in 0 blocks
+    ==1616==    indirectly lost: 0 bytes in 0 blocks
+    ==1616==      possibly lost: 0 bytes in 0 blocks
+    ==1616==    still reachable: 44,906 bytes in 772 blocks
+    ==1616==         suppressed: 375,047 bytes in 2,940 blocks
+
+7. Create pull request.
 
 
 Naming convention:
