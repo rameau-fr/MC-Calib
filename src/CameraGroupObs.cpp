@@ -32,11 +32,7 @@ void CameraGroupObs::insertObjectObservation(
   object_observations_[object_observations_.size()] = new_object_observation;
 }
 
-CameraGroupObs::~CameraGroupObs() {
-  for (auto const &item : object_pose_)
-    delete[] item.second;
-  object_pose_.clear();
-}
+CameraGroupObs::~CameraGroupObs() {}
 
 /**
  * @brief Compute pose of object in the camera obs
@@ -168,7 +164,7 @@ cv::Mat CameraGroupObs::getObjectPoseMat(int object_id) {
  * @param object_id object index of interest in the group
  */
 void CameraGroupObs::setObjectPoseMat(cv::Mat pose, int object_id) {
-  object_pose_[object_id] = new double[6];
+  object_pose_[object_id] = std::vector<double>(6);
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   object_pose_[object_id][0] = r_vec.at<double>(0);
@@ -188,7 +184,7 @@ void CameraGroupObs::setObjectPoseMat(cv::Mat pose, int object_id) {
  */
 void CameraGroupObs::setObjectPoseVec(cv::Mat r_vec, cv::Mat t_vec,
                                       int object_id) {
-  object_pose_[object_id] = new double[6];
+  object_pose_[object_id] = std::vector<double>(6);
   object_pose_[object_id][0] = r_vec.at<double>(0);
   object_pose_[object_id][1] = r_vec.at<double>(1);
   object_pose_[object_id][2] = r_vec.at<double>(2);

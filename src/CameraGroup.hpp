@@ -35,7 +35,7 @@ public:
   std::vector<int> vis_object_idx_; // vector of index of the 3D object
 
   // extrinsic
-  std::map<int, double *>
+  std::map<int, std::vector<double>>
       relative_camera_pose_; // camera pose wrt. the ref. cam
   int id_ref_cam_;
   std::vector<int> cam_idx; // index of the cameras in the group

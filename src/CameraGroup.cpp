@@ -53,11 +53,7 @@ void CameraGroup::insertNewFrame(std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
 }
 
-CameraGroup::~CameraGroup() {
-  for (auto const &item : relative_camera_pose_)
-    delete[] item.second;
-  relative_camera_pose_.clear();
-}
+CameraGroup::~CameraGroup() {}
 
 /**
  * @brief Get camera pose (vector) of the camera "id_cam" in the group
@@ -104,7 +100,7 @@ cv::Mat CameraGroup::getCameraPoseMat(int id_cam) {
  * @param id_cam index of the camera of interest in the group
  */
 void CameraGroup::setCameraPoseMat(cv::Mat pose, int id_cam) {
-  relative_camera_pose_[id_cam] = new double[6];
+  relative_camera_pose_[id_cam] = std::vector<double>(6);
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   relative_camera_pose_[id_cam][0] = r_vec.at<double>(0);
@@ -123,7 +119,7 @@ void CameraGroup::setCameraPoseMat(cv::Mat pose, int id_cam) {
  * @param id_cam index of the camera of interest in the group
  */
 void CameraGroup::setCameraPoseVec(cv::Mat r_vec, cv::Mat t_vec, int id_cam) {
-  relative_camera_pose_[id_cam] = new double[6];
+  relative_camera_pose_[id_cam] = std::vector<double>(6);
   relative_camera_pose_[id_cam][0] = r_vec.at<double>(0);
   relative_camera_pose_[id_cam][1] = r_vec.at<double>(1);
   relative_camera_pose_[id_cam][2] = r_vec.at<double>(2);
@@ -276,9 +272,10 @@ void CameraGroup::refineCameraGroup(int nb_iterations) {
                               cam_ptr->distortion_model_);
                       problem.AddResidualBlock(
                           reprojection_error, new ceres::HuberLoss(1.0),
-                          relative_camera_pose_[current_cam_id],
+                          relative_camera_pose_[current_cam_id].data(),
                           cam_group_obs_ptr
-                              ->object_pose_[it_obj3d_ptr->object_3d_id_]);
+                              ->object_pose_[it_obj3d_ptr->object_3d_id_]
+                              .data());
                       // it_obj3d->second->group_pose_);
                       // it_cam_group_obs->second->object_pose_[it_obj3d->second->object_3d_id_]
                     }
@@ -300,7 +297,8 @@ void CameraGroup::refineCameraGroup(int nb_iterations) {
   ceres::Solve(options, &problem, &summary);
 
   // Display poses in the group
-  for (std::map<int, double *>::iterator it = relative_camera_pose_.begin();
+  for (std::map<int, std::vector<double>>::iterator it =
+           relative_camera_pose_.begin();
        it != relative_camera_pose_.end(); ++it) {
     LOG_INFO << "Camera  " << it->first
              << "  :: " << getCameraPoseMat(it->first);
@@ -486,9 +484,10 @@ void CameraGroup::refineCameraGroupAndObjects(int nb_iterations) {
                       problem.AddResidualBlock(
                           reprojection_error,
                           new ceres::HuberLoss(1.0), // nullptr,
-                          relative_camera_pose_[current_cam_id],
+                          relative_camera_pose_[current_cam_id].data(),
                           cam_group_obs_ptr
-                              ->object_pose_[it_obj3d_ptr->object_3d_id_],
+                              ->object_pose_[it_obj3d_ptr->object_3d_id_]
+                              .data(),
                           object_3d_ptr
                               ->relative_board_pose_[board_id_pts_id.first]);
                     }
@@ -510,7 +509,8 @@ void CameraGroup::refineCameraGroupAndObjects(int nb_iterations) {
   ceres::Solve(options, &problem, &summary);
 
   // Display poses in the group
-  for (std::map<int, double *>::iterator it = relative_camera_pose_.begin();
+  for (std::map<int, std::vector<double>>::iterator it =
+           relative_camera_pose_.begin();
        it != relative_camera_pose_.end(); ++it) {
     LOG_INFO << "Camera  " << it->first
              << "  :: " << getCameraPoseMat(it->first);
@@ -603,9 +603,10 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(int nb_iterations) {
                       problem.AddResidualBlock(
                           reprojection_error,
                           new ceres::HuberLoss(1.0), // nullptr,
-                          relative_camera_pose_[current_cam_id],
+                          relative_camera_pose_[current_cam_id].data(),
                           cam_group_obs_ptr
-                              ->object_pose_[it_obj3d_ptr->object_3d_id_],
+                              ->object_pose_[it_obj3d_ptr->object_3d_id_]
+                              .data(),
                           object_3d_ptr
                               ->relative_board_pose_[board_id_pts_id.first],
                           cam_ptr->intrinsics_);
@@ -628,7 +629,8 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(int nb_iterations) {
   ceres::Solve(options, &problem, &summary);
 
   // Display poses in the group
-  for (std::map<int, double *>::iterator it = relative_camera_pose_.begin();
+  for (std::map<int, std::vector<double>>::iterator it =
+           relative_camera_pose_.begin();
        it != relative_camera_pose_.end(); ++it) {
     LOG_INFO << "Camera  " << it->first
              << "  :: " << getCameraPoseMat(it->first);
