@@ -122,25 +122,24 @@ cv::Point3f triangulateNViewLinearEigen(std::vector<cv::Point2f> Pts2D,
 }
 
 // Fit the line according to the point set ax + by + c = 0, res is the residual
-void calcLinePara(std::vector<cv::Point2f> pts, double &a, double &b, double &c, double &res)
-{
-    res = 0;
-    cv::Vec4f line;
-    std::vector<cv::Point2f> ptsF;
-    for (unsigned int i = 0; i < pts.size(); i++)
-        ptsF.push_back(pts[i]);
+void calcLinePara(std::vector<cv::Point2f> pts, double &a, double &b, double &c,
+                  double &res) {
+  res = 0;
+  cv::Vec4f line;
+  std::vector<cv::Point2f> ptsF;
+  for (unsigned int i = 0; i < pts.size(); i++)
+    ptsF.push_back(pts[i]);
 
-    cv::fitLine(ptsF, line,cv::DistanceTypes::DIST_L2, 0, 1e-2, 1e-2);
-    a = line[1];
-    b = -line[0];
-    c = line[0] * line[3] - line[1] * line[2];
+  cv::fitLine(ptsF, line, cv::DistanceTypes::DIST_L2, 0, 1e-2, 1e-2);
+  a = line[1];
+  b = -line[0];
+  c = line[0] * line[3] - line[1] * line[2];
 
-    for (unsigned int i = 0; i < pts.size(); i++)
-    {
-        double resid_ = fabs(pts[i].x * a + pts[i].y * b + c);
-        res += resid_;
-    }
-    res /= pts.size();
+  for (unsigned int i = 0; i < pts.size(); i++) {
+    double resid_ = fabs(pts[i].x * a + pts[i].y * b + c);
+    res += resid_;
+  }
+  res /= pts.size();
 }
 
 // RANSAC algorithm

@@ -13,41 +13,39 @@ There are several ways to get the environment ready. Choose any of them:
 
 1. The easiest way to get the environment is to pull it from the Docker Hub:
 
-   - [Install](https://docs.docker.com/engine/install/) docker
+   - [Install](https://docs.docker.com/engine/install/) docker.
 
    - Pull the image:
 
-      ```bash
-      docker pull frameau/opencv-ceres
-      ```
+     ```bash
+     docker pull frameau/opencv-ceres
+     ```
 
    - Run pulled image:
-
+   
       ```bash
       xhost +si:localuser:root
       docker run \
-                   --runtime=nvidia \
-                   -ti --rm \
-                   --network host \
-                   --gpus all \
-                   --env="DISPLAY" \
-                   --env="QT_X11_NO_MITSHM=1" \
-                   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-                   --volume="$HOME/.Xauthority:/home/$USER/.Xauthority:rw" \
-                   --volume="${PWD}:/home/$USER/MultiCamCalib" \
-                   --volume="PATH_TO_DATA:/home/$USER/MultiCamCalib/data" \
-                   frameau/opencv-ceres
-
-      # xhost -local:root  # resetting permissions
+                  --runtime=nvidia \
+                  -ti --rm \
+                  --network host \
+                  --gpus all \
+                  --env="DISPLAY" \
+                  --env="QT_X11_NO_MITSHM=1" \
+                  --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+                  --volume="$HOME/.Xauthority:/home/$USER/.Xauthority:rw" \
+                  --volume="${PWD}:/home/$USER/MultiCamCalib" \
+                  --volume="PATH_TO_DATA:/home/$USER/MultiCamCalib/data" \
+                  frameau/opencv-ceres
+      #xhost -local:root  # resetting permissions
       ```
-
+      
 2. It is also possible to build the docker environment manually:
    
    - [Install](https://docs.docker.com/engine/install/) docker
 
-
    - Create the image:
-
+   
       ```bash
       docker build - < Dockerfile -t SPECIFY_YOUR_NAME
       ```
@@ -59,12 +57,13 @@ There are several ways to get the environment ready. Choose any of them:
    - Follow [installation guidelines](http://ceres-solver.org/installation.html#linux) to install Ceres.
 
    - Install boost:
-      
-      ```
+
+      ```bash
       sudo apt install libboost-all-dev
       ```
 
 Then the following should do the job of compiling the code: 
+
    ```bash
    mkdir build
    cd build
@@ -74,88 +73,93 @@ Then the following should do the job of compiling the code:
 
 ## Generate documentation
 
-- Install [Doxygen](https://www.doxygen.nl/download.html):
+- Doxygen documentation is [available online](https://codedocs.xyz/rameau-fr/MC-Calib/).
 
-   ```bash
-   sudo apt install flex
-   sudo apt install bison
-   git clone https://github.com/doxygen/doxygen.git
-   cd doxygen
-   mkdir build
-   cd build
-   cmake -G "Unix Makefiles" ..
-   make
-   make install # optional
-   ```
+- It is also possible to generate Doxygen documentation locally:
 
-- Doxygen is already added to the `CmakeLists.txt` and is auto-generated if dependencies are satisfied. However, it is also possible to set it up manually:
+   - Install [Doxygen](https://www.doxygen.nl/download.html):
 
-   ```bash
-   mkdir docs
-   cd docs
-   doxygen -g
-   #set INPUT = ../src in Doxyfile
-   doxygen
-   ```
+      ```bash
+      sudo apt install flex
+      sudo apt install bison
+      git clone https://github.com/doxygen/doxygen.git
+      cd doxygen
+      mkdir build
+      cd build
+      cmake -G "Unix Makefiles" ..
+      make
+      make install # optional
+      ```
+   - Doxygen is already added to the `CmakeLists.txt` and is auto-generated if dependencies are satisfied. However, it is also possible to set it up manually:
 
+      ```bash
+      mkdir docs
+      cd docs
+      doxygen -g
+      #set INPUT = ../src in Doxyfile
+      doxygen
+      ```
+      
 # Usage
 
 ## Calibration procedure
 
-1. **generate your own charuco boards**
+1. **Generate your own Charuco boards**
 
-	If all your boards are similar (same number of squares in the x and y directions), you only need to specify the ```number_x_square```, ```number_y_square``` and ```number_board```. Then you can run the charuco board generator:
-	```bash
-	./generate_charuco ../configs/calib_param.yml
-	```
-	If each board have a specific format (different number of squares), then you need to specify it in the fields 		```number_x_square_per_board``` and
-```number_y_square_per_board```, for instance, if you would like to use 2 boards of size [10x3], [5x4] respectively, then you have to set:
-	```
-	number_board: 2 
-	number_x_square_per_board: [10,5]
-	number_y_square_per_board: [3,4]
-	```
-	A sample of charuco boards is provided in ```./board_samples```.
-	Note: the board images are save in the root folder where the code is executed.
+      If all your boards are similar (same number of squares in the x and y directions), you only need to specify the `number_x_square`, `number_y_square` and `number_board`. Then you can run the Charuco board generator:
+      ```bash
+      ./generate_charuco ../configs/calib_param.yml
+      ```
+      If each board have a specific format (different number of squares), then you need to specify it in the fields 		`number_x_square_per_board` and `number_y_square_per_board`. For instance, if you want to use two boards of size [10x3] and [5x4] respectively, you have to set:
+      ```
+      number_board: 2 
+      number_x_square_per_board: [10,5]
+      number_y_square_per_board: [3,4]
+      ```
+      A sample of Charuco boards is provided in [board_samples](board_samples).
+      Note: the board images are saved to the root folder where the code is executed.
 
-3. **print your boards**
+2. **Print your boards**
 
-4. **Measure the size of the squares on your boards**
+3. **Measure the size of the squares on your boards**
 
-	If the boards have all the same square size, you just need to specify it in ```square_size``` and leave ```square_size_per_board``` empty. 
-If each boards have a different size specify it in 'square_size_per_board'. For instance ```square_size_per_board: [1, 25]``` means that the first and second boards are composed of square of size 0.1 and 0.25 cm respectively.
-Note that the square size can be in any unit you prefer (m, cm, inch, etc.) and the resulting calibration will also be expressed in this unit.
+      If the boards have all the same square size, you just need to specify it in `square_size` and leave `square_size_per_board` empty. If each board has a different size, specify it in `square_size_per_board`. For instance `square_size_per_board: [1, 25]` means that the first and second boards are composed of square of size `0.1cm` and `0.25cm` respectively. Note that the square size can be in any unit you prefer (m, cm, inch, etc.) and the resulting calibration will also be expressed in this unit.
 
-6. **Acquire your images**
+4. **Acquire your images**
 
-	MC-Calib has been designed for synchronized cameras, therefore, you have to make sure that all the cameras in the rig capture images at the exact same time. 
-Additionally, this toolbox has been designed and tested for global shutter cameras, therefore we cannot guarantee highly accurate results if you are using rolling shutter sensors.
-For high quality calibration make sure to have a limited quantity of motion blur during your sequence.
+      MC-Calib has been designed for synchronized cameras, therefore, you have to make sure that all the cameras in the rig capture images at the exact same time. Additionally, this toolbox has been designed and tested for global shutter cameras, therefore we cannot guarantee highly accurate results if you are using rolling shutter sensors. For high-quality calibration, make sure to have a limited quantity of motion blur during your sequence.
 
-8. **Prepare your video sequences**
-	The images extracted from each cameras have to be stored in a different folders with a common prefix followed by a 3 digits index (starting from 001), for instance if two cameras are used the folder can be called: 'Cam_001' and 'Cam_002'. 
+5. **Prepare your video sequences**
 
-9. **Setup the configuration file for your system**
+      The images extracted from each cameras have to be stored in a different folders with a common prefix followed by a 3 digits index (starting from 001), for instance if two cameras are used the folder can be called: 'Cam_001' and 'Cam_002'. 
+
+6. **Setup the configuration file for your system**
 
 	* *Set the number of cameras and cameras' types:*
-	The number of cameras to be calibrated have to be specified in the field ```number_camera```.
-	If you are calibrating a homogeneous camera system you can specify the camera type with ```distortion_model```, a '0' signifies that all your cameras are perspective (Brown distortion model) and a '1' will use the Kanalla distortion model (fisheye).
-	If you are calibrating a hybrid vision system (composed of both fisheye and perspective cameras), you need to specify the type of distortion model you wish to use in the vector 'distortion_per_camera'
+
+      The number of cameras to be calibrated have to be specified in the field `number_camera`.
+      If you are calibrating a homogeneous camera system you can specify the camera type with `distortion_model`: `0` signifies that all your cameras are perspective (Brown distortion model) and a `1` will use the Kannala distortion model (fisheye).
+      If you are calibrating a hybrid vision system (composed of both fisheye and perspective cameras), you need to specify the type of distortion model you wish to use in the vector `distortion_per_camera`.
 
 	* *Set the image path:*
-	You need to specify the folder where the images have been stored in the field ```root_path``` for instance '../Data/Image_folder/'
 
-	* *set the outputs:*
-	By default, MC-Calib will generate the camera calibration results, the reprojection error log, the 3D object structure and the pose of the object for each frames where it has been detected. Additionally, you can save the detection and reprojection images by setting ```save_detection``` and ```save_reprojection``` to 1.
+      You need to specify the folder where the images have been stored in the field `root_path` for instance `"../Data/Image_folder/"`.
+
+	* *Set the outputs:*
+
+      By default, MC-Calib will generate the camera calibration results, the reprojection error log, the 3D object structure and the pose of the object for each frames where it has been detected. Additionally, you can save the detection and reprojection images by setting `save_detection` and `save_reprojection` to `1`.
 
 	* *Using only certain boards:*
-	If you prepared a large number of calibration objects but if only a few appears in your calibration sequence, you can specify the list of boards' indexes in ```boards_index```. Specifying the board indexes avoids trying to detect all the boards and will speed-up your calibration.
 
-	* *advanced setup:*
-	For a general calibration setup, for the sake of robustness, we recommend to set ```min_perc_pts``` to at least 0.4 (40% of the points of the board should appear to be considered). However, in case of a calibration of limited field-of-view overlapping with a single board, this parameter can be reduced significantly. Our automatic colinear points check should avoid most degenerated configurations.
-	The provided example configuration files contains a few additional paramters which can be tuned. Letting these parameters by default should lead to a correct calibration of your system, however, you can adjust them if needed. These parameters are quite self explicit and described in the configuration files.
+      If you prepared a large number of calibration objects but only a few appear in your calibration sequence, you can specify the list of boards' indexes in `boards_index`. Specifying the board indexes avoids trying to detect all the boards and will speed up your calibration.
+
+	* *Advanced setup:*
+
+      For a general calibration setup, for the sake of robustness, we recommend setting `min_perc_pts` to at least 0.4 (40% of the points of the board should appear to be considered). However, in the case of calibration of limited field-of-view overlapping with a single board, this parameter can be reduced significantly. Our automatic colinear points check should avoid most degenerated configurations.
+      The provided example configuration files contain a few additional parameters which can be tuned. Letting these parameters by default should lead to a correct calibration of your system, but you can adjust them if needed. These parameters are quite self explicit and described in the configuration files.
 
 7. **Run the calibration**
+
 	```bash
 	./calibrate_stereo ../configs/calib_param.yml
 	```
@@ -210,98 +214,101 @@ camera_params_file_name: "" # "name.yml"
 
 ## Output explanation
 
-The calibration toolbox automatically output 4 ```*.yml``` files. To illustrate them, we propose to display the results obtained from the calibration of a hybrid stereo-vision system.
+The calibration toolbox automatically output four ```*.yml``` files. To illustrate them, we propose to display the results obtained from the calibration of a hybrid stereo-vision system.
 
-* **Camera parameters:** ```calibrated_cameras_data.yml```
+* **Camera parameters:** `calibrated_cameras_data.yml`
 
-```bash
-%YAML:1.0
----
-nb_camera: 2 
-camera_0: # all the calibration parameters (intrinsic/extrinsic) for the camera 0
-   camera_matrix: !!opencv-matrix # 3x3 intrinsic matrix
-      rows: 3
-      cols: 3
-      dt: d
-      data: [ 6.9057886528642052e+02, 0., 6.5114341701043156e+02, 0.,
-          6.8919862105007201e+02, 2.6741231181725999e+02, 0., 0., 1. ]
-   distortion_vector: !!opencv-matrix # 1x5 distortion vector (Brown model here)
-      rows: 1
-      cols: 5
-      dt: d
-      data: [ -5.5592652556282401e-02, 1.2691061778374907e-01,
-          -2.4976766901851363e-04, 1.1847248726536302e-03,
-          -6.7785776099559991e-02 ]
-   distortion_type: 0 # type of distortion model (0: perspective, 1: fisheye)
-   camera_group: 0 #Camera group in which this camera belong, if the calibration has been sucessful, all camera should belong to the group 0
-   img_width: 1280 #image size
-   img_height: 512
-   camera_pose_matrix: !!opencv-matrix
-      rows: 4
-      cols: 4
-      dt: d
-      data: [ 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0.,
-          1. ] #4x4 extrinsic matrix (for camera 0, it is the identity because it is the reference)
-camera_1: # all the calibration parameters (intrinsic/extrinsic) for the camera 1
-   camera_matrix: !!opencv-matrix # 3x3 intrinsic matrix for camera 1
-      rows: 3
-      cols: 3
-      dt: d
-      data: [ 3.3467577884661034e+02, 0., 6.3270889699552083e+02, 0.,
-          3.3407723815119016e+02, 2.6650518594457941e+02, 0., 0., 1. ]
-   distortion_vector: !!opencv-matrix # 1x4 distortion vector (fisheye model)
-      rows: 1
-      cols: 4
-      dt: d
-      data: [ 1.1763357579105141e-02, -5.1797112353852174e-03,
-          2.6315580610037459e-03, 0. ]
-   distortion_type: 1 # type of distortion model (0: perspective, 1: fisheye)
-   camera_group: 0
-   img_width: 1280
-   img_height: 512
-   camera_pose_matrix: !!opencv-matrix #4x4 extrinsic matrix
-      rows: 4
-      cols: 4
-      dt: d
-      data: [ 9.9999074801577947e-01, 7.7896180494682642e-04,
-          -4.2304965841050025e-03, 1.9839157514973714e+01,
-          -7.9020195036245652e-04, 9.9999616084980592e-01,
-          -2.6559116188004227e-03, 6.1882118248103253e-02,
-          4.2284114888848610e-03, 2.6592299929997965e-03,
-          9.9998752443824268e-01, 1.8600285922272908e+00, 0., 0., 0., 1. ]  #4x4 extrinsic matrix, expressed in camera 0 referencial
-```
+   ```bash
+   %YAML:1.0
+   ---
+   nb_camera: 2 
+   camera_0: # all the calibration parameters (intrinsic/extrinsic) for the camera 0
+      camera_matrix: !!opencv-matrix # 3x3 intrinsic matrix
+         rows: 3
+         cols: 3
+         dt: d
+         data: [ 6.9057886528642052e+02, 0., 6.5114341701043156e+02, 0.,
+            6.8919862105007201e+02, 2.6741231181725999e+02, 0., 0., 1. ]
+      distortion_vector: !!opencv-matrix # 1x5 distortion vector (Brown model here)
+         rows: 1
+         cols: 5
+         dt: d
+         data: [ -5.5592652556282401e-02, 1.2691061778374907e-01,
+            -2.4976766901851363e-04, 1.1847248726536302e-03,
+            -6.7785776099559991e-02 ]
+      distortion_type: 0 # type of distortion model (0: perspective, 1: fisheye)
+      camera_group: 0 #Camera group in which this camera belong, if the calibration has been sucessful, all camera should belong to the group 0
+      img_width: 1280 #image size
+      img_height: 512
+      camera_pose_matrix: !!opencv-matrix
+         rows: 4
+         cols: 4
+         dt: d
+         data: [ 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0.,
+            1. ] #4x4 extrinsic matrix (for camera 0, it is the identity because it is the reference)
+   camera_1: # all the calibration parameters (intrinsic/extrinsic) for the camera 1
+      camera_matrix: !!opencv-matrix # 3x3 intrinsic matrix for camera 1
+         rows: 3
+         cols: 3
+         dt: d
+         data: [ 3.3467577884661034e+02, 0., 6.3270889699552083e+02, 0.,
+            3.3407723815119016e+02, 2.6650518594457941e+02, 0., 0., 1. ]
+      distortion_vector: !!opencv-matrix # 1x4 distortion vector (fisheye model)
+         rows: 1
+         cols: 4
+         dt: d
+         data: [ 1.1763357579105141e-02, -5.1797112353852174e-03,
+            2.6315580610037459e-03, 0. ]
+      distortion_type: 1 # type of distortion model (0: perspective, 1: fisheye)
+      camera_group: 0
+      img_width: 1280
+      img_height: 512
+      camera_pose_matrix: !!opencv-matrix #4x4 extrinsic matrix
+         rows: 4
+         cols: 4
+         dt: d
+         data: [ 9.9999074801577947e-01, 7.7896180494682642e-04,
+            -4.2304965841050025e-03, 1.9839157514973714e+01,
+            -7.9020195036245652e-04, 9.9999616084980592e-01,
+            -2.6559116188004227e-03, 6.1882118248103253e-02,
+            4.2284114888848610e-03, 2.6592299929997965e-03,
+            9.9998752443824268e-01, 1.8600285922272908e+00, 0., 0., 0., 1. ]  #4x4 extrinsic matrix, expressed in camera 0 referencial
+   ```
 
-* **Object 3D structure:** ```calibrated_objects_data.yml```
-```bash
-%YAML:1.0
----
-object_0: #object index (if all boards have been seen, a single object should exist)
-   points: !!opencv-matrix #3xn 3D structure of the object
-      rows: 3
-      cols: 16
-      dt: f
-      data: [ 0., 9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0.,
-          9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0.,
-          9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0.,
-          9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0., 0., 0., 0.,
-          9.14999962e+00, 9.14999962e+00, 9.14999962e+00, 9.14999962e+00,
-          1.82999992e+01, 1.82999992e+01, 1.82999992e+01, 1.82999992e+01,
-          2.74499989e+01, 2.74499989e+01, 2.74499989e+01, 2.74499989e+01,
-          0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0. ]
-```
+* **Object 3D structure:** `calibrated_objects_data.yml`
 
-* **Object's poses:** ```calibrated_objects_pose_data.yml```
-The pose of the object (for all frames where boards are visible) with respect to the reference camera is provided in this file as a 6xn array. each row contains the Rodrigues angle-axis (3 floats) followed by the translation vector (3 floats).
+   ```bash
+   %YAML:1.0
+   ---
+   object_0: #object index (if all boards have been seen, a single object should exist)
+      points: !!opencv-matrix #3xn 3D structure of the object
+         rows: 3
+         cols: 16
+         dt: f
+         data: [ 0., 9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0.,
+            9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0.,
+            9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0.,
+            9.14999962e+00, 1.82999992e+01, 2.74499989e+01, 0., 0., 0., 0.,
+            9.14999962e+00, 9.14999962e+00, 9.14999962e+00, 9.14999962e+00,
+            1.82999992e+01, 1.82999992e+01, 1.82999992e+01, 1.82999992e+01,
+            2.74499989e+01, 2.74499989e+01, 2.74499989e+01, 2.74499989e+01,
+            0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0. ]
+   ```
 
-* **Reprojection error log:** ```reprojection_error_data.yml```
-The reprojection error for each corner, camera and frame.
+* **Object's poses:** `calibrated_objects_pose_data.yml`
 
-Samples of python code to read these files are provided in ```python_utils```
+   The pose of the object (for all frames where boards are visible) with respect to the reference camera is provided in this file as a 6xn array. Each row contains the Rodrigues angle-axis (3 floats) followed by the translation vector (3 floats).
+
+* **Reprojection error log:** `reprojection_error_data.yml`
+
+   The reprojection error for each corner, camera and frame.
+
+   Samples of python code to read these files are provided in ```python_utils```
 
 # Datasets
 The synthetic and real datasets acquired for this paper are freely available via the following links:
-[Real Data](https://bosch.frameau.xyz/index.php/s/fqtFij4PNc9mp2a)
-[Synthetic Data](https://bosch.frameau.xyz/index.php/s/pLc2T9bApbeLmSz)
+- [Real Data](https://bosch.frameau.xyz/index.php/s/fqtFij4PNc9mp2a)
+- [Synthetic Data](https://bosch.frameau.xyz/index.php/s/pLc2T9bApbeLmSz)
 
 
 # Contribution

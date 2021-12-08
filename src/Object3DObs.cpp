@@ -42,9 +42,12 @@ void Object3DObs::insertNewBoardObs(std::shared_ptr<BoardObs> new_board_obs) {
     // Convert the index from the board to the object
     std::pair<int, int> board_id_pts_id =
         std::make_pair(new_board_obs->board_id_, new_board_obs->charuco_id_[i]);
-    int pts_idx_obj = object_3d_.lock()->pts_board_2_obj_[board_id_pts_id];
-    pts_2d_.push_back(new_board_obs->pts_2d_[i]);
-    pts_id_.push_back(pts_idx_obj);
+    auto object_3d_ptr = object_3d_.lock();
+    if (object_3d_ptr) {
+      int pts_idx_obj = object_3d_ptr->pts_board_2_obj_[board_id_pts_id];
+      pts_2d_.push_back(new_board_obs->pts_2d_[i]);
+      pts_id_.push_back(pts_idx_obj);
+    }
   }
 }
 
@@ -239,22 +242,26 @@ cv::Mat Object3DObs::getTransInGroupVec() {
 void Object3DObs::estimatePose(double ransac_thresh) {
   std::vector<cv::Point3f> object_pts_temp;
   for (int i = 0; i < pts_id_.size(); i++) {
-    object_pts_temp.push_back(object_3d_.lock()->pts_3d_[pts_id_[i]]);
+    auto object_3d_ptr = object_3d_.lock();
+    if (object_3d_ptr)
+      object_pts_temp.push_back(object_3d_ptr->pts_3d_[pts_id_[i]]);
   }
 
   // Estimate the pose using a RANSAC
   cv::Mat r_vec, t_vec;
   std::shared_ptr<Camera> cam_ptr = cam_.lock();
-  cv::Mat inliers = ransacP3PDistortion(
-      object_pts_temp, pts_2d_, cam_ptr->getCameraMat(),
-      cam_ptr->getDistortionVectorVector(), r_vec, t_vec, ransac_thresh, 0.99,
-      1000, true, cam_ptr->distortion_model_);
-  LOG_DEBUG << "Trans :: " << t_vec << "       Rot :: " << r_vec;
-  LOG_DEBUG << "input pts 3D :: " << object_pts_temp.size();
-  LOG_DEBUG << "Inliers :: " << inliers.rows;
-  r_vec.convertTo(r_vec, CV_64F);
-  t_vec.convertTo(t_vec, CV_64F);
-  setPoseVec(r_vec, t_vec);
+  if (cam_ptr) {
+    cv::Mat inliers = ransacP3PDistortion(
+        object_pts_temp, pts_2d_, cam_ptr->getCameraMat(),
+        cam_ptr->getDistortionVectorVector(), r_vec, t_vec, ransac_thresh, 0.99,
+        1000, true, cam_ptr->distortion_model_);
+    LOG_DEBUG << "Trans :: " << t_vec << "       Rot :: " << r_vec;
+    LOG_DEBUG << "input pts 3D :: " << object_pts_temp.size();
+    LOG_DEBUG << "Inliers :: " << inliers.rows;
+    r_vec.convertTo(r_vec, CV_64F);
+    t_vec.convertTo(t_vec, CV_64F);
+    setPoseVec(r_vec, t_vec);
+  }
 }
 
 /**
@@ -263,32 +270,37 @@ void Object3DObs::estimatePose(double ransac_thresh) {
  * @return mean reprojection error for this observation
  */
 float Object3DObs::computeReprojectionError() {
-  float sum_err_object = 0;
+  float sum_err_object = 0.0;
   std::vector<cv::Point3f> object_pts_temp;
-  for (int i = 0; i < pts_id_.size(); i++)
-    object_pts_temp.push_back(object_3d_.lock()->pts_3d_[pts_id_[i]]);
+  for (int i = 0; i < pts_id_.size(); i++) {
+    auto object_3d_ptr = object_3d_.lock();
+    if (object_3d_ptr)
+      object_pts_temp.push_back(object_3d_ptr->pts_3d_[pts_id_[i]]);
+  }
 
   // Project the 3D pts on the image
   std::vector<cv::Point2f> repro_pts;
   std::vector<float> error_object_vec;
   std::shared_ptr<Camera> cam_ptr = cam_.lock();
-  projectPointsWithDistortion(object_pts_temp, getRotVec(), getTransVec(),
-                              cam_ptr->getCameraMat(),
-                              cam_ptr->getDistortionVectorVector(), repro_pts,
-                              cam_ptr->distortion_model_);
-  for (int j = 0; j < repro_pts.size(); j++) {
-    float rep_err = sqrt(pow((pts_2d_[j].x - repro_pts[j].x), 2) +
-                         pow((pts_2d_[j].y - repro_pts[j].y), 2));
-    error_object_vec.push_back(rep_err);
-    sum_err_object += rep_err;
-    // if (rep_err > 6.0)
-    // LOG_WARNING << "LARGE REPROJECTION ERROR ::: " << rep_err  ;
+  if (cam_ptr) {
+    projectPointsWithDistortion(object_pts_temp, getRotVec(), getTransVec(),
+                                cam_ptr->getCameraMat(),
+                                cam_ptr->getDistortionVectorVector(), repro_pts,
+                                cam_ptr->distortion_model_);
+    for (int j = 0; j < repro_pts.size(); j++) {
+      float rep_err = sqrt(pow((pts_2d_[j].x - repro_pts[j].x), 2) +
+                           pow((pts_2d_[j].y - repro_pts[j].y), 2));
+      error_object_vec.push_back(rep_err);
+      sum_err_object += rep_err;
+      // if (rep_err > 6.0)
+      // LOG_WARNING << "LARGE REPROJECTION ERROR ::: " << rep_err  ;
+    }
+    LOG_DEBUG << "Frame :: " << this->frame_id_
+              << "  object :: " << this->object_3d_id_ << "  --- Mean Error ::"
+              << sum_err_object / error_object_vec.size()
+              << "  Nb pts :: " << error_object_vec.size();
   }
-  LOG_DEBUG << "Frame :: " << this->frame_id_
-            << "  object :: " << this->object_3d_id_
-            << "  --- Mean Error ::" << sum_err_object / error_object_vec.size()
-            << "  Nb pts :: " << error_object_vec.size();
-
   // return mean error for the board
-  return sum_err_object / error_object_vec.size();
+  return error_object_vec.size() > 0 ? sum_err_object / error_object_vec.size()
+                                     : sum_err_object;
 }

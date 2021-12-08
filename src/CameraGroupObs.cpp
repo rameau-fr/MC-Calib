@@ -32,11 +32,7 @@ void CameraGroupObs::insertObjectObservation(
   object_observations_[object_observations_.size()] = new_object_observation;
 }
 
-CameraGroupObs::~CameraGroupObs() {
-  for (auto const &item : object_pose_)
-    delete[] item.second;
-  object_pose_.clear();
-}
+CameraGroupObs::~CameraGroupObs() {}
 
 /**
  * @brief Compute pose of object in the camera obs
@@ -73,31 +69,27 @@ void CameraGroupObs::computeObjectsPose() {
     bool flag_ref_cam = false;
     cv::Mat group_pose_r, group_pose_t;
     for (int i = 0; i < it_obj_obs->second.size(); i++) {
-      if (cam_group_.lock()->id_ref_cam_ ==
-          object_observations_[it_obj_obs->second[i]].lock()->camera_id_) {
+      auto cam_group_ptr = cam_group_.lock();
+      auto obj_obs_ptr = object_observations_[it_obj_obs->second[i]].lock();
+      if (cam_group_ptr && obj_obs_ptr &&
+          cam_group_ptr->id_ref_cam_ == obj_obs_ptr->camera_id_) {
         flag_ref_cam = true;
-        group_pose_r = object_observations_[it_obj_obs->second[i]]
-                           .lock()
-                           ->getRotInGroupVec();
-        group_pose_t = object_observations_[it_obj_obs->second[i]]
-                           .lock()
-                           ->getTransInGroupVec();
+        group_pose_r = obj_obs_ptr->getRotInGroupVec();
+        group_pose_t = obj_obs_ptr->getTransInGroupVec();
       }
     }
 
-    if (flag_ref_cam ==
-        false) // if the reference camera has no visible observation, then take
-               // the average of other observations
-    {
+    // if the reference camera has no visible observation, then take
+    // the average of other observations
+    if (flag_ref_cam == false) {
       cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
       cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
       for (int i = 0; i < it_obj_obs->second.size(); i++) {
-        average_rotation += object_observations_[it_obj_obs->second[i]]
-                                .lock()
-                                ->getRotInGroupVec();
-        average_translation += object_observations_[it_obj_obs->second[i]]
-                                   .lock()
-                                   ->getTransInGroupVec();
+        auto obj_obs_ptr = object_observations_[it_obj_obs->second[i]].lock();
+        if (obj_obs_ptr) {
+          average_rotation += obj_obs_ptr->getRotInGroupVec();
+          average_translation += obj_obs_ptr->getTransInGroupVec();
+        }
       }
       // Average version
       group_pose_t = average_translation / it_obj_obs->second.size();
@@ -114,15 +106,17 @@ void CameraGroupObs::computeObjectsPose() {
     setObjectPoseVec(group_pose_r, group_pose_t, it_obj_obs->first);
     // update the object observations
     for (int i = 0; i < it_obj_obs->second.size(); i++) {
-      object_observations_[it_obj_obs->second[i]].lock()->setPoseInGroupVec(
-          group_pose_r, group_pose_t);
-      // Get the pose in the camera referential (no need here, maybe...)
-      /*cv::Mat pose_cam_in_group =
-      cam_group_->getCameraPoseMat(object_observations_[it_obj_obs->second[i]]->camera_id_);
-      cv::Mat pose_object_in_group =
-      object_observations_[it_obj_obs->second[i]]->getPoseInGroupMat(); Mat
-      trans = pose_cam_in_group.inv()*pose_object_in_group;
-      object_observations_[it_obj_obs->second[i]]->setPoseMat(trans);*/
+      auto obj_obs_ptr = object_observations_[it_obj_obs->second[i]].lock();
+      if (obj_obs_ptr) {
+        obj_obs_ptr->setPoseInGroupVec(group_pose_r, group_pose_t);
+        // Get the pose in the camera referential (no need here, maybe...)
+        /*cv::Mat pose_cam_in_group =
+        cam_group_->getCameraPoseMat(object_observations_[it_obj_obs->second[i]]->camera_id_);
+        cv::Mat pose_object_in_group =
+        object_observations_[it_obj_obs->second[i]]->getPoseInGroupMat(); Mat
+        trans = pose_cam_in_group.inv()*pose_object_in_group;
+        object_observations_[it_obj_obs->second[i]]->setPoseMat(trans);*/
+      }
     }
   }
 }
@@ -170,7 +164,7 @@ cv::Mat CameraGroupObs::getObjectPoseMat(int object_id) {
  * @param object_id object index of interest in the group
  */
 void CameraGroupObs::setObjectPoseMat(cv::Mat pose, int object_id) {
-  object_pose_[object_id] = new double[6];
+  object_pose_[object_id] = std::vector<double>(6);
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   object_pose_[object_id][0] = r_vec.at<double>(0);
@@ -190,7 +184,7 @@ void CameraGroupObs::setObjectPoseMat(cv::Mat pose, int object_id) {
  */
 void CameraGroupObs::setObjectPoseVec(cv::Mat r_vec, cv::Mat t_vec,
                                       int object_id) {
-  object_pose_[object_id] = new double[6];
+  object_pose_[object_id] = std::vector<double>(6);
   object_pose_[object_id][0] = r_vec.at<double>(0);
   object_pose_[object_id][1] = r_vec.at<double>(1);
   object_pose_[object_id][2] = r_vec.at<double>(2);
@@ -233,8 +227,11 @@ cv::Mat CameraGroupObs::getObjectTransVec(int object_id) {
  */
 void CameraGroupObs::updateObjObsPose() {
   for (int i = 0; i < object_idx_.size(); i++) {
-    object_observations_[i].lock()->setPoseInGroupVec(
-        getObjectRotVec(object_observations_[i].lock()->object_3d_id_),
-        getObjectTransVec(object_observations_[i].lock()->object_3d_id_));
+    auto obj_obs_ptr = object_observations_[i].lock();
+    if (obj_obs_ptr) {
+      obj_obs_ptr->setPoseInGroupVec(
+          getObjectRotVec(obj_obs_ptr->object_3d_id_),
+          getObjectTransVec(obj_obs_ptr->object_3d_id_));
+    }
   }
 }

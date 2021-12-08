@@ -66,8 +66,7 @@ void runCalibrationWorkflow(std::string config_path) {
   // only
   Calib.refineAllCameraGroupAndObjects();
   // Optimize everything including intrinsics
-  if (Calib.fix_intrinsic_==0)
-  {
+  if (Calib.fix_intrinsic_ == 0) {
     Calib.refineAllCameraGroupAndObjectsAndIntrinsic();
   }
 

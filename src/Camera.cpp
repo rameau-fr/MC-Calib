@@ -190,15 +190,17 @@ void Camera::initializeCalibration() {
   for (int i = 0; i < nb_board_est; i++) {
     std::shared_ptr<BoardObs> board_obs_temp =
         board_observations_[indbv[shuffled_board_ind[i]]].lock();
-    img_points.push_back(board_obs_temp->pts_2d_);
-    std::vector<int> corners_idx_temp = board_obs_temp->charuco_id_;
-    std::vector<cv::Point3f> pts_3d_temp;
-    std::shared_ptr<Board> board_3d_ptr = board_obs_temp->board_3d_.lock();
-    if (board_3d_ptr) {
-      for (int k = 0; k < corners_idx_temp.size(); k++)
-        pts_3d_temp.push_back(board_3d_ptr->pts_3d_[corners_idx_temp[k]]);
+    if (board_obs_temp) {
+      img_points.push_back(board_obs_temp->pts_2d_);
+      std::vector<int> corners_idx_temp = board_obs_temp->charuco_id_;
+      std::vector<cv::Point3f> pts_3d_temp;
+      std::shared_ptr<Board> board_3d_ptr = board_obs_temp->board_3d_.lock();
+      if (board_3d_ptr) {
+        for (int k = 0; k < corners_idx_temp.size(); k++)
+          pts_3d_temp.push_back(board_3d_ptr->pts_3d_[corners_idx_temp[k]]);
+      }
+      obj_points.push_back(pts_3d_temp);
     }
-    obj_points.push_back(pts_3d_temp);
   }
 
   // Calibrate using OpenCV
@@ -243,7 +245,8 @@ void Camera::computeReproErrAllBoard() {
            board_observations_.begin();
        it != board_observations_.end(); ++it) {
     std::shared_ptr<BoardObs> board_obs_ptr = it->second.lock();
-    float err = board_obs_ptr->computeReprojectionError();
+    if (board_obs_ptr)
+      float err = board_obs_ptr->computeReprojectionError();
   }
 }
 
@@ -253,30 +256,33 @@ void Camera::computeReproErrAllBoard() {
  */
 void Camera::refineIntrinsicCalibration(int nb_iterations) {
   ceres::Problem problem;
-  double loss = 1;
+  double loss = 1.0;
   LOG_INFO << "Parameters before optimization :: " << this->getCameraMat();
   LOG_INFO << "distortion vector :: " << getDistortionVectorVector();
   for (std::map<int, std::weak_ptr<BoardObs>>::iterator it =
            board_observations_.begin();
        it != board_observations_.end(); ++it) {
     std::shared_ptr<BoardObs> board_obs_ptr = it->second.lock();
-    if (board_obs_ptr->valid_ == true) {
+    if (board_obs_ptr && board_obs_ptr->valid_ == true) {
       std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
-      std::vector<cv::Point3f> board_pts_3d = board_3d_ptr->pts_3d_;
-      std::vector<int> board_pts_idx = board_obs_ptr->charuco_id_;
-      std::vector<cv::Point2f> board_pts_2d = board_obs_ptr->pts_2d_;
-      for (int i = 0; i < board_pts_idx.size(); i++) {
-        cv::Point3f current_pts_3d =
-            board_pts_3d[board_pts_idx[i]];           // Current 3D pts
-        cv::Point2f current_pts_2d = board_pts_2d[i]; // Current 2D pts
-        ceres::CostFunction *reprojection_error = ReprojectionError::Create(
-            double(current_pts_2d.x), double(current_pts_2d.y),
-            double(current_pts_3d.x), double(current_pts_3d.y),
-            double(current_pts_3d.z), distortion_model_);
-        // problem.AddResidualBlock(ReprojectionError, new
-        // ceres::ArctanLoss(loss), poses[i], Intrinsics);
-        problem.AddResidualBlock(reprojection_error, new ceres::HuberLoss(1.0),
-                                 board_obs_ptr->pose_, intrinsics_);
+      if (board_3d_ptr) {
+        std::vector<cv::Point3f> board_pts_3d = board_3d_ptr->pts_3d_;
+        std::vector<int> board_pts_idx = board_obs_ptr->charuco_id_;
+        std::vector<cv::Point2f> board_pts_2d = board_obs_ptr->pts_2d_;
+        for (int i = 0; i < board_pts_idx.size(); i++) {
+          cv::Point3f current_pts_3d =
+              board_pts_3d[board_pts_idx[i]];           // Current 3D pts
+          cv::Point2f current_pts_2d = board_pts_2d[i]; // Current 2D pts
+          ceres::CostFunction *reprojection_error = ReprojectionError::Create(
+              double(current_pts_2d.x), double(current_pts_2d.y),
+              double(current_pts_3d.x), double(current_pts_3d.y),
+              double(current_pts_3d.z), distortion_model_);
+          // problem.AddResidualBlock(ReprojectionError, new
+          // ceres::ArctanLoss(loss), poses[i], Intrinsics);
+          problem.AddResidualBlock(reprojection_error,
+                                   new ceres::HuberLoss(1.0),
+                                   board_obs_ptr->pose_, intrinsics_);
+        }
       }
     }
   }
