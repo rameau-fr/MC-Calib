@@ -18,7 +18,7 @@ Object3DObs::Object3DObs() {}
  * @param object_idx object index
  */
 void Object3DObs::initializeObject(std::shared_ptr<Object3D> obj_obs,
-                                   int object_idx) {
+                                   const int object_idx) {
   object_3d_ = obj_obs;
   object_3d_id_ = object_idx;
 }
@@ -62,7 +62,7 @@ Object3DObs::~Object3DObs() {
  * @param r_vec return by reference Rodrigues rotation vector
  * @param t_vec return by reference the translation vector
  */
-void Object3DObs::getPoseVec(cv::Mat &r_vec, cv::Mat &t_vec) {
+void Object3DObs::getPoseVec(cv::Mat &r_vec, cv::Mat &t_vec) const {
   cv::Mat rot_v = cv::Mat::zeros(3, 1, CV_64F);
   cv::Mat trans_v = cv::Mat::zeros(3, 1, CV_64F);
   rot_v.at<double>(0) = pose_[0];
@@ -80,7 +80,7 @@ void Object3DObs::getPoseVec(cv::Mat &r_vec, cv::Mat &t_vec) {
  *
  * @return 4x4 pose matrix
  */
-cv::Mat Object3DObs::getPoseMat() {
+cv::Mat Object3DObs::getPoseMat() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseVec(r_vec, t_vec);
@@ -93,7 +93,7 @@ cv::Mat Object3DObs::getPoseMat() {
  *
  * @return 1x3 Rodrigues vector
  */
-cv::Mat Object3DObs::getRotVec() {
+cv::Mat Object3DObs::getRotVec() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseVec(r_vec, t_vec);
@@ -105,7 +105,7 @@ cv::Mat Object3DObs::getRotVec() {
  *
  * @return 1x3 translation vector
  */
-cv::Mat Object3DObs::getTransVec() {
+cv::Mat Object3DObs::getTransVec() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseVec(r_vec, t_vec);
@@ -135,7 +135,7 @@ void Object3DObs::setPoseMat(cv::Mat pose) {
  * @param r_vec Rodrigues rotation vector
  * @param t_vec translation vector
  */
-void Object3DObs::setPoseVec(cv::Mat r_vec, cv::Mat t_vec) {
+void Object3DObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
   pose_[0] = r_vec.at<double>(0);
   pose_[1] = r_vec.at<double>(1);
   pose_[2] = r_vec.at<double>(2);
@@ -168,7 +168,7 @@ void Object3DObs::setPoseInGroupMat(cv::Mat pose) {
  * @param r_vec Rodrigues rotation vector
  * @param t_vec translation vector
  */
-void Object3DObs::setPoseInGroupVec(cv::Mat r_vec, cv::Mat t_vec) {
+void Object3DObs::setPoseInGroupVec(const cv::Mat r_vec, const cv::Mat t_vec) {
   group_pose_[0] = r_vec.at<double>(0);
   group_pose_[1] = r_vec.at<double>(1);
   group_pose_[2] = r_vec.at<double>(2);
@@ -183,7 +183,7 @@ void Object3DObs::setPoseInGroupVec(cv::Mat r_vec, cv::Mat t_vec) {
  * @param r_vec return by reference Rodrigues rotation vector
  * @param t_vec return by reference the translation vector
  */
-void Object3DObs::getPoseInGroupVec(cv::Mat &r_vec, cv::Mat &t_vec) {
+void Object3DObs::getPoseInGroupVec(cv::Mat &r_vec, cv::Mat &t_vec) const {
   cv::Mat rot_v = cv::Mat::zeros(3, 1, CV_64F);
   cv::Mat trans_v = cv::Mat::zeros(3, 1, CV_64F);
   rot_v.at<double>(0) = group_pose_[0];
@@ -201,7 +201,7 @@ void Object3DObs::getPoseInGroupVec(cv::Mat &r_vec, cv::Mat &t_vec) {
  *
  * @return 4x4 pose matrix
  */
-cv::Mat Object3DObs::getPoseInGroupMat() {
+cv::Mat Object3DObs::getPoseInGroupMat() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseInGroupVec(r_vec, t_vec);
@@ -214,7 +214,7 @@ cv::Mat Object3DObs::getPoseInGroupMat() {
  *
  * @return 1x3 Rodrigues vector
  */
-cv::Mat Object3DObs::getRotInGroupVec() {
+cv::Mat Object3DObs::getRotInGroupVec() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseInGroupVec(r_vec, t_vec);
@@ -226,7 +226,7 @@ cv::Mat Object3DObs::getRotInGroupVec() {
  *
  * @return 1x3 translation vector
  */
-cv::Mat Object3DObs::getTransInGroupVec() {
+cv::Mat Object3DObs::getTransInGroupVec() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseInGroupVec(r_vec, t_vec);
@@ -239,7 +239,7 @@ cv::Mat Object3DObs::getTransInGroupVec() {
  * It using a PnP RANSAC algorithm.
  *
  */
-void Object3DObs::estimatePose(double ransac_thresh) {
+void Object3DObs::estimatePose(const float ransac_thresh) {
   std::vector<cv::Point3f> object_pts_temp;
   for (int i = 0; i < pts_id_.size(); i++) {
     auto object_3d_ptr = object_3d_.lock();
@@ -269,7 +269,7 @@ void Object3DObs::estimatePose(double ransac_thresh) {
  *
  * @return mean reprojection error for this observation
  */
-float Object3DObs::computeReprojectionError() {
+float Object3DObs::computeReprojectionError() const {
   float sum_err_object = 0.0;
   std::vector<cv::Point3f> object_pts_temp;
   for (int i = 0; i < pts_id_.size(); i++) {
