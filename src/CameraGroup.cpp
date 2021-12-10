@@ -19,7 +19,7 @@ CameraGroup::CameraGroup() {}
  * @param id_ref_cam index of the reference camera
  * @param cam_group_idx index of the camera group
  */
-void CameraGroup::initializeCameraGroup(int id_ref_cam, int cam_group_idx) {
+void CameraGroup::initializeCameraGroup(const int id_ref_cam, const int cam_group_idx) {
   id_ref_cam_ = id_ref_cam;
   cam_group_idx_ = cam_group_idx;
 }
@@ -204,7 +204,7 @@ void CameraGroup::computeObjPoseInCameraGroup() {
  * @param nb_iterations number of iterations for non-linear refinement
  *
  */
-void CameraGroup::refineCameraGroup(int nb_iterations) {
+void CameraGroup::refineCameraGroup(const int nb_iterations) {
   ceres::Problem problem;
   LOG_INFO << "Number of frames for camera group optimization  :: "
            << frames_.size();
@@ -370,8 +370,8 @@ void CameraGroup::reproErrorCameraGroup() {
                   // Compute error
                   for (int i = 0; i < repro_pts.size(); i++) {
                     float rep_err =
-                        sqrt(pow((obj_pts_2d[i].x - repro_pts[i].x), 2) +
-                             pow((obj_pts_2d[i].y - repro_pts[i].y), 2));
+                        std::sqrt(std::pow((obj_pts_2d[i].x - repro_pts[i].x), 2) +
+                             std::pow((obj_pts_2d[i].y - repro_pts[i].y), 2));
                     sum_error += rep_err;
                   }
                   float mean_error = sum_error / repro_pts.size();
@@ -395,7 +395,7 @@ void CameraGroup::reproErrorCameraGroup() {
  * @param nb_iterations number of iterations for non-linear refinement
  *
  */
-void CameraGroup::refineCameraGroupAndObjects(int nb_iterations) {
+void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
   ceres::Problem problem;
   LOG_INFO << "Number of frames for camera group optimization  :: "
            << frames_.size();
@@ -524,7 +524,7 @@ void CameraGroup::refineCameraGroupAndObjects(int nb_iterations) {
  * @param nb_iterations number of iterations for non-linear refinement
  *
  */
-void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(int nb_iterations) {
+void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(const int nb_iterations) {
   ceres::Problem problem;
   LOG_INFO << "Number of frames for camera group optimization  :: "
            << frames_.size();
