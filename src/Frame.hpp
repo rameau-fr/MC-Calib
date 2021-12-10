@@ -54,5 +54,5 @@ public:
   void insertNewObject(std::shared_ptr<Object3DObs> new_object);
   void
   insertNewCameraGroupObs(std::shared_ptr<CameraGroupObs> new_cam_group_obs,
-                          int camera_group_idx);
+                          const int camera_group_idx);
 };
