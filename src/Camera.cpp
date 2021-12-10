@@ -15,7 +15,7 @@ Camera::Camera() {}
  *
  * @return 3x3 camera matrix
  */
-cv::Mat Camera::getCameraMat() {
+cv::Mat Camera::getCameraMat() const {
   cv::Mat camera_matrix = cv::Mat(3, 3, CV_64F, cv::Scalar(0));
   camera_matrix.at<double>(0, 0) = intrinsics_[0];
   camera_matrix.at<double>(1, 1) = intrinsics_[1]; // focal
@@ -30,7 +30,7 @@ cv::Mat Camera::getCameraMat() {
  *
  * @param camera_matrix 3x3 camera matrix (K)
  */
-void Camera::setCameraMat(cv::Mat camera_matrix) {
+void Camera::setCameraMat(const cv::Mat camera_matrix) {
   intrinsics_[0] = camera_matrix.at<double>(0, 0);
   intrinsics_[1] = camera_matrix.at<double>(1, 1); // focal
   intrinsics_[2] = camera_matrix.at<double>(0, 2);
@@ -47,7 +47,7 @@ void Camera::setCameraMat(cv::Mat camera_matrix) {
  *
  * @param distortion_vector
  */
-void Camera::setDistortionVector(cv::Mat distortion_vector) {
+void Camera::setDistortionVector(const cv::Mat distortion_vector) {
   if (distortion_model_ == 0) {
     intrinsics_[4] = distortion_vector.at<double>(0);
     intrinsics_[5] = distortion_vector.at<double>(1);
@@ -70,7 +70,7 @@ void Camera::setDistortionVector(cv::Mat distortion_vector) {
  *
  * @todo early exit, possible memory leak due to unsupported distorion model
  */
-cv::Mat Camera::getDistortionVectorVector() {
+cv::Mat Camera::getDistortionVectorVector() const {
   if (distortion_model_ == 0) {
     cv::Mat distortion_vector = cv::Mat(1, 5, CV_64F, cv::Scalar(0));
     distortion_vector.at<double>(0) = intrinsics_[4];
@@ -115,7 +115,7 @@ void Camera::getIntrinsics(cv::Mat &camera_matrix, cv::Mat &distortion_vector) {
  * @param camera_matrix 3x3 K matrix
  * @param distortion_vector 1x5 distortion vector (following OpenCV)
  */
-void Camera::setIntrinsics(cv::Mat camera_matrix, cv::Mat distortion_vector) {
+void Camera::setIntrinsics(const cv::Mat camera_matrix, const cv::Mat distortion_vector) {
   setCameraMat(camera_matrix);
   setDistortionVector(distortion_vector);
 }
@@ -254,7 +254,7 @@ void Camera::computeReproErrAllBoard() {
  * @brief Refinement of the camera parameters of the current camera
  *
  */
-void Camera::refineIntrinsicCalibration(int nb_iterations) {
+void Camera::refineIntrinsicCalibration(const int nb_iterations) {
   ceres::Problem problem;
   double loss = 1.0;
   LOG_INFO << "Parameters before optimization :: " << this->getCameraMat();

@@ -50,12 +50,12 @@ public:
   void insertNewFrame(std::shared_ptr<Frame> newFrame);
   void insertNewObject(std::shared_ptr<Object3DObs> new_object);
   void initializeCalibration();
-  void refineIntrinsicCalibration(int nb_iterations);
-  cv::Mat getCameraMat();
-  void setCameraMat(cv::Mat K);
-  void setDistortionVector(cv::Mat distortion_vector);
-  cv::Mat getDistortionVectorVector();
+  void refineIntrinsicCalibration(const int nb_iterations);
+  cv::Mat getCameraMat() const;
+  void setCameraMat(const cv::Mat K);
+  void setDistortionVector(const cv::Mat distortion_vector);
+  cv::Mat getDistortionVectorVector() const;
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
-  void setIntrinsics(cv::Mat K, cv::Mat distortion_vector);
+  void setIntrinsics(const cv::Mat K, const cv::Mat distortion_vector);
   void computeReproErrAllBoard();
 };
