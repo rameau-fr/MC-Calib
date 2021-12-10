@@ -59,7 +59,7 @@ public:
   int corner_ref_max_iter_ = 20; // max iterations for corner ref
 
   // Optimization parameters
-  double ransac_thresh_; // threshold in pixel
+  float ransac_thresh_; // threshold in pixel
   int nb_iterations_;    // max number of iteration for refinements
 
   // hand-eye technique

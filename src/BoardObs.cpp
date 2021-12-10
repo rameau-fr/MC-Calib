@@ -132,7 +132,7 @@ void BoardObs::setPoseVec(cv::Mat r_vec, cv::Mat t_vec) {
  *
  * @todo possible division by zero on the return
  */
-void BoardObs::estimatePose(double ransac_thresh) {
+void BoardObs::estimatePose(const float ransac_thresh) {
   std::vector<cv::Point3f> board_pts_temp;
   for (int i = 0; i < charuco_id_.size(); i++) {
     std::shared_ptr<Board> board_3d_ptr = board_3d_.lock();
