@@ -30,8 +30,8 @@ void Object3D::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
  * @param obj_id object id
  * @param color color of the 3D object
  */
-void Object3D::initializeObject3D(int nb_boards, int ref_board_id, int obj_id,
-                                  std::vector<double> color) {
+void Object3D::initializeObject3D(const int nb_boards, const int ref_board_id, const int obj_id,
+                                  const std::vector<double> color) {
   nb_boards_ = nb_boards;
   ref_board_id_ = ref_board_id;
   obj_id_ = obj_id;
@@ -173,7 +173,7 @@ cv::Mat Object3D::getBoardTransVec(int board_id) {
  * board of the object is visible. We might need to include yet another
  * objective function
  */
-void Object3D::refineObject(int nb_iterations) {
+void Object3D::refineObject(const int nb_iterations) {
 
   ceres::Problem problem;
 
