@@ -22,9 +22,9 @@ BoardObs::BoardObs() {}
  * @param cam camera observing the board
  * @param board_3d 3D board corresponding to the observation
  */
-void BoardObs::init(int camera_id, int frame_id, int board_id,
-                    std::vector<cv::Point2f> pts_2d,
-                    std::vector<int> charuco_id, std::shared_ptr<Camera> cam,
+void BoardObs::init(const int camera_id, const int frame_id, const int board_id,
+                    const std::vector<cv::Point2f> pts_2d,
+                    const std::vector<int> charuco_id, std::shared_ptr<Camera> cam,
                     std::shared_ptr<Board> board_3d) {
   frame_id_ = frame_id;
   camera_id_ = camera_id;
@@ -41,7 +41,7 @@ void BoardObs::init(int camera_id, int frame_id, int board_id,
  * @param r_vec Rodrigues rotation vector passed by reference
  * @param t_vec translation vector passed by reference
  */
-void BoardObs::getPoseVec(cv::Mat &r_vec, cv::Mat &t_vec) {
+void BoardObs::getPoseVec(cv::Mat &r_vec, cv::Mat &t_vec) const {
   cv::Mat rot_v = cv::Mat::zeros(3, 1, CV_64F);
   cv::Mat trans_v = cv::Mat::zeros(3, 1, CV_64F);
   rot_v.at<double>(0) = pose_[0];
@@ -59,7 +59,7 @@ void BoardObs::getPoseVec(cv::Mat &r_vec, cv::Mat &t_vec) {
  *
  * @return 4x4 board pose w.r.t. to the camera
  */
-cv::Mat BoardObs::getPoseMat() {
+cv::Mat BoardObs::getPoseMat() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseVec(r_vec, t_vec);
@@ -72,7 +72,7 @@ cv::Mat BoardObs::getPoseMat() {
  *
  * @return 1x3 rotation vector w.r.t. the camera observing the board
  */
-cv::Mat BoardObs::getRotVec() {
+cv::Mat BoardObs::getRotVec() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseVec(r_vec, t_vec);
@@ -84,7 +84,7 @@ cv::Mat BoardObs::getRotVec() {
  *
  * @return 1x3 translation vector w.r.t. the camera observing the board
  */
-cv::Mat BoardObs::getTransVec() {
+cv::Mat BoardObs::getTransVec() const {
   cv::Mat r_vec;
   cv::Mat t_vec;
   getPoseVec(r_vec, t_vec);
@@ -96,7 +96,7 @@ cv::Mat BoardObs::getTransVec() {
  *
  * @param pose 4x4 pose matrix
  */
-void BoardObs::setPoseMat(cv::Mat pose) {
+void BoardObs::setPoseMat(const cv::Mat pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   pose_[0] = r_vec.at<double>(0);
@@ -114,7 +114,7 @@ void BoardObs::setPoseMat(cv::Mat pose) {
  * @param r_vec Rodrigues rotation vector
  * @param t_vec translation vector
  */
-void BoardObs::setPoseVec(cv::Mat r_vec, cv::Mat t_vec) {
+void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
   pose_[0] = r_vec.at<double>(0);
   pose_[1] = r_vec.at<double>(1);
   pose_[2] = r_vec.at<double>(2);
