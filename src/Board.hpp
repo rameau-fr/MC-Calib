@@ -45,7 +45,7 @@ public:
   // Functions
   Board();
   ~Board(){};
-  void initParams(std::string config, int board_idx);
+  void initParams(const std::string config, const int board_idx);
   void insertNewBoard(std::shared_ptr<BoardObs> new_board);
   void insertNewFrame(std::shared_ptr<Frame> new_frame);
 };
