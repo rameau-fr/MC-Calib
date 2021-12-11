@@ -41,8 +41,9 @@ double median(std::vector<double> &v);
 cv::Mat ransacP3PDistortion(std::vector<cv::Point3f> scene_points,
                             std::vector<cv::Point2f> image_points,
                             cv::Mat intrinsic, cv::Mat distortion_vector,
-                            cv::Mat &best_R, cv::Mat &best_T, const float thresh,
-                            double p, int it, bool refine, int distortion_type);
+                            cv::Mat &best_R, cv::Mat &best_T,
+                            const float thresh, double p, int it, bool refine,
+                            int distortion_type);
 void projectPointsWithDistortion(std::vector<cv::Point3f> object_pts,
                                  cv::Mat rot, cv::Mat trans,
                                  cv::Mat camera_matrix,

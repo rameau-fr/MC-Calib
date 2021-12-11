@@ -45,7 +45,8 @@ void Frame::insertNewCamObs(std::shared_ptr<CameraObs> new_cam_obs) {
  * @param camera_group_idx index of the group to be inserted
  */
 void Frame::insertNewCameraGroupObs(
-    std::shared_ptr<CameraGroupObs> new_cam_group_obs, const int camera_group_idx) {
+    std::shared_ptr<CameraGroupObs> new_cam_group_obs,
+    const int camera_group_idx) {
   cam_group_idx_.push_back(camera_group_idx);
   cam_group_observations_[cam_group_observations_.size()] = new_cam_group_obs;
 }

@@ -235,8 +235,8 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
 // Thresh = reprojection tolerance in pixels, it = max iteration
 cv::Mat ransacP3P(std::vector<cv::Point3f> scenePoints,
                   std::vector<cv::Point2f> imagePoints, cv::Mat Intrinsic,
-                  cv::Mat Disto, cv::Mat &BestR, cv::Mat &BestT, const float thresh,
-                  double p, int it, bool refine) {
+                  cv::Mat Disto, cv::Mat &BestR, cv::Mat &BestT,
+                  const float thresh, double p, int it, bool refine) {
 
   // Init parameters
   int N = it;
@@ -290,7 +290,8 @@ cv::Mat ransacP3P(std::vector<cv::Point3f> scenePoints,
     int NbInliers = 0;
     for (int k = 0; k < (int)scenePoints.size(); k++) {
       if (std::sqrt(std::pow(imagePoints[k].x - reprojected_pts[k].x, 2) +
-               std::pow(imagePoints[k].y - reprojected_pts[k].y, 2)) < thresh) {
+                    std::pow(imagePoints[k].y - reprojected_pts[k].y, 2)) <
+          thresh) {
         Index.push_back(k);
         NbInliers++;
       }
@@ -579,8 +580,8 @@ double median(std::vector<double> &v) {
 cv::Mat ransacP3PDistortion(std::vector<cv::Point3f> scene_points,
                             std::vector<cv::Point2f> image_points,
                             cv::Mat intrinsic, cv::Mat distortion_vector,
-                            cv::Mat &best_R, cv::Mat &best_T, const float thresh,
-                            double p, int it, bool refine,
+                            cv::Mat &best_R, cv::Mat &best_T,
+                            const float thresh, double p, int it, bool refine,
                             int distortion_type) {
   cv::Mat Inliers;
   // P3P for perspective (Brown model)

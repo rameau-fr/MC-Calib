@@ -115,7 +115,8 @@ void Camera::getIntrinsics(cv::Mat &camera_matrix, cv::Mat &distortion_vector) {
  * @param camera_matrix 3x3 K matrix
  * @param distortion_vector 1x5 distortion vector (following OpenCV)
  */
-void Camera::setIntrinsics(const cv::Mat camera_matrix, const cv::Mat distortion_vector) {
+void Camera::setIntrinsics(const cv::Mat camera_matrix,
+                           const cv::Mat distortion_vector) {
   setCameraMat(camera_matrix);
   setDistortionVector(distortion_vector);
 }
