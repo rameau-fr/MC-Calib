@@ -16,7 +16,7 @@ Board::Board() {}
  * @param config_path path to the configuration file
  * @param board_idx index of the board
  */
-void Board::initParams(std::string config_path, int board_idx) {
+void Board::initParams(const std::string config_path, const int board_idx) {
   std::vector<int> number_x_square_per_board, number_y_square_per_board;
   std::vector<double> square_size_per_board;
   std::vector<int> boards_index;

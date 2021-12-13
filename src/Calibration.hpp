@@ -59,8 +59,8 @@ public:
   int corner_ref_max_iter_ = 20; // max iterations for corner ref
 
   // Optimization parameters
-  double ransac_thresh_; // threshold in pixel
-  int nb_iterations_;    // max number of iteration for refinements
+  float ransac_thresh_; // threshold in pixel
+  int nb_iterations_;   // max number of iteration for refinements
 
   // hand-eye technique
   int he_approach_;
@@ -135,22 +135,24 @@ public:
   // Functions
   Calibration();
   ~Calibration(){};
-  void
-  initialization(std::string config_path); // initialize the charuco pattern, nb
-                                           // of cameras, nb of boards etc.
+  void initialization(
+      const std::string config_path); // initialize the charuco pattern, nb
+                                      // of cameras, nb of boards etc.
   void boardExtraction();
+  void detectBoards(
+      const cv::Mat image, const int cam_idx, const int frame_idx,
+      const std::string frame_path); // detect the board in the input frame
+  void saveCamerasParams();          // Save all cameras params
+  void save3DObj();                  // Save 3D objects
+  void save3DObjPose();              // Save 3D objects pose
+  void displayBoards(const cv::Mat image, const int cam_idx,
+                     const int frame_idx);
   void
-  detectBoards(cv::Mat image, int cam_idx, int frame_idx,
-               std::string frame_path); // detect the board in the input frame
-  void saveCamerasParams();             // Save all cameras params
-  void save3DObj();                     // Save 3D objects
-  void save3DObjPose();                 // Save 3D objects pose
-  void displayBoards(cv::Mat image, int cam_idx, int frame_idx);
-  void insertNewBoard(int cam_idx, int frame_idx, int board_idx,
-                      std::vector<cv::Point2f> pts_2d,
-                      std::vector<int> charuco_idx,
-                      std::string frame_path); // insert a new board in all the
-                                               // different datastructure
+  insertNewBoard(const int cam_idx, const int frame_idx, const int board_idx,
+                 const std::vector<cv::Point2f> pts_2d,
+                 const std::vector<int> charuco_idx,
+                 const std::string frame_path); // insert a new board in all the
+                                                // different datastructure
   void
   insertNewObjectObservation(std::shared_ptr<Object3DObs>
                                  new_obj_obs); // insert new object observation
@@ -168,8 +170,8 @@ public:
                                    // the pairs of boards
   void initInterBoardsGraph();     // Initialize the graph
   void init3DObjects(); // initialize the 3D objects with the board graph
-  void
-  init3DObjectObs(int object_idx); // initialize the 3D objects observations
+  void init3DObjectObs(
+      const int object_idx);       // initialize the 3D objects observations
   void initAll3DObjectObs();       // initialize all the 3D objects observations
   void estimatePoseAllObjects();   // Estimate the pose of all visible object
                                    // using a PnP
@@ -183,16 +185,16 @@ public:
   void initInterCamerasGraph();     // Initialize the graph for cameras
   void initCameraGroup();           // Initialize camera group
   void initCameraGroupObs(
-      int camera_group_idx);    // Initialize observation of cameraGroup
-  void initAllCameraGroupObs(); // initialize all camera groups
-  void refineAllCameraGroup();  // Refine all camera group pose
+      const int camera_group_idx); // Initialize observation of cameraGroup
+  void initAllCameraGroupObs();    // initialize all camera groups
+  void refineAllCameraGroup();     // Refine all camera group pose
   void findPairObjectForNonOverlap();
-  void
-  initNonOverlapPair(int cam_group_id1,
-                     int cam_group_id2); // Initialize the pose between two non
-                                         // overlapping groups of cameras
-  void findPoseNoOverlapAllCamGroup();   // initialize the pose between all non
-                                         // overlapping camera groups
+  void initNonOverlapPair(
+      const int cam_group_id1,
+      const int cam_group_id2);        // Initialize the pose between two non
+                                       // overlapping groups of cameras
+  void findPoseNoOverlapAllCamGroup(); // initialize the pose between all non
+                                       // overlapping camera groups
   void
   initInterCamGroupGraph(); // Initialize camera group graph without overlaping
   void mergeCameraGroup();  // Merge the camera groups
@@ -200,8 +202,9 @@ public:
                                  // camera group
   void computeAllObjPoseInCameraGroup();
   void computeObjectsPairPose();
-  cv::Mat computeDistanceBetweenPoints(std::vector<cv::Point2f> obj_pts_2d,
-                                       std::vector<cv::Point2f> repro_pts);
+  cv::Mat
+  computeDistanceBetweenPoints(const std::vector<cv::Point2f> obj_pts_2d,
+                               const std::vector<cv::Point2f> repro_pts);
   double computeAvgReprojectionError();
   void initInterObjectsTransform();
   void initInterObjectsGraph();
@@ -210,9 +213,9 @@ public:
   void reproErrorAllCamGroup();
   void refineAllCameraGroupAndObjects();
   void refineAllCameraGroupAndObjectsAndIntrinsic();
-  void saveReprojection(int cam_id);
+  void saveReprojection(const int cam_id);
   void saveReprojectionAllCam();
-  void saveDetection(int cam_id);
+  void saveDetection(const int cam_id);
   void saveDetectionAllCam();
   void saveReprojectionErrorToFile();
 };

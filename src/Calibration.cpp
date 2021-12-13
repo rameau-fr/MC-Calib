@@ -16,7 +16,7 @@ Calibration::Calibration() {}
  *
  * @param config_path path to the configuration file
  */
-void Calibration::initialization(std::string config_path) {
+void Calibration::initialization(const std::string config_path) {
   cv::FileStorage fs; // cv::FileStorage to read calibration params from file
   int distortion_model;
   std::vector<int> distortion_per_camera;
@@ -194,8 +194,9 @@ void Calibration::boardExtraction() {
  * @param cam_idx camera index which acquire the frame
  * @param frame_idx frame index
  */
-void Calibration::detectBoards(cv::Mat image, int cam_idx, int frame_idx,
-                               std::string frame_path) {
+void Calibration::detectBoards(const cv::Mat image, const int cam_idx,
+                               const int frame_idx,
+                               const std::string frame_path) {
   // Greyscale image for subpixel refinement
   cv::Mat graymat;
   cv::cvtColor(image, graymat, cv::COLOR_BGR2GRAY);
@@ -390,7 +391,8 @@ void Calibration::save3DObjPose() {
  * @param cam_idx camera index
  * @param frame_idx frame index
  */
-void Calibration::displayBoards(cv::Mat image, int cam_idx, int frame_idx) {
+void Calibration::displayBoards(const cv::Mat image, const int cam_idx,
+                                const int frame_idx) {
   std::pair<int, int> cam_frame = std::make_pair(cam_idx, frame_idx);
   std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator it =
       cams_obs_.find(cam_frame); // Check if a frame exist
@@ -407,9 +409,9 @@ void Calibration::displayBoards(cv::Mat image, int cam_idx, int frame_idx) {
           for (int j = 0; j < current_pts.size(); j++) {
             LOG_DEBUG << "Pts x :: " << current_pts[j].x << "   y :: ";
             // Current_pts[j].y  ;
-            circle(image, cv::Point(current_pts[j].x, current_pts[j].y), 4,
-                   cv::Scalar(color_temp[0], color_temp[1], color_temp[2]),
-                   cv::FILLED, 8, 0);
+            cv::circle(image, cv::Point(current_pts[j].x, current_pts[j].y), 4,
+                       cv::Scalar(color_temp[0], color_temp[1], color_temp[2]),
+                       cv::FILLED, 8, 0);
           }
         }
       }
@@ -428,10 +430,11 @@ void Calibration::displayBoards(cv::Mat image, int cam_idx, int frame_idx) {
  * @param pts_2d detected 2D points
  * @param charuco_idx index of the detected points in the board
  */
-void Calibration::insertNewBoard(int cam_idx, int frame_idx, int board_idx,
-                                 std::vector<cv::Point2f> pts_2d,
-                                 std::vector<int> charuco_idx,
-                                 std::string frame_path) {
+void Calibration::insertNewBoard(const int cam_idx, const int frame_idx,
+                                 const int board_idx,
+                                 const std::vector<cv::Point2f> pts_2d,
+                                 const std::vector<int> charuco_idx,
+                                 const std::string frame_path) {
   std::shared_ptr<BoardObs> new_board = std::make_shared<BoardObs>();
   new_board->init(cam_idx, frame_idx, board_idx, pts_2d, charuco_idx,
                   cams_[cam_idx], boards_3d_[board_idx]);
@@ -789,7 +792,7 @@ void Calibration::init3DObjects() {
  *
  * @param object_idx index of the 3D object observed
  */
-void Calibration::init3DObjectObs(int object_idx) {
+void Calibration::init3DObjectObs(const int object_idx) {
 
   // Iterate through cameraobs
   for (std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator
@@ -1083,7 +1086,7 @@ void Calibration::initCameraGroup() {
  *
  * @param camera_group_idx camera group index
  */
-void Calibration::initCameraGroupObs(int camera_group_idx) {
+void Calibration::initCameraGroupObs(const int camera_group_idx) {
   // List of camera idx in the group
   std::vector<int> cam_in_group = cam_group_[camera_group_idx]->cam_idx;
 
@@ -1314,7 +1317,8 @@ void Calibration::findPairObjectForNonOverlap() {
  *
  * @todo remove dead code
  */
-void Calibration::initNonOverlapPair(int cam_group_id1, int cam_group_id2) {
+void Calibration::initNonOverlapPair(const int cam_group_id1,
+                                     const int cam_group_id2) {
   // Prepare the group of interest
   std::shared_ptr<CameraGroup> cam_group1 = cam_group_[cam_group_id1];
   std::shared_ptr<CameraGroup> cam_group2 = cam_group_[cam_group_id2];
@@ -1997,7 +2001,7 @@ void Calibration::refineAllCameraGroupAndObjects() {
  * @brief Save reprojection results images for a given camera.
  *
  */
-void Calibration::saveReprojection(int cam_id) {
+void Calibration::saveReprojection(const int cam_id) {
   // Prepare the path to save the images
   std::string path_root = save_path_ + "Reprojection/";
   std::stringstream ss;
@@ -2119,7 +2123,7 @@ void Calibration::saveReprojectionAllCam() {
  * @brief Save detection results images for a given camera
  *
  */
-void Calibration::saveDetection(int cam_id) {
+void Calibration::saveDetection(const int cam_id) {
   // Prepare the path to save the images
   std::string path_root = save_path_ + "Detection/";
   std::stringstream ss;
@@ -2278,9 +2282,9 @@ void Calibration::merge3DObjects() {
  *
  * @return list of distances between points
  */
-cv::Mat
-Calibration::computeDistanceBetweenPoints(std::vector<cv::Point2f> obj_pts_2d,
-                                          std::vector<cv::Point2f> repro_pts) {
+cv::Mat Calibration::computeDistanceBetweenPoints(
+    const std::vector<cv::Point2f> obj_pts_2d,
+    const std::vector<cv::Point2f> repro_pts) {
   cv::Mat error_list;
   for (int i = 0; i < repro_pts.size(); i++) {
     float rep_err = std::sqrt(std::pow((obj_pts_2d[i].x - repro_pts[i].x), 2) +

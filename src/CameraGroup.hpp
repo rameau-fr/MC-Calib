@@ -46,7 +46,7 @@ public:
   // Functions
   CameraGroup();
   ~CameraGroup();
-  void initializeCameraGroup(int id_ref_cam, int cam_group_idx);
+  void initializeCameraGroup(const int id_ref_cam, const int cam_group_idx);
   void insertCamera(std::shared_ptr<Camera> new_camera);
   void insertNewObjectObservation(
       std::shared_ptr<Object3DObs> new_object_observation);
@@ -58,8 +58,8 @@ public:
   cv::Mat getCameraRotVec(int id_cam);
   cv::Mat getCameraTransVec(int id_cam);
   void computeObjPoseInCameraGroup();
-  void refineCameraGroup(int nb_iterations);
+  void refineCameraGroup(const int nb_iterations);
   void reproErrorCameraGroup();
-  void refineCameraGroupAndObjects(int nb_iterations);
-  void refineCameraGroupAndObjectsAndIntrinsics(int nb_iterations);
+  void refineCameraGroupAndObjects(const int nb_iterations);
+  void refineCameraGroupAndObjectsAndIntrinsics(const int nb_iterations);
 };
