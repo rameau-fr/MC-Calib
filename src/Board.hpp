@@ -19,7 +19,8 @@ class Frame;
  *  - frames where these 3D boards are observed
  */
 
-class Board {
+class Board final 
+{
 public:
   // Parameters
   int nb_x_square_, nb_y_square_, res_x_, res_y_;

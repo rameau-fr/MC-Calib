@@ -28,7 +28,8 @@
  *
  * Centralization of all the data to perform the calibration.
  */
-class Calibration {
+class Calibration final
+{
 public:
   // Parameters
   int nb_camera_, nb_board_;

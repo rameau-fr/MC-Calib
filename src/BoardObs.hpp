@@ -20,7 +20,8 @@ class Board;
  * camera observing the board.
  *
  */
-class BoardObs {
+class BoardObs final 
+{
 public:
   // Indexing
   int frame_id_;

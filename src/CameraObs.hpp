@@ -17,7 +17,8 @@ class Camera;
  *
  * A camera observation contains all the board/object observed by the camera
  */
-class CameraObs {
+class CameraObs final
+{
 public:
   // Boards
   std::vector<int> board_idx_; // index of the visible 3D boards

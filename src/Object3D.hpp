@@ -22,7 +22,8 @@ class Camera;
  * - observation of these objects
  * - frames where these 3D objects are observed
  */
-class Object3D {
+class Object3D final
+{
 public:
   // Parameters
   int nb_boards_;             // number of boards constituting the 3D object

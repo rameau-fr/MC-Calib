@@ -18,7 +18,8 @@ class CameraGroup;
  * - 3D object observations from this camera group observation
  * - camera group corresponding to this observation
  */
-class CameraGroupObs {
+class CameraGroupObs final
+{
 public:
   // Objects
   std::vector<int> object_idx_; // index of the visible 3d objects
