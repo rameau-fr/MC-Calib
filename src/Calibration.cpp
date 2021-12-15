@@ -85,7 +85,8 @@ Calibration::Calibration(const std::string config_path) {
 
   // Initialize Cameras
   for (int i = 0; i < nb_camera_; i++) {
-    std::shared_ptr<Camera> new_cam = std::make_shared<Camera>(i, distortion_per_camera[i]);
+    std::shared_ptr<Camera> new_cam =
+        std::make_shared<Camera>(i, distortion_per_camera[i]);
     cams_[i] = new_cam;
   }
 
@@ -430,8 +431,9 @@ void Calibration::insertNewBoard(const int cam_idx, const int frame_idx,
                                  const std::vector<cv::Point2f> pts_2d,
                                  const std::vector<int> charuco_idx,
                                  const std::string frame_path) {
-  std::shared_ptr<BoardObs> new_board = std::make_shared<BoardObs>(cam_idx, frame_idx, board_idx, pts_2d, charuco_idx,
-                  cams_[cam_idx], boards_3d_[board_idx]);
+  std::shared_ptr<BoardObs> new_board = std::make_shared<BoardObs>(
+      cam_idx, frame_idx, board_idx, pts_2d, charuco_idx, cams_[cam_idx],
+      boards_3d_[board_idx]);
 
   // Add new board in the board list
   board_observations_[board_observations_.size()] = new_board;
@@ -445,15 +447,13 @@ void Calibration::insertNewBoard(const int cam_idx, const int frame_idx,
   // Add board in the Frames list
   std::map<int, std::shared_ptr<Frame>>::iterator it = frames_.find(
       frame_idx); // Check if a frame has already been initialize at this key?
-  if (it != frames_.end()) 
-  {
+  if (it != frames_.end()) {
     frames_[frame_idx]->insertNewBoard(
         new_board); // If the key already exist just push a new board in there
     frames_[frame_idx]->frame_path_[cam_idx] = frame_path;
-  } 
-  else 
-  {
-    std::shared_ptr<Frame> newFrame = std::make_shared<Frame>(frame_idx, cam_idx, frame_path);
+  } else {
+    std::shared_ptr<Frame> newFrame =
+        std::make_shared<Frame>(frame_idx, cam_idx, frame_path);
     frames_[frame_idx] = newFrame; // Initialize the Frame if key does not exist
     frames_[frame_idx]->insertNewBoard(new_board);
     cams_[cam_idx]->insertNewFrame(newFrame);
@@ -465,14 +465,12 @@ void Calibration::insertNewBoard(const int cam_idx, const int frame_idx,
   std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator itCamObs =
       cams_obs_.find(cam_frame_idx); // Check if a Camobs has already been
                                      // initialize at this key?
-  if (itCamObs != cams_obs_.end()) 
-  {
+  if (itCamObs != cams_obs_.end()) {
     // insert in list
     cams_obs_[cam_frame_idx]->insertNewBoard(new_board);
-  } 
-  else 
-  {
-    std::shared_ptr<CameraObs> new_cam_obs = std::make_shared<CameraObs>(new_board);
+  } else {
+    std::shared_ptr<CameraObs> new_cam_obs =
+        std::make_shared<CameraObs>(new_board);
     cams_obs_[cam_frame_idx] = new_cam_obs;
     frames_[frame_idx]->insertNewCamObs(new_cam_obs);
   }
@@ -725,7 +723,9 @@ void Calibration::init3DObjects() {
         *min_element(connect_comp[i].begin(), connect_comp[i].end());
 
     // Declare a new 3D object
-    std::shared_ptr<Object3D> newObject3D = std::make_shared<Object3D>(connect_comp[i].size(), ref_board_id, i, boards_3d_[ref_board_id]->color_);
+    std::shared_ptr<Object3D> newObject3D =
+        std::make_shared<Object3D>(connect_comp[i].size(), ref_board_id, i,
+                                   boards_3d_[ref_board_id]->color_);
     int pts_count = 0;
 
     // Compute the shortest path between the reference and the other board
@@ -796,7 +796,8 @@ void Calibration::init3DObjectObs(const int object_idx) {
 
     // Declare the 3D object observed in this camera observation
     // Keep in mind that a single object can be observed in one image
-    std::shared_ptr<Object3DObs> object_obs = std::make_shared<Object3DObs>(object_3d_[object_idx], object_idx);
+    std::shared_ptr<Object3DObs> object_obs =
+        std::make_shared<Object3DObs>(object_3d_[object_idx], object_idx);
 
     // Check the boards observing this camera
     std::map<int, std::weak_ptr<BoardObs>> current_board_obs =
@@ -1086,7 +1087,8 @@ void Calibration::initCameraGroupObs(const int camera_group_idx) {
        it_frame != frames_.end(); ++it_frame) {
     int current_frame_id = it_frame->second->frame_idx_;
     std::shared_ptr<CameraGroupObs> new_cam_group_obs =
-        std::make_shared<CameraGroupObs>(cam_group_[camera_group_idx]);  // declare a new observation
+        std::make_shared<CameraGroupObs>(
+            cam_group_[camera_group_idx]); // declare a new observation
 
     std::map<int, std::weak_ptr<Object3DObs>> current_object_obs =
         it_frame->second->object_observations_;
@@ -1817,7 +1819,8 @@ void Calibration::mergeObjects() {
       object_pose_to_ref[current_object_id] = transform;
     }
     // initialize the object
-    std::shared_ptr<Object3D> newObject3D = std::make_shared<Object3D>(nb_board_in_obj, ref_board_id, i, boards_3d_[ref_board_id]->color_);
+    std::shared_ptr<Object3D> newObject3D = std::make_shared<Object3D>(
+        nb_board_in_obj, ref_board_id, i, boards_3d_[ref_board_id]->color_);
     int pts_count = 0;
     // Iterate through the objects and add all of them individually in the new
     // object

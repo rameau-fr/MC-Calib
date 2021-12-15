@@ -19,8 +19,7 @@
  * A frame is all the observation from all the synchronized cameras at a given
  * time.
  */
-class Frame final
-{
+class Frame final {
 public:
   int frame_idx_;
 

@@ -6,7 +6,8 @@
 
 #include "Frame.hpp"
 
-Frame::Frame(const int frame_idx, const int cam_idx, const std::string frame_path) {
+Frame::Frame(const int frame_idx, const int cam_idx,
+             const std::string frame_path) {
   frame_idx_ = frame_idx;
   frame_path_[cam_idx] = frame_path;
 }

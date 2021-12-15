@@ -27,8 +27,7 @@ class Object3D;
  * - frame index
  * - object 3D index
  */
-class Object3DObs final
-{
+class Object3DObs final {
 public:
   // Indexing
   int frame_id_;

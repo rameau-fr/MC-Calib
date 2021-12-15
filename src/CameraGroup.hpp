@@ -23,8 +23,7 @@
  * - object observation
  * - reference camera in the group
  */
-class CameraGroup final
-{
+class CameraGroup final {
 public:
   // datastructure for this camera group
   std::map<int, std::weak_ptr<Object3DObs>>

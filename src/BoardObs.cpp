@@ -21,10 +21,10 @@
  * @param board_3d 3D board corresponding to the observation
  */
 BoardObs::BoardObs(const int camera_id, const int frame_id, const int board_id,
-                    const std::vector<cv::Point2f> pts_2d,
-                    const std::vector<int> charuco_id,
-                    std::shared_ptr<Camera> cam,
-                    std::shared_ptr<Board> board_3d) {
+                   const std::vector<cv::Point2f> pts_2d,
+                   const std::vector<int> charuco_id,
+                   std::shared_ptr<Camera> cam,
+                   std::shared_ptr<Board> board_3d) {
   frame_id_ = frame_id;
   camera_id_ = camera_id;
   board_id_ = board_id;

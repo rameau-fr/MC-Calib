@@ -14,8 +14,7 @@
  * Relies on boost. Reference:
  * https://www.boost.org/doc/libs/1_75_0/libs/graph/example/dijkstra-example.cpp
  */
-class Graph final
-{
+class Graph final {
 public:
   // edge weight
   typedef boost::property<boost::edge_weight_t, double> EdgeWeightProperty;

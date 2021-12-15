@@ -15,8 +15,8 @@
  * @param new_obj_obs object to be added
  * @param object_idx object index
  */
-Object3DObs::Object3DObs(std::shared_ptr<Object3D> obj_obs, const int object_idx) 
-{
+Object3DObs::Object3DObs(std::shared_ptr<Object3D> obj_obs,
+                         const int object_idx) {
   object_3d_ = obj_obs;
   object_3d_id_ = object_idx;
 }

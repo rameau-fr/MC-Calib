@@ -34,8 +34,7 @@ double getRotationError(cv::Mat a, cv::Mat b) {
 
 Calibration calibrate(std::string config_path) {
   // calibrate
-  Calibration Calib;
-  Calib.initialization(config_path);
+  Calibration Calib(config_path);
   Calib.boardExtraction();
   Calib.initIntrinsic();
   Calib.calibrate3DObjects();

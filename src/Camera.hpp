@@ -21,8 +21,7 @@
  * - boards observation
  * - object observation
  */
-class Camera final
-{
+class Camera final {
 public:
   // datastructure for this camera
   std::map<int, std::weak_ptr<BoardObs>>
