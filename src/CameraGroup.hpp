@@ -45,9 +45,9 @@ public:
   int cam_group_idx_;
 
   // Functions
-  CameraGroup();
+  CameraGroup() = delete;
   ~CameraGroup();
-  void initializeCameraGroup(const int id_ref_cam, const int cam_group_idx);
+  CameraGroup(const int id_ref_cam, const int cam_group_idx);
   void insertCamera(std::shared_ptr<Camera> new_camera);
   void insertNewObjectObservation(
       std::shared_ptr<Object3DObs> new_object_observation);

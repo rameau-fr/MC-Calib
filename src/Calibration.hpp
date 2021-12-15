@@ -134,11 +134,10 @@ public:
   void merge3DObjects();
 
   // Functions
-  Calibration();
+  Calibration() = delete;
   ~Calibration(){};
-  void initialization(
-      const std::string config_path); // initialize the charuco pattern, nb
-                                      // of cameras, nb of boards etc.
+  Calibration(const std::string config_path); // initialize the charuco pattern, nb
+                                              // of cameras, nb of boards etc.
   void boardExtraction();
   void detectBoards(
       const cv::Mat image, const int cam_idx, const int frame_idx,

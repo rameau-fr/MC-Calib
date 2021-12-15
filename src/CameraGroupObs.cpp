@@ -8,15 +8,12 @@
 
 #include "CameraGroupObs.hpp"
 
-CameraGroupObs::CameraGroupObs() {}
-
 /**
  * @brief Associate this observation with its respective camera group
  *
  * @param new_cam_group camera group to be added
  */
-void CameraGroupObs::insertCameraGroup(
-    std::shared_ptr<CameraGroup> new_cam_group) {
+CameraGroupObs::CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group) {
   cam_group_ = new_cam_group;
   cam_group_idx_ = new_cam_group->cam_group_idx_;
 }

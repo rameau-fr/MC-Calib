@@ -32,8 +32,9 @@ public:
       object_observations_; // Objects stored
 
   // Functions
-  CameraObs();
+  CameraObs() = delete;
   ~CameraObs(){};
+  CameraObs(std::shared_ptr<BoardObs> new_board);
   void insertNewBoard(std::shared_ptr<BoardObs> new_board);
   void insertNewObject(std::shared_ptr<Object3DObs> new_object);
 };

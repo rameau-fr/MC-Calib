@@ -8,15 +8,13 @@
 #include "Frame.hpp"
 #include "logger.h"
 
-Board::Board() {}
-
 /**
- * @brief Initialize parameters of the board
+ * @brief Initialize Board object
  *
  * @param config_path path to the configuration file
  * @param board_idx index of the board
  */
-void Board::initParams(const std::string config_path, const int board_idx) {
+Board::Board(const std::string config_path, const int board_idx) {
   std::vector<int> number_x_square_per_board, number_y_square_per_board;
   std::vector<double> square_size_per_board;
   std::vector<int> boards_index;

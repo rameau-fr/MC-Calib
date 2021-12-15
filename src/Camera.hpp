@@ -45,7 +45,8 @@ public:
   int cam_idx_;
 
   // Functions
-  Camera();
+  Camera() = delete;
+  Camera(const int cam_idx, const int distortion_model);
   ~Camera() { delete[] intrinsics_; };
   void insertNewBoard(std::shared_ptr<BoardObs> newBoard);
   void insertNewFrame(std::shared_ptr<Frame> newFrame);

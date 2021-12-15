@@ -65,10 +65,9 @@ public:
   bool valid_ = true;
 
   // Functions
-  Object3DObs();
+  Object3DObs() = delete;
   ~Object3DObs();
-  void initializeObject(std::shared_ptr<Object3D> obj_obs,
-                        const int object_idx);
+  Object3DObs(std::shared_ptr<Object3D> obj_obs, const int object_idx);
   void insertNewBoardObs(std::shared_ptr<BoardObs> new_board_obs);
   void getPoseVec(cv::Mat &R, cv::Mat &T) const;
   cv::Mat getPoseMat() const;

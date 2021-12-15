@@ -6,7 +6,9 @@
 
 #include "CameraObs.hpp"
 
-CameraObs::CameraObs() {}
+CameraObs::CameraObs(std::shared_ptr<BoardObs> new_board) {
+  insertNewBoard(new_board);
+}
 
 /**
  * @brief Insert new board observation in the camera observation

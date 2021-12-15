@@ -53,10 +53,9 @@ public:
   std::map<int, std::weak_ptr<Frame>> frames_;
 
   // Functions
-  Object3D();
+  Object3D() = delete;
   ~Object3D();
-  void initializeObject3D(const int nb_boards, const int ref_board_id,
-                          const int obj_id, const std::vector<double> color);
+  Object3D(const int nb_boards, const int ref_board_id, const int obj_id, const std::vector<double> color);
   void insertBoardInObject(std::shared_ptr<Board> new_board);
   void insertNewObject(std::shared_ptr<Object3DObs> new_object);
   void insertNewFrame(std::shared_ptr<Frame> new_frame);

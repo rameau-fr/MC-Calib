@@ -44,9 +44,9 @@ public:
   cv::Ptr<cv::aruco::CharucoBoard> charuco_board_; // vector of charuco boards
 
   // Functions
-  Board();
+  Board() = delete;
   ~Board(){};
-  void initParams(const std::string config, const int board_idx);
+  Board(const std::string config, const int board_idx);
   void insertNewBoard(std::shared_ptr<BoardObs> new_board);
   void insertNewFrame(std::shared_ptr<Frame> new_frame);
 };
