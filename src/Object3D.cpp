@@ -29,13 +29,9 @@ void Object3D::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
  * @param color color of the 3D object
  */
 Object3D::Object3D(const int nb_boards, const int ref_board_id,
-                   const int obj_id, const std::vector<double> color) {
-  nb_boards_ = nb_boards;
-  ref_board_id_ = ref_board_id;
-  obj_id_ = obj_id;
-  nb_pts_ = 0;
-  color_ = color;
-}
+                   const int obj_id, const std::vector<double> color)
+    : nb_boards_(nb_boards), ref_board_id_(ref_board_id), obj_id_(obj_id),
+      nb_pts_(0), color_(color){};
 
 /**
  * @brief Insert a new board in the object

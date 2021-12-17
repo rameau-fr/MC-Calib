@@ -17,10 +17,8 @@
  * @param id_ref_cam index of the reference camera
  * @param cam_group_idx index of the camera group
  */
-CameraGroup::CameraGroup(const int id_ref_cam, const int cam_group_idx) {
-  id_ref_cam_ = id_ref_cam;
-  cam_group_idx_ = cam_group_idx;
-}
+CameraGroup::CameraGroup(const int id_ref_cam, const int cam_group_idx)
+    : id_ref_cam_(id_ref_cam), cam_group_idx_(cam_group_idx){};
 
 /**
  * @brief Insert a new camera in the group
