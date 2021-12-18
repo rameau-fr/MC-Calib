@@ -19,7 +19,7 @@
  * A frame is all the observation from all the synchronized cameras at a given
  * time.
  */
-class Frame {
+class Frame final {
 public:
   int frame_idx_;
 
@@ -47,8 +47,9 @@ public:
   std::map<int, std::string> frame_path_; // camera_id // path
 
   // Functions
-  Frame();
+  Frame() = delete;
   ~Frame(){};
+  Frame(const int frame_idx, const int cam_idx, const std::string frame_path);
   void insertNewBoard(std::shared_ptr<BoardObs> newBoard);
   void insertNewCamObs(std::shared_ptr<CameraObs> newCamObs);
   void insertNewObject(std::shared_ptr<Object3DObs> new_object);

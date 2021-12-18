@@ -11,8 +11,6 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
-Object3D::Object3D() {}
-
 /**
  * @brief Insert a new object observation for this 3D object
  *
@@ -30,15 +28,10 @@ void Object3D::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
  * @param obj_id object id
  * @param color color of the 3D object
  */
-void Object3D::initializeObject3D(const int nb_boards, const int ref_board_id,
-                                  const int obj_id,
-                                  const std::vector<double> color) {
-  nb_boards_ = nb_boards;
-  ref_board_id_ = ref_board_id;
-  obj_id_ = obj_id;
-  nb_pts_ = 0;
-  color_ = color;
-}
+Object3D::Object3D(const int nb_boards, const int ref_board_id,
+                   const int obj_id, const std::vector<double> color)
+    : nb_boards_(nb_boards), ref_board_id_(ref_board_id), obj_id_(obj_id),
+      nb_pts_(0), color_(color){};
 
 /**
  * @brief Insert a new board in the object

@@ -6,7 +6,11 @@
 
 #include "Frame.hpp"
 
-Frame::Frame() {}
+Frame::Frame(const int frame_idx, const int cam_idx,
+             const std::string frame_path) {
+  frame_idx_ = frame_idx;
+  frame_path_[cam_idx] = frame_path;
+}
 
 /**
  * @brief Insert new board observation in this frame

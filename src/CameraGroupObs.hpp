@@ -18,7 +18,7 @@ class CameraGroup;
  * - 3D object observations from this camera group observation
  * - camera group corresponding to this observation
  */
-class CameraGroupObs {
+class CameraGroupObs final {
 public:
   // Objects
   std::vector<int> object_idx_; // index of the visible 3d objects
@@ -32,9 +32,9 @@ public:
   std::weak_ptr<CameraGroup> cam_group_;
 
   // Functions
-  CameraGroupObs();
+  CameraGroupObs() = delete;
   ~CameraGroupObs();
-  void insertCameraGroup(std::shared_ptr<CameraGroup> new_cam_group);
+  CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group);
   void
   insertObjectObservation(std::shared_ptr<Object3DObs> new_object_observation);
   void computeObjectsPose();

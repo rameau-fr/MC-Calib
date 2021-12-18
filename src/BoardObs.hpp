@@ -20,7 +20,7 @@ class Board;
  * camera observing the board.
  *
  */
-class BoardObs {
+class BoardObs final {
 public:
   // Indexing
   int frame_id_;
@@ -45,12 +45,12 @@ public:
   bool valid_ = true;
 
   // Functions
-  BoardObs();
+  BoardObs() = delete;
   ~BoardObs() { delete[] pose_; };
-  void init(const int camera_id, const int frame_id, const int board_id,
-            const std::vector<cv::Point2f> pts_2d,
-            const std::vector<int> charuco_id, std::shared_ptr<Camera> cam,
-            std::shared_ptr<Board> board_3d);
+  BoardObs(const int camera_id, const int frame_id, const int board_id,
+           const std::vector<cv::Point2f> pts_2d,
+           const std::vector<int> charuco_id, std::shared_ptr<Camera> cam,
+           std::shared_ptr<Board> board_3d);
   void getPoseVec(cv::Mat &R, cv::Mat &T) const;
   cv::Mat getPoseMat() const;
   void setPoseMat(const cv::Mat Pose);

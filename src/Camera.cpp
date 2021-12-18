@@ -8,7 +8,8 @@
 #include "OptimizationCeres.h"
 #include "logger.h"
 
-Camera::Camera() {}
+Camera::Camera(const int cam_idx, const int distortion_model)
+    : cam_idx_(cam_idx), distortion_model_(distortion_model){};
 
 /**
  * @brief Get camera matrix (K)

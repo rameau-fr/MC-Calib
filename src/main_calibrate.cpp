@@ -14,8 +14,7 @@
 
 void runCalibrationWorkflow(std::string config_path) {
   // Instantiate the calibration and initialize the parameters
-  Calibration Calib;
-  Calib.initialization(config_path);
+  Calibration Calib(config_path);
   Calib.boardExtraction();
   LOG_INFO << "Board extraction done!";
 

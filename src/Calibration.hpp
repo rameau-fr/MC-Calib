@@ -28,7 +28,7 @@
  *
  * Centralization of all the data to perform the calibration.
  */
-class Calibration {
+class Calibration final {
 public:
   // Parameters
   int nb_camera_, nb_board_;
@@ -133,9 +133,9 @@ public:
   void merge3DObjects();
 
   // Functions
-  Calibration();
+  Calibration() = delete;
   ~Calibration(){};
-  void initialization(
+  Calibration(
       const std::string config_path); // initialize the charuco pattern, nb
                                       // of cameras, nb of boards etc.
   void boardExtraction();

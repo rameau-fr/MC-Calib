@@ -9,19 +9,15 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
-Object3DObs::Object3DObs() {}
-
 /**
  * @brief initialize the object in the observation (what board is observed)
  *
  * @param new_obj_obs object to be added
  * @param object_idx object index
  */
-void Object3DObs::initializeObject(std::shared_ptr<Object3D> obj_obs,
-                                   const int object_idx) {
-  object_3d_ = obj_obs;
-  object_3d_id_ = object_idx;
-}
+Object3DObs::Object3DObs(std::shared_ptr<Object3D> obj_obs,
+                         const int object_idx)
+    : object_3d_(obj_obs), object_3d_id_(object_idx){};
 
 /**
  * @brief Insert a new board in the object
