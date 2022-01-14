@@ -1,7 +1,7 @@
 
 # MC-Calib
 
-Toolbox described in the paper ["MultiCamCalib: A Generic Calibration Toolbox for Multi-Camera Systems"]().
+Toolbox described in the paper ["MC-Calib: A generic and robust calibration toolbox for multi-camera systems"](https://www.sciencedirect.com/science/article/abs/pii/S1077314221001818) ([RG](https://www.researchgate.net/publication/357801965_MC-Calib_A_generic_and_robust_calibration_toolbox_for_multi-camera_systems) for open access).
 
 ![](https://github.com/rameau-fr/MC-Calib/blob/master/illustration.png)
 
@@ -315,5 +315,21 @@ The synthetic and real datasets acquired for this paper are freely available via
 
 Please follow `docs/contributing.rst` when introducing changes. 
 
+# Citation
+
+If you use this project in your research, please cite:
+```
+@article{RAMEAU2022103353,
+title = {MC-Calib: A generic and robust calibration toolbox for multi-camera systems},
+journal = {Computer Vision and Image Understanding},
+pages = {103353},
+year = {2022},
+issn = {1077-3142},
+doi = {https://doi.org/10.1016/j.cviu.2021.103353},
+url = {https://www.sciencedirect.com/science/article/pii/S1077314221001818},
+author = {Francois Rameau and Jinsun Park and Oleksandr Bailo and In So Kweon},
+keywords = {Camera calibration, Multi-camera system},
+}
+```
 
 
