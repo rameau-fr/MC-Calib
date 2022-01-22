@@ -3,7 +3,7 @@
 
 Toolbox described in the paper ["MC-Calib: A generic and robust calibration toolbox for multi-camera systems"](https://www.sciencedirect.com/science/article/abs/pii/S1077314221001818) ([RG](https://www.researchgate.net/publication/357801965_MC-Calib_A_generic_and_robust_calibration_toolbox_for_multi-camera_systems) for open access, [preprint](https://github.com/rameau-fr/MC-Calib/issues/4)).
 
-![](https://github.com/rameau-fr/MC-Calib/blob/master/docs/illustration.png)
+![](docs/illustration.png)
 
 # Installation
 
