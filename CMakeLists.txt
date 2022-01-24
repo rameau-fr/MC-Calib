@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(create_charuco)
+project(MC-Calib)
 
 add_definitions(-std=c++14)
 set(CMAKE_CXX_FLAGS "-std=c++14") # required for Ceres https://github.com/colmap/colmap/issues/905#issuecomment-731138700
@@ -66,36 +66,11 @@ endif (DOXYGEN_FOUND)
 
 ##########################################################################
 
+file(GLOB MC_CALIB_SRC CONFIGURE_DEPENDS src/*.cpp src/*.hpp src/*.h)
+list(REMOVE_ITEM MC_CALIB_SRC ${PROJECT_SOURCE_DIR}/src/main_calibrate.cpp ${PROJECT_SOURCE_DIR}/src/main_create_charuco.cpp)
+
 ## Single calibration camera + cube
-add_executable(calibrate src/main_calibrate.cpp
-				src/point_refinement.h
-				src/geometrytools.hpp
-				src/geometrytools.cpp
-				src/Calibration.hpp
-				src/Calibration.cpp
-				src/Camera.hpp
-				src/Camera.cpp
-				src/Board.hpp
-				src/Board.cpp
-				src/CameraObs.hpp
-				src/CameraObs.cpp
-				src/Frame.hpp
-				src/Frame.cpp
-				src/BoardObs.hpp
-				src/BoardObs.cpp
-				src/Object3D.hpp
-				src/Object3D.cpp
-				src/Object3DObs.cpp
-				src/Object3DObs.hpp
-				src/CameraGroup.cpp
-				src/CameraGroup.hpp
-				src/CameraGroupObs.cpp
-				src/CameraGroupObs.hpp
-				src/OptimizationCeres.h
-				src/logger.h
-				src/logger.cpp
-				src/Graph.hpp
-				src/Graph.cpp)
+add_executable(calibrate src/main_calibrate.cpp ${MC_CALIB_SRC})
 
 target_link_libraries(calibrate
  -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log

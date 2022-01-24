@@ -1,9 +1,9 @@
 
 # MC-Calib
 
-Toolbox described in the paper ["MC-Calib: A generic and robust calibration toolbox for multi-camera systems"](https://www.sciencedirect.com/science/article/abs/pii/S1077314221001818) ([RG](https://www.researchgate.net/publication/357801965_MC-Calib_A_generic_and_robust_calibration_toolbox_for_multi-camera_systems) for open access).
+Toolbox described in the paper ["MC-Calib: A generic and robust calibration toolbox for multi-camera systems"](https://www.sciencedirect.com/science/article/abs/pii/S1077314221001818) ([RG](https://www.researchgate.net/publication/357801965_MC-Calib_A_generic_and_robust_calibration_toolbox_for_multi-camera_systems) for open access, [preprint](https://github.com/rameau-fr/MC-Calib/issues/4)).
 
-![](https://github.com/rameau-fr/MC-Calib/blob/master/illustration.png)
+![](docs/illustration.png)
 
 # Installation
 
@@ -34,8 +34,8 @@ There are several ways to get the environment ready. Choose any of them:
                   --env="QT_X11_NO_MITSHM=1" \
                   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
                   --volume="$HOME/.Xauthority:/home/$USER/.Xauthority:rw" \
-                  --volume="${PWD}:/home/$USER/MultiCamCalib" \
-                  --volume="PATH_TO_DATA:/home/$USER/MultiCamCalib/data" \
+                  --volume="${PWD}:/home/$USER/MC-Calib" \
+                  --volume="PATH_TO_DATA:/home/$USER/MC-Calib/data" \
                   frameau/opencv-ceres
       #xhost -local:root  # resetting permissions
       ```
@@ -116,7 +116,7 @@ Then the following should do the job of compiling the code:
       number_x_square_per_board: [10,5]
       number_y_square_per_board: [3,4]
       ```
-      A sample of Charuco boards is provided in [board_samples](board_samples).
+      A sample of Charuco boards is provided in [board_samples](docs/board_samples).
       Note: the board images are saved to the root folder where the code is executed.
 
 2. **Print your boards**
