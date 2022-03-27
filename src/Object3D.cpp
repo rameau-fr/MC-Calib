@@ -172,16 +172,11 @@ void Object3D::refineObject(const int nb_iterations) {
   ceres::Problem problem;
 
   // Iterate through the object obs
-  for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj_obs =
-           object_observations_.begin();
-       it_obj_obs != object_observations_.end(); ++it_obj_obs) {
-    std::shared_ptr<Object3DObs> current_object_obs = it_obj_obs->second.lock();
+  for (const auto &it_obj_obs : object_observations_) {
+    std::shared_ptr<Object3DObs> current_object_obs = it_obj_obs.second.lock();
     if (current_object_obs) {
-      for (std::map<int, std::weak_ptr<BoardObs>>::iterator it_board_obs =
-               current_object_obs->board_observations_.begin();
-           it_board_obs != current_object_obs->board_observations_.end();
-           ++it_board_obs) {
-        auto board_obs_ptr = it_board_obs->second.lock();
+      for (const auto &it_board_obs : current_object_obs->board_observations_) {
+        auto board_obs_ptr = it_board_obs.second.lock();
         if (board_obs_ptr && board_obs_ptr->valid_ == true) {
           std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
           if (board_3d_ptr) {
@@ -235,9 +230,8 @@ void Object3D::refineObject(const int nb_iterations) {
   ceres::Solve(options, &problem, &summary);
 
   // Update the pts3d in the object
-  for (std::map<int, std::weak_ptr<Board>>::iterator it_board = boards_.begin();
-       it_board != boards_.end(); ++it_board) {
-    auto board_ptr = it_board->second.lock();
+  for (const auto &it_board : boards_) {
+    auto board_ptr = it_board.second.lock();
     if (board_ptr) {
       int board_idx = board_ptr->board_id_;
 
@@ -261,9 +255,8 @@ void Object3D::refineObject(const int nb_iterations) {
  */
 void Object3D::updateObjectPts() {
   // Update the pts3d in the object
-  for (std::map<int, std::weak_ptr<Board>>::iterator it_board = boards_.begin();
-       it_board != boards_.end(); ++it_board) {
-    auto board_ptr = it_board->second.lock();
+  for (const auto &it_board : boards_) {
+    auto board_ptr = it_board.second.lock();
     if (board_ptr) {
       int board_idx = board_ptr->board_id_;
 

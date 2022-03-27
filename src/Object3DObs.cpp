@@ -237,10 +237,10 @@ cv::Mat Object3DObs::getTransInGroupVec() const {
  */
 void Object3DObs::estimatePose(const float ransac_thresh) {
   std::vector<cv::Point3f> object_pts_temp;
-  for (int i = 0; i < pts_id_.size(); i++) {
+  for (const auto &pt_id : pts_id_) {
     auto object_3d_ptr = object_3d_.lock();
     if (object_3d_ptr)
-      object_pts_temp.push_back(object_3d_ptr->pts_3d_[pts_id_[i]]);
+      object_pts_temp.push_back(object_3d_ptr->pts_3d_[pt_id]);
   }
 
   // Estimate the pose using a RANSAC
@@ -268,10 +268,10 @@ void Object3DObs::estimatePose(const float ransac_thresh) {
 float Object3DObs::computeReprojectionError() const {
   float sum_err_object = 0.0;
   std::vector<cv::Point3f> object_pts_temp;
-  for (int i = 0; i < pts_id_.size(); i++) {
+  for (const auto &pt_id : pts_id_) {
     auto object_3d_ptr = object_3d_.lock();
     if (object_3d_ptr)
-      object_pts_temp.push_back(object_3d_ptr->pts_3d_[pts_id_[i]]);
+      object_pts_temp.push_back(object_3d_ptr->pts_3d_[pt_id]);
   }
 
   // Project the 3D pts on the image

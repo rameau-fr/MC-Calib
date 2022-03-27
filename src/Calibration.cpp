@@ -61,10 +61,8 @@ Calibration::Calibration(const std::string config_path) {
     max_board_idx = *max_element(boards_index.begin(), boards_index.end());
   }
   if (square_size_per_board_.size() == 0) {
-    for (int i = 0; i <= max_board_idx; i++) {
-      number_x_square_per_board_.push_back(nb_x_square);
-      number_y_square_per_board_.push_back(nb_y_square);
-    }
+    number_x_square_per_board_.assign(max_board_idx + 1, nb_x_square);
+    number_y_square_per_board_.assign(max_board_idx + 1, nb_y_square);
   }
 
   LOG_INFO << "Nb of cameras : " << nb_camera_
@@ -78,10 +76,8 @@ Calibration::Calibration(const std::string config_path) {
   }
 
   // prepare the distortion type per camera
-  if (distortion_per_camera.size() == 0) {
-    for (int i = 0; i < nb_camera_; i++)
-      distortion_per_camera.push_back(distortion_model);
-  }
+  if (distortion_per_camera.size() == 0)
+    distortion_per_camera.assign(nb_camera_, distortion_model);
 
   // Initialize Cameras
   for (int i = 0; i < nb_camera_; i++) {
@@ -92,8 +88,8 @@ Calibration::Calibration(const std::string config_path) {
 
   // Prepare the charuco patterns
   if (boards_index.size() == 0) {
-    for (int i = 0; i < nb_board_; i++)
-      boards_index.push_back(i);
+    boards_index.resize(nb_board_);
+    std::iota(boards_index.begin(), boards_index.end(), 0);
   }
   std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
   int offset_count = 0;
@@ -244,10 +240,10 @@ void Calibration::detectBoards(const cv::Mat image, const int cam_idx,
 
       // Check for colinnerarity
       std::vector<cv::Point2f> pts_on_board_2d;
-      for (unsigned int k = 0; k < charuco_idx[i].size(); k++) {
+      for (const auto &charuco_idx_at_board_id : charuco_idx[i]) {
         cv::Point2f temp_pts;
-        temp_pts.x = boards_3d_[i]->pts_3d_[charuco_idx[i][k]].x;
-        temp_pts.y = boards_3d_[i]->pts_3d_[charuco_idx[i][k]].y;
+        temp_pts.x = boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].x;
+        temp_pts.y = boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].y;
         pts_on_board_2d.push_back(temp_pts);
       }
       double dum_a, dum_b, dum_c;
@@ -281,16 +277,11 @@ void Calibration::saveCamerasParams() {
           ? save_path_ + camera_params_file_name_
           : save_path_ + "calibrated_cameras_data.yml";
   cv::FileStorage fs(save_path_camera_params, cv::FileStorage::WRITE);
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it_cam_group =
-           cam_group_.begin();
-       it_cam_group != cam_group_.end(); ++it_cam_group) {
-
-    std::shared_ptr<CameraGroup> cur_cam_group = it_cam_group->second;
+  for (const auto &it_cam_group : cam_group_) {
+    std::shared_ptr<CameraGroup> cur_cam_group = it_cam_group.second;
     fs << "nb_camera" << nb_camera_;
-    for (std::map<int, std::weak_ptr<Camera>>::iterator it_cam =
-             cur_cam_group->cameras_.begin();
-         it_cam != cur_cam_group->cameras_.end(); ++it_cam) {
-      std::shared_ptr<Camera> cur_cam = it_cam->second.lock();
+    for (const auto &it_cam : cur_cam_group->cameras_) {
+      std::shared_ptr<Camera> cur_cam = it_cam.second.lock();
       if (cur_cam) {
         fs << "camera_" + std::to_string(cur_cam->cam_idx_);
         cv::Mat cam_matrix;
@@ -300,7 +291,7 @@ void Calibration::saveCamerasParams() {
            << "camera_matrix" << cam_matrix;
         fs << "distortion_vector" << distortion_vector;
         fs << "distortion_type" << cur_cam->distortion_model_;
-        fs << "camera_group" << it_cam_group->first;
+        fs << "camera_group" << it_cam_group.first;
         fs << "img_width" << cur_cam->im_cols_;
         fs << "img_height" << cur_cam->im_rows_;
         fs << "camera_pose_matrix"
@@ -322,10 +313,8 @@ void Calibration::save3DObj() {
   std::string save_path_object = save_path_ + "calibrated_objects_data.yml";
   cv::FileStorage fs(save_path_object, cv::FileStorage::WRITE);
 
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it_obj =
-           object_3d_.begin();
-       it_obj != object_3d_.end(); ++it_obj) {
-    std::shared_ptr<Object3D> cur_object = it_obj->second;
+  for (const auto &it_obj : object_3d_) {
+    std::shared_ptr<Object3D> cur_object = it_obj.second;
     fs << "object_" + std::to_string(cur_object->obj_id_);
     int obj_nb_pts = cur_object->nb_pts_;
     cv::Mat pts_mat(3, obj_nb_pts, CV_32FC1);
@@ -350,18 +339,14 @@ void Calibration::save3DObjPose() {
   std::string save_path_object_pose =
       save_path_ + "calibrated_objects_pose_data.yml";
   cv::FileStorage fs(save_path_object_pose, cv::FileStorage::WRITE);
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it_obj =
-           object_3d_.begin();
-       it_obj != object_3d_.end(); ++it_obj) {
-    std::shared_ptr<Object3D> cur_object = it_obj->second;
+  for (const auto &it_obj : object_3d_) {
+    std::shared_ptr<Object3D> cur_object = it_obj.second;
     fs << "object_" + std::to_string(cur_object->obj_id_);
     fs << "{";
     cv::Mat pose_mat(6, cur_object->object_observations_.size(), CV_64FC1);
     int a = 0;
-    for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj_obs =
-             cur_object->object_observations_.begin();
-         it_obj_obs != cur_object->object_observations_.end(); ++it_obj_obs) {
-      std::shared_ptr<Object3DObs> cur_object_obs = it_obj_obs->second.lock();
+    for (const auto &it_obj_obs : cur_object->object_observations_) {
+      std::shared_ptr<Object3DObs> cur_object_obs = it_obj_obs.second.lock();
       if (cur_object_obs) {
         cv::Mat rot, trans;
         cur_object_obs->getPoseVec(rot, trans);
@@ -393,19 +378,17 @@ void Calibration::displayBoards(const cv::Mat image, const int cam_idx,
   std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator it =
       cams_obs_.find(cam_frame); // Check if a frame exist
   if (it != cams_obs_.end()) {
-    for (std::map<int, std::weak_ptr<BoardObs>>::iterator it =
-             cams_obs_[cam_frame]->board_observations_.begin();
-         it != cams_obs_[cam_frame]->board_observations_.end(); ++it) {
-      auto board_obs_ptr = it->second.lock();
+    for (const auto &it : cams_obs_[cam_frame]->board_observations_) {
+      auto board_obs_ptr = it.second.lock();
       if (board_obs_ptr) {
         std::vector<cv::Point2f> current_pts = board_obs_ptr->pts_2d_;
         std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
         if (board_3d_ptr) {
           std::vector<double> color_temp = board_3d_ptr->color_;
-          for (int j = 0; j < current_pts.size(); j++) {
-            LOG_DEBUG << "Pts x :: " << current_pts[j].x << "   y :: ";
-            // Current_pts[j].y  ;
-            cv::circle(image, cv::Point(current_pts[j].x, current_pts[j].y), 4,
+          for (const auto &current_pt : current_pts) {
+            LOG_DEBUG << "Pts x :: " << current_pt.x
+                      << "   y :: " << current_pt.y;
+            cv::circle(image, cv::Point(current_pt.x, current_pt.y), 4,
                        cv::Scalar(color_temp[0], color_temp[1], color_temp[2]),
                        cv::FILLED, 8, 0);
           }
@@ -501,26 +484,23 @@ void Calibration::initializeCalibrationAllCam() {
 
     LOG_INFO << "Initializing camera calibration from " << cam_params_path_;
 
-    for (std::map<int, std::shared_ptr<Camera>>::iterator it = cams_.begin();
-         it != cams_.end(); ++it) {
+    for (const auto &it : cams_) {
       // extract camera matrix and distortion coefficients from the file
-      cv::FileNode loaded_cam_params =
-          fs["camera_" + std::to_string(it->first)];
+      cv::FileNode loaded_cam_params = fs["camera_" + std::to_string(it.first)];
 
       cv::Mat camera_matrix;
       cv::Mat distortion_coeffs;
       loaded_cam_params["camera_matrix"] >> camera_matrix;
       loaded_cam_params["distortion_vector"] >> distortion_coeffs;
 
-      it->second->setIntrinsics(camera_matrix, distortion_coeffs);
+      it.second->setIntrinsics(camera_matrix, distortion_coeffs);
     }
 
   } else {
     LOG_INFO << "Initializing camera calibration using images";
 
-    for (std::map<int, std::shared_ptr<Camera>>::iterator it = cams_.begin();
-         it != cams_.end(); ++it)
-      it->second->initializeCalibration();
+    for (const auto &it : cams_)
+      it.second->initializeCalibration();
   }
 }
 
@@ -531,10 +511,8 @@ void Calibration::initializeCalibrationAllCam() {
  *
  */
 void Calibration::estimatePoseAllBoards() {
-  for (std::map<int, std::shared_ptr<BoardObs>>::iterator it =
-           board_observations_.begin();
-       it != board_observations_.end(); ++it)
-    it->second->estimatePose(ransac_thresh_);
+  for (const auto &it : board_observations_)
+    it.second->estimatePose(ransac_thresh_);
 }
 
 /**
@@ -543,9 +521,8 @@ void Calibration::estimatePoseAllBoards() {
  *
  */
 void Calibration::refineIntrinsicAndPoseAllCam() {
-  for (std::map<int, std::shared_ptr<Camera>>::iterator it = cams_.begin();
-       it != cams_.end(); ++it)
-    it->second->refineIntrinsicCalibration(nb_iterations_);
+  for (const auto &it : cams_)
+    it.second->refineIntrinsicCalibration(nb_iterations_);
 }
 
 /**
@@ -555,10 +532,8 @@ void Calibration::refineIntrinsicAndPoseAllCam() {
 void Calibration::computeReproErrAllBoard() {
   std::vector<float> err_vec;
   float sum_err = 0;
-  for (std::map<int, std::shared_ptr<BoardObs>>::iterator it =
-           board_observations_.begin();
-       it != board_observations_.end(); ++it) {
-    float err = it->second->computeReprojectionError();
+  for (const auto &it : board_observations_) {
+    float err = it.second->computeReprojectionError();
   }
 }
 
@@ -571,24 +546,18 @@ void Calibration::computeReproErrAllBoard() {
  */
 void Calibration::computeBoardsPairPose() {
   board_pose_pairs_.clear();
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator it =
-           cams_obs_.begin();
-       it != cams_obs_.end(); ++it) {
-    std::shared_ptr<CameraObs> current_board = it->second;
+  for (const auto &it : cams_obs_) {
+    std::shared_ptr<CameraObs> current_board = it.second;
     std::vector<int> BoardIdx = current_board->board_idx_;
 
     if (BoardIdx.size() > 1) // if more than one board is visible
     {
-      for (std::map<int, std::weak_ptr<BoardObs>>::iterator it1 =
-               current_board->board_observations_.begin();
-           it1 != current_board->board_observations_.end(); ++it1) {
-        auto board1_obs_ptr = it1->second.lock();
+      for (const auto &it1 : current_board->board_observations_) {
+        auto board1_obs_ptr = it1.second.lock();
         if (board1_obs_ptr) {
           int boardid1 = board1_obs_ptr->board_id_;
-          for (std::map<int, std::weak_ptr<BoardObs>>::iterator it2 =
-                   current_board->board_observations_.begin();
-               it2 != current_board->board_observations_.end(); ++it2) {
-            auto board2_obs_ptr = it2->second.lock();
+          for (const auto &it2 : current_board->board_observations_) {
+            auto board2_obs_ptr = it2.second.lock();
             if (board2_obs_ptr) {
               int boardid2 = board2_obs_ptr->board_id_;
               cv::Mat proj_1 = board1_obs_ptr->getPoseMat();
@@ -620,11 +589,9 @@ void Calibration::computeBoardsPairPose() {
  */
 void Calibration::initInterBoardsTransform() {
   inter_board_transform_.clear();
-  for (std::map<std::pair<int, int>, std::vector<cv::Mat>>::iterator it =
-           board_pose_pairs_.begin();
-       it != board_pose_pairs_.end(); ++it) {
-    std::pair<int, int> board_pair_idx = it->first;
-    std::vector<cv::Mat> board_poses_temp = it->second;
+  for (const auto &it : board_pose_pairs_) {
+    std::pair<int, int> board_pair_idx = it.first;
+    std::vector<cv::Mat> board_poses_temp = it.second;
     cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
     cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
 
@@ -643,9 +610,9 @@ void Calibration::initInterBoardsTransform() {
     // Median
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
-    for (int i = 0; i < board_poses_temp.size(); i++) {
+    for (const auto &board_pose_temp : board_poses_temp) {
       cv::Mat R, T;
-      Proj2RT(board_poses_temp[i], R, T);
+      Proj2RT(board_pose_temp, R, T);
       r1.push_back(R.at<double>(0));
       r2.push_back(R.at<double>(1));
       r3.push_back(R.at<double>(2));
@@ -681,18 +648,15 @@ void Calibration::initInterBoardsGraph() {
   covis_boards_graph_.clearGraph();
 
   // Each board is a vertex if it has been observed at least once
-  for (std::map<int, std::shared_ptr<Board>>::iterator it = boards_3d_.begin();
-       it != boards_3d_.end(); ++it) {
-    if (it->second->board_observations_.size() > 0) {
-      covis_boards_graph_.addVertex(it->second->board_id_);
+  for (const auto &it : boards_3d_) {
+    if (it.second->board_observations_.size() > 0) {
+      covis_boards_graph_.addVertex(it.second->board_id_);
     }
   }
 
-  for (std::map<std::pair<int, int>, std::vector<cv::Mat>>::iterator it =
-           board_pose_pairs_.begin();
-       it != board_pose_pairs_.end(); ++it) {
-    std::pair<int, int> board_pair_idx = it->first;
-    std::vector<cv::Mat> board_poses_temp = it->second;
+  for (const auto &it : board_pose_pairs_) {
+    std::pair<int, int> board_pair_idx = it.first;
+    std::vector<cv::Mat> board_poses_temp = it.second;
     covis_boards_graph_.addEdge(board_pair_idx.first, board_pair_idx.second,
                                 ((double)1 / board_poses_temp.size()));
   }
@@ -787,12 +751,9 @@ void Calibration::init3DObjects() {
 void Calibration::init3DObjectObs(const int object_idx) {
 
   // Iterate through cameraobs
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator
-           it_cam_obs = cams_obs_.begin();
-       it_cam_obs != cams_obs_.end(); ++it_cam_obs) {
-    std::pair<int, int> cam_id_frame_id =
-        it_cam_obs->first; // Cam ind/Frame ind
-    std::shared_ptr<CameraObs> current_camobs = it_cam_obs->second;
+  for (const auto &it_cam_obs : cams_obs_) {
+    std::pair<int, int> cam_id_frame_id = it_cam_obs.first; // Cam ind/Frame ind
+    std::shared_ptr<CameraObs> current_camobs = it_cam_obs.second;
 
     // Declare the 3D object observed in this camera observation
     // Keep in mind that a single object can be observed in one image
@@ -802,11 +763,8 @@ void Calibration::init3DObjectObs(const int object_idx) {
     // Check the boards observing this camera
     std::map<int, std::weak_ptr<BoardObs>> current_board_obs =
         current_camobs->board_observations_;
-    for (std::map<int, std::weak_ptr<BoardObs>>::iterator it_board_obs =
-             current_board_obs.begin();
-         it_board_obs != current_board_obs.end(); ++it_board_obs) {
-
-      auto board_obs_ptr = it_board_obs->second.lock();
+    for (const auto &it_board_obs : current_board_obs) {
+      auto board_obs_ptr = it_board_obs.second.lock();
       if (board_obs_ptr) {
         // Check if this board correspond to the object of interest
         std::map<int, std::weak_ptr<Board>>::iterator it =
@@ -823,7 +781,7 @@ void Calibration::init3DObjectObs(const int object_idx) {
       // Update the camobs//frame//camera//3DObject
       cams_obs_[cam_id_frame_id]->insertNewObject(object_obs);
       frames_[cam_id_frame_id.second]->insertNewObject(object_obs);
-      cams_[it_cam_obs->first.first]->insertNewObject(object_obs);
+      cams_[it_cam_obs.first.first]->insertNewObject(object_obs);
       object_3d_[object_idx]->insertNewObject(object_obs);
       object_3d_[object_idx]->insertNewFrame(frames_[cam_id_frame_id.second]);
       insertNewObjectObservation(object_obs);
@@ -836,11 +794,8 @@ void Calibration::init3DObjectObs(const int object_idx) {
  *
  */
 void Calibration::initAll3DObjectObs() {
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it =
-           object_3d_.begin();
-       it != object_3d_.end(); ++it) {
-    this->init3DObjectObs(it->first);
-  }
+  for (const auto &it : object_3d_)
+    this->init3DObjectObs(it.first);
 }
 
 /**
@@ -848,10 +803,8 @@ void Calibration::initAll3DObjectObs() {
  *
  */
 void Calibration::estimatePoseAllObjects() {
-  for (std::map<int, std::shared_ptr<Object3DObs>>::iterator it =
-           object_observations_.begin();
-       it != object_observations_.end(); ++it)
-    it->second->estimatePose(ransac_thresh_);
+  for (const auto &it : object_observations_)
+    it.second->estimatePose(ransac_thresh_);
 }
 
 /**
@@ -860,11 +813,8 @@ void Calibration::estimatePoseAllObjects() {
  */
 void Calibration::computeReproErrAllObject() {
   std::vector<float> err_vec;
-  for (std::map<int, std::shared_ptr<Object3DObs>>::iterator it =
-           object_observations_.begin();
-       it != object_observations_.end(); ++it) {
-    err_vec.push_back(it->second->computeReprojectionError());
-  }
+  for (const auto &it : object_observations_)
+    err_vec.push_back(it.second->computeReprojectionError());
 
   LOG_INFO << "Mean Error "
            << std::accumulate(err_vec.begin(), err_vec.end(), 0.0) /
@@ -876,10 +826,8 @@ void Calibration::computeReproErrAllObject() {
  *
  */
 void Calibration::refineAllObject3D() {
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it =
-           object_3d_.begin();
-       it != object_3d_.end(); ++it)
-    it->second->refineObject(nb_iterations_);
+  for (const auto &it : object_3d_)
+    it.second->refineObject(nb_iterations_);
 }
 
 /**
@@ -890,29 +838,20 @@ void Calibration::refineAllObject3D() {
 void Calibration::computeCamerasPairPose() {
   camera_pose_pairs_.clear();
   // Iterate through frames
-  for (std::map<int, std::shared_ptr<Frame>>::iterator it_frame =
-           frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-    if (it_frame->second->board_observations_.size() >
-        1) // if more than one observation is available
-    {
+  for (const auto &it_frame : frames_) {
+    // if more than one observation is available
+    if (it_frame.second->board_observations_.size() > 1) {
       // Iterate through the object observation
       std::map<int, std::weak_ptr<Object3DObs>> frame_obj_obs =
-          it_frame->second->object_observations_;
-      for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_objectobs1 =
-               frame_obj_obs.begin();
-           it_objectobs1 != frame_obj_obs.end(); ++it_objectobs1) {
-
-        auto obj_obs_1_ptr = it_objectobs1->second.lock();
+          it_frame.second->object_observations_;
+      for (const auto &it_objectobs1 : frame_obj_obs) {
+        auto obj_obs_1_ptr = it_objectobs1.second.lock();
         if (obj_obs_1_ptr) {
           int cam_id_1 = obj_obs_1_ptr->camera_id_;
           int obj_id_1 = obj_obs_1_ptr->object_3d_id_;
           cv::Mat pose_cam_1 = obj_obs_1_ptr->getPoseMat();
-          for (std::map<int, std::weak_ptr<Object3DObs>>::iterator
-                   it_objectobs2 = frame_obj_obs.begin();
-               it_objectobs2 != frame_obj_obs.end(); ++it_objectobs2) {
-
-            auto obj_obs_2_ptr = it_objectobs2->second.lock();
+          for (const auto &it_objectobs2 : frame_obj_obs) {
+            auto obj_obs_2_ptr = it_objectobs2.second.lock();
             if (obj_obs_2_ptr) {
               int cam_id_2 = obj_obs_2_ptr->camera_id_;
               int obj_id_2 = obj_obs_2_ptr->object_3d_id_;
@@ -945,11 +884,9 @@ void Calibration::computeCamerasPairPose() {
  */
 void Calibration::initInterCamerasTransform() {
   inter_camera_transform_.clear();
-  for (std::map<std::pair<int, int>, std::vector<cv::Mat>>::iterator it =
-           camera_pose_pairs_.begin();
-       it != camera_pose_pairs_.end(); ++it) {
-    std::pair<int, int> camera_pair_idx = it->first;
-    std::vector<cv::Mat> camera_poses_temp = it->second;
+  for (const auto &it : camera_pose_pairs_) {
+    std::pair<int, int> camera_pair_idx = it.first;
+    std::vector<cv::Mat> camera_poses_temp = it.second;
     cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
     cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
 
@@ -966,12 +903,11 @@ void Calibration::initInterCamerasTransform() {
     average_rotation = average_rotation / camera_poses_temp.size();*/
 
     // Median technique
-    // Median
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
-    for (int i = 0; i < camera_poses_temp.size(); i++) {
+    for (const auto &camera_pose_temp : camera_poses_temp) {
       cv::Mat R, T;
-      Proj2RT(camera_poses_temp[i], R, T);
+      Proj2RT(camera_pose_temp, R, T);
       r1.push_back(R.at<double>(0));
       r2.push_back(R.at<double>(1));
       r3.push_back(R.at<double>(2));
@@ -1000,19 +936,15 @@ void Calibration::initInterCamerasTransform() {
 void Calibration::initInterCamerasGraph() {
   covis_camera_graph_.clearGraph();
   // Each camera is a vertex if it has observed at least one object
-  for (std::map<int, std::shared_ptr<Camera>>::iterator it =
-           this->cams_.begin();
-       it != cams_.end(); ++it) {
-    if (it->second->board_observations_.size() > 0) {
-      covis_camera_graph_.addVertex(it->second->cam_idx_);
+  for (const auto &it : this->cams_) {
+    if (it.second->board_observations_.size() > 0) {
+      covis_camera_graph_.addVertex(it.second->cam_idx_);
     }
   }
   // Build the graph with cameras' pairs
-  for (std::map<std::pair<int, int>, std::vector<cv::Mat>>::iterator it =
-           camera_pose_pairs_.begin();
-       it != camera_pose_pairs_.end(); ++it) {
-    std::pair<int, int> camera_pair_idx = it->first;
-    std::vector<cv::Mat> camera_poses_temp = it->second;
+  for (const auto &it : camera_pose_pairs_) {
+    std::pair<int, int> camera_pair_idx = it.first;
+    std::vector<cv::Mat> camera_poses_temp = it.second;
     covis_camera_graph_.addEdge(camera_pair_idx.first, camera_pair_idx.second,
                                 ((double)1 / camera_poses_temp.size()));
   }
@@ -1082,21 +1014,16 @@ void Calibration::initCameraGroupObs(const int camera_group_idx) {
   std::vector<int> cam_in_group = cam_group_[camera_group_idx]->cam_idx;
 
   // Iterate through frame
-  for (std::map<int, std::shared_ptr<Frame>>::iterator it_frame =
-           frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-    int current_frame_id = it_frame->second->frame_idx_;
+  for (const auto &it_frame : frames_) {
+    int current_frame_id = it_frame.second->frame_idx_;
     std::shared_ptr<CameraGroupObs> new_cam_group_obs =
         std::make_shared<CameraGroupObs>(
             cam_group_[camera_group_idx]); // declare a new observation
 
     std::map<int, std::weak_ptr<Object3DObs>> current_object_obs =
-        it_frame->second->object_observations_;
-    for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj_obs =
-             current_object_obs.begin();
-         it_obj_obs != current_object_obs.end(); ++it_obj_obs) {
-
-      auto obj_obs_ptr = it_obj_obs->second.lock();
+        it_frame.second->object_observations_;
+    for (const auto &it_obj_obs : current_object_obs) {
+      auto obj_obs_ptr = it_obj_obs.second.lock();
       if (obj_obs_ptr) {
         int current_cam_id = obj_obs_ptr->camera_id_;
         int current_obj_id = obj_obs_ptr->object_3d_id_;
@@ -1136,10 +1063,8 @@ void Calibration::initCameraGroupObs(const int camera_group_idx) {
  *
  */
 void Calibration::initAllCameraGroupObs() {
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
-    int camera_group_idx = it->second->cam_group_idx_;
+  for (const auto &it : cam_group_) {
+    int camera_group_idx = it.second->cam_group_idx_;
     initCameraGroupObs(camera_group_idx);
   }
 }
@@ -1150,19 +1075,14 @@ void Calibration::initAllCameraGroupObs() {
  *
  */
 void Calibration::refineAllCameraGroup() {
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
+  for (const auto &it : cam_group_) {
     // it->second->computeObjPoseInCameraGroup();
-    it->second->refineCameraGroup(nb_iterations_);
+    it.second->refineCameraGroup(nb_iterations_);
   }
 
   // Update the object3D observation
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraGroupObs>>::iterator
-           it = cams_group_obs_.begin();
-       it != cams_group_obs_.end(); it++) {
-    it->second->updateObjObsPose();
-  }
+  for (const auto &it : cams_group_obs_)
+    it.second->updateObjObsPose();
 }
 
 /**
@@ -1175,41 +1095,31 @@ void Calibration::refineAllCameraGroup() {
 void Calibration::findPairObjectForNonOverlap() {
   no_overlap_object_pair_.clear();
   // Iterate through the camera groups
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it_groups_1 =
-           cam_group_.begin();
-       it_groups_1 != cam_group_.end(); ++it_groups_1) {
-    int group_idx1 = it_groups_1->first;
-    for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it_groups_2 =
-             cam_group_.begin();
-         it_groups_2 != cam_group_.end(); ++it_groups_2) {
-      int group_idx2 = it_groups_2->first;
+  for (const auto &it_groups_1 : cam_group_) {
+    int group_idx1 = it_groups_1.first;
+    for (const auto &it_groups_2 : cam_group_) {
+      int group_idx2 = it_groups_2.first;
       if (group_idx1 != group_idx2) // if the two groups are different
       {
         // Prepare the list of possible objects pairs
         std::map<std::pair<int, int>, int> count_pair_obs;
-        for (std::map<int, std::shared_ptr<Object3D>>::iterator it_obj1 =
-                 object_3d_.begin();
-             it_obj1 != object_3d_.end(); ++it_obj1) {
-          for (std::map<int, std::shared_ptr<Object3D>>::iterator it_obj2 =
-                   object_3d_.begin();
-               it_obj2 != object_3d_.end(); ++it_obj2) {
-            int obj_id1 = it_obj1->second->obj_id_;
-            int obj_id2 = it_obj2->second->obj_id_;
-            if (obj_id1 != obj_id2) {
-              count_pair_obs[std::make_pair(obj_id1, obj_id2)] =
-                  0; // initialize the count to zero
-            }
+        for (const auto &it_obj1 : object_3d_) {
+          for (const auto &it_obj2 : object_3d_) {
+            int obj_id1 = it_obj1.second->obj_id_;
+            int obj_id2 = it_obj2.second->obj_id_;
+            if (obj_id1 != obj_id2)
+              count_pair_obs[std::make_pair(obj_id1, obj_id2)] = 0;
           }
         }
 
         // move to shared_ptr cause there is no = for weak_ptr
         std::map<int, std::shared_ptr<Frame>> it_groups_1_frames;
         std::map<int, std::shared_ptr<Frame>> it_groups_2_frames;
-        for (auto item : it_groups_1->second->frames_) {
+        for (const auto &item : it_groups_1.second->frames_) {
           if (auto frame_ptr = item.second.lock())
             it_groups_1_frames[item.first] = frame_ptr;
         }
-        for (auto item : it_groups_2->second->frames_) {
+        for (const auto &item : it_groups_2.second->frames_) {
           if (auto frame_ptr = item.second.lock())
             it_groups_2_frames[item.first] = frame_ptr;
         }
@@ -1225,32 +1135,26 @@ void Calibration::findPairObjectForNonOverlap() {
 
         // Iterate through the frames and count the occurrence of object pair
         // (to select the pair of object appearing the most)
-        for (std::map<int, std::shared_ptr<Frame>>::iterator it_common_frames =
-                 common_frames.begin();
-             it_common_frames != common_frames.end(); ++it_common_frames) {
+        for (const auto &it_common_frames : common_frames) {
           // Find the index of the observation corresponding to the groups in
           // cam group obs
           auto it_camgroupid_1 =
-              find(it_common_frames->second->cam_group_idx_.begin(),
-                   it_common_frames->second->cam_group_idx_.end(), group_idx1);
+              find(it_common_frames.second->cam_group_idx_.begin(),
+                   it_common_frames.second->cam_group_idx_.end(), group_idx1);
           auto it_camgroupid_2 =
-              find(it_common_frames->second->cam_group_idx_.begin(),
-                   it_common_frames->second->cam_group_idx_.end(), group_idx2);
+              find(it_common_frames.second->cam_group_idx_.begin(),
+                   it_common_frames.second->cam_group_idx_.end(), group_idx2);
           int index_camgroup_1 =
-              it_camgroupid_1 -
-              it_common_frames->second->cam_group_idx_.begin();
+              it_camgroupid_1 - it_common_frames.second->cam_group_idx_.begin();
           int index_camgroup_2 =
-              it_camgroupid_2 -
-              it_common_frames->second->cam_group_idx_.begin();
+              it_camgroupid_2 - it_common_frames.second->cam_group_idx_.begin();
 
           // Access the objects 3D index for both groups
           auto common_frames_cam_group1_obs_ptr =
-              it_common_frames->second
-                  ->cam_group_observations_[index_camgroup_1]
+              it_common_frames.second->cam_group_observations_[index_camgroup_1]
                   .lock();
           auto common_frames_cam_group2_obs_ptr =
-              it_common_frames->second
-                  ->cam_group_observations_[index_camgroup_2]
+              it_common_frames.second->cam_group_observations_[index_camgroup_2]
                   .lock();
           if (common_frames_cam_group1_obs_ptr &&
               common_frames_cam_group2_obs_ptr) {
@@ -1258,18 +1162,12 @@ void Calibration::findPairObjectForNonOverlap() {
                 common_frames_cam_group1_obs_ptr->object_observations_;
             std::map<int, std::weak_ptr<Object3DObs>> object_obs_2 =
                 common_frames_cam_group2_obs_ptr->object_observations_;
-            for (std::map<int, std::weak_ptr<Object3DObs>>::iterator
-                     it_object_obs_1 = object_obs_1.begin();
-                 it_object_obs_1 != object_obs_1.end(); ++it_object_obs_1) {
-
-              auto object_obs_1_ptr = it_object_obs_1->second.lock();
+            for (const auto &it_object_obs_1 : object_obs_1) {
+              auto object_obs_1_ptr = it_object_obs_1.second.lock();
               if (object_obs_1_ptr) {
                 int obj_ind_1 = object_obs_1_ptr->object_3d_id_;
-                for (std::map<int, std::weak_ptr<Object3DObs>>::iterator
-                         it_object_obs_2 = object_obs_2.begin();
-                     it_object_obs_2 != object_obs_2.end(); ++it_object_obs_2) {
-
-                  auto object_obs_2_ptr = it_object_obs_2->second.lock();
+                for (const auto &it_object_obs_2 : object_obs_2) {
+                  auto object_obs_2_ptr = it_object_obs_2.second.lock();
                   if (object_obs_2_ptr) {
                     int obj_ind_2 = object_obs_2_ptr->object_3d_id_;
                     count_pair_obs[std::make_pair(obj_ind_1, obj_ind_2)]++;
@@ -1283,11 +1181,10 @@ void Calibration::findPairObjectForNonOverlap() {
         // find the pair of object with the maximum shared frames
         unsigned currentMax = 0;
         std::pair<int, int> arg_max = std::make_pair(0, 0);
-        for (auto it = count_pair_obs.cbegin(); it != count_pair_obs.cend();
-             ++it) {
-          if (it->second > currentMax) {
-            arg_max = it->first;
-            currentMax = it->second;
+        for (const auto &it : count_pair_obs) {
+          if (it.second > currentMax) {
+            arg_max = it.first;
+            currentMax = it.second;
           }
         }
 
@@ -1334,11 +1231,11 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
   // move to shared_ptr cause there is no = for weak_ptr
   std::map<int, std::shared_ptr<Frame>> cam_group1_frames;
   std::map<int, std::shared_ptr<Frame>> cam_group2_frames;
-  for (auto item : cam_group1->frames_) {
+  for (const auto &item : cam_group1->frames_) {
     if (auto frames_ptr = item.second.lock())
       cam_group1_frames[item.first] = frames_ptr;
   }
-  for (auto item : cam_group2->frames_) {
+  for (const auto &item : cam_group2->frames_) {
     if (auto frames_ptr = item.second.lock())
       cam_group2_frames[item.first] = frames_ptr;
   }
@@ -1353,27 +1250,25 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
 
   // Iterate through common frames and reproject the objects in the images to
   // cluster
-  for (std::map<int, std::shared_ptr<Frame>>::iterator it_common_frames =
-           common_frames.begin();
-       it_common_frames != common_frames.end(); ++it_common_frames) {
+  for (const auto &it_common_frames : common_frames) {
     // Find the index of the observation corresponding to the groups in cam
     // group obs
     auto it_camgroupid_1 =
-        find(it_common_frames->second->cam_group_idx_.begin(),
-             it_common_frames->second->cam_group_idx_.end(), cam_group_id1);
+        find(it_common_frames.second->cam_group_idx_.begin(),
+             it_common_frames.second->cam_group_idx_.end(), cam_group_id1);
     auto it_camgroupid_2 =
-        find(it_common_frames->second->cam_group_idx_.begin(),
-             it_common_frames->second->cam_group_idx_.end(), cam_group_id2);
+        find(it_common_frames.second->cam_group_idx_.begin(),
+             it_common_frames.second->cam_group_idx_.end(), cam_group_id2);
     int index_camgroup_1 =
-        it_camgroupid_1 - it_common_frames->second->cam_group_idx_.begin();
+        it_camgroupid_1 - it_common_frames.second->cam_group_idx_.begin();
     int index_camgroup_2 =
-        it_camgroupid_2 - it_common_frames->second->cam_group_idx_.begin();
+        it_camgroupid_2 - it_common_frames.second->cam_group_idx_.begin();
 
     // check if both objects of interest are in the frame
     std::weak_ptr<CameraGroupObs> cam_group_obs1 =
-        it_common_frames->second->cam_group_observations_[index_camgroup_1];
+        it_common_frames.second->cam_group_observations_[index_camgroup_1];
     std::weak_ptr<CameraGroupObs> cam_group_obs2 =
-        it_common_frames->second->cam_group_observations_[index_camgroup_2];
+        it_common_frames.second->cam_group_observations_[index_camgroup_2];
 
     auto cam_group_obs1_ptr = cam_group_obs1.lock();
     auto cam_group_obs2_ptr = cam_group_obs2.lock();
@@ -1460,14 +1355,10 @@ void Calibration::findPoseNoOverlapAllCamGroup() {
   no_overlap_camgroup_pair_pose_.clear();
 
   // Iterate through the camera groups
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it_groups_1 =
-           cam_group_.begin();
-       it_groups_1 != cam_group_.end(); ++it_groups_1) {
-    int group_idx1 = it_groups_1->first;
-    for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it_groups_2 =
-             cam_group_.begin();
-         it_groups_2 != cam_group_.end(); ++it_groups_2) {
-      int group_idx2 = it_groups_2->first;
+  for (const auto &it_groups_1 : cam_group_) {
+    int group_idx1 = it_groups_1.first;
+    for (const auto &it_groups_2 : cam_group_) {
+      int group_idx2 = it_groups_2.first;
       if (group_idx1 != group_idx2) // if the two groups are different
       {
         initNonOverlapPair(group_idx1, group_idx2);
@@ -1483,20 +1374,16 @@ void Calibration::findPoseNoOverlapAllCamGroup() {
 void Calibration::initInterCamGroupGraph() {
   no_overlap_camgroup_graph_.clearGraph();
   // All the existing groups form a vertex
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
-    if (it->second->object_observations_.size() > 0) {
-      no_overlap_camgroup_graph_.addVertex(it->second->cam_group_idx_);
+  for (const auto &it : cam_group_) {
+    if (it.second->object_observations_.size() > 0) {
+      no_overlap_camgroup_graph_.addVertex(it.second->cam_group_idx_);
     }
   }
 
   // Create the graph
-  for (std::map<std::pair<int, int>, cv::Mat>::iterator it =
-           no_overlap_camgroup_pair_pose_.begin();
-       it != no_overlap_camgroup_pair_pose_.end(); ++it) {
-    std::pair<int, int> camgroup_pair_idx = it->first;
-    cv::Mat camgroup_poses_temp = it->second;
+  for (const auto &it : no_overlap_camgroup_pair_pose_) {
+    std::pair<int, int> camgroup_pair_idx = it.first;
+    cv::Mat camgroup_poses_temp = it.second;
     int nb_common_frame =
         no_overlap__camgroup_pair_common_cnt_[camgroup_pair_idx];
     no_overlap_camgroup_graph_.addEdge(camgroup_pair_idx.first,
@@ -1557,23 +1444,18 @@ void Calibration::mergeCameraGroup() {
         std::make_shared<CameraGroup>(id_ref_cam, i);
     // Iterate through the camera groups and add all the cameras individually in
     // the new group
-    for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it_group =
-             cam_group_.begin();
-         it_group != cam_group_.end(); ++it_group) {
+    for (const auto &it_group : cam_group_) {
       // Check if the current camera group belong to the final group
-      int current_cam_group_idx = it_group->second->cam_group_idx_;
+      int current_cam_group_idx = it_group.second->cam_group_idx_;
       if (std::find(connect_comp[i].begin(), connect_comp[i].end(),
                     current_cam_group_idx) != connect_comp[i].end()) {
         // Prepare the current group pose in the referential of the final group
-        std::shared_ptr<CameraGroup> current_group = it_group->second;
+        std::shared_ptr<CameraGroup> current_group = it_group.second;
         cv::Mat pose_in_final =
             cam_group_pose_to_ref[current_group->cam_group_idx_];
         // the camera group is in the final group so we include its cameras
-        for (std::map<int, std::weak_ptr<Camera>>::iterator it_cam =
-                 current_group->cameras_.begin();
-             it_cam != current_group->cameras_.end(); ++it_cam) {
-
-          std::shared_ptr<Camera> current_camera = it_cam->second.lock();
+        for (const auto &it_cam : current_group->cameras_) {
+          std::shared_ptr<Camera> current_camera = it_cam.second.lock();
           if (current_camera) {
             // Update the pose in the referential of the final group
             cv::Mat pose_cam_in_current_group =
@@ -1599,19 +1481,15 @@ void Calibration::mergeCameraGroup() {
  */
 void Calibration::mergeAllCameraGroupObs() {
   // First we erase all the Cameragroups observation in the entire datastructure
-  for (std::map<int, std::shared_ptr<Frame>>::iterator it_frame =
-           frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-    it_frame->second->cam_group_idx_.clear();
-    it_frame->second->cam_group_observations_.clear();
+  for (const auto &it_frame : frames_) {
+    it_frame.second->cam_group_idx_.clear();
+    it_frame.second->cam_group_observations_.clear();
   }
   cams_group_obs_.clear();
 
   // Reinitialize all camera obserations
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
-    int camera_group_idx = it->second->cam_group_idx_;
+  for (const auto &it : cam_group_) {
+    int camera_group_idx = it.second->cam_group_idx_;
     initCameraGroupObs(camera_group_idx);
   }
 }
@@ -1621,18 +1499,11 @@ void Calibration::mergeAllCameraGroupObs() {
  *
  */
 void Calibration::computeAllObjPoseInCameraGroup() {
-
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
-    it->second->computeObjPoseInCameraGroup();
-  }
+  for (const auto &it : cam_group_)
+    it.second->computeObjPoseInCameraGroup();
   // Compute the pose of each object in the camera groups obs
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraGroupObs>>::iterator
-           it_cam_group_obs = cams_group_obs_.begin();
-       it_cam_group_obs != cams_group_obs_.end(); it_cam_group_obs++) {
-    it_cam_group_obs->second->computeObjectsPose();
-  }
+  for (const auto &it_cam_group_obs : cams_group_obs_)
+    it_cam_group_obs.second->computeObjectsPose();
 }
 
 /**
@@ -1645,31 +1516,23 @@ void Calibration::computeAllObjPoseInCameraGroup() {
 void Calibration::computeObjectsPairPose() {
   object_pose_pairs_.clear();
   // Iterate through camera group obs
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraGroupObs>>::iterator
-           it_cam_group_obs = cams_group_obs_.begin();
-       it_cam_group_obs != cams_group_obs_.end(); it_cam_group_obs++) {
-    if (it_cam_group_obs->second->object_idx_.size() > 1) {
+  for (const auto &it_cam_group_obs : cams_group_obs_) {
+    if (it_cam_group_obs.second->object_idx_.size() > 1) {
       std::map<int, std::weak_ptr<Object3DObs>> obj_obs =
-          it_cam_group_obs->second->object_observations_;
-      for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_object1 =
-               obj_obs.begin();
-           it_object1 != obj_obs.end(); it_object1++) {
-
-        auto it_object1_ptr = it_object1->second.lock();
+          it_cam_group_obs.second->object_observations_;
+      for (const auto &it_object1 : obj_obs) {
+        auto it_object1_ptr = it_object1.second.lock();
         if (it_object1_ptr) {
           int object_3d_id_1 = it_object1_ptr->object_3d_id_;
           cv::Mat obj_pose_1 =
-              it_cam_group_obs->second->getObjectPoseMat(object_3d_id_1);
+              it_cam_group_obs.second->getObjectPoseMat(object_3d_id_1);
           // cv::Mat obj_pose_1 = it_object1->second->getPoseInGroupMat();
-          for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_object2 =
-                   obj_obs.begin();
-               it_object2 != obj_obs.end(); it_object2++) {
-
-            auto it_object2_ptr = it_object2->second.lock();
+          for (const auto &it_object2 : obj_obs) {
+            auto it_object2_ptr = it_object2.second.lock();
             if (it_object2_ptr) {
               int object_3d_id_2 = it_object2_ptr->object_3d_id_;
               cv::Mat obj_pose_2 =
-                  it_cam_group_obs->second->getObjectPoseMat(object_3d_id_2);
+                  it_cam_group_obs.second->getObjectPoseMat(object_3d_id_2);
               // cv::Mat obj_pose_2 = it_object2->second->getPoseInGroupMat();
               if (object_3d_id_1 != object_3d_id_2) {
                 cv::Mat inter_object_pose = obj_pose_2.inv() * obj_pose_1;
@@ -1696,11 +1559,9 @@ void Calibration::computeObjectsPairPose() {
  */
 void Calibration::initInterObjectsTransform() {
   inter_object_transform_.clear();
-  for (std::map<std::pair<int, int>, std::vector<cv::Mat>>::iterator it =
-           object_pose_pairs_.begin();
-       it != object_pose_pairs_.end(); ++it) {
-    std::pair<int, int> object_pair_idx = it->first;
-    std::vector<cv::Mat> object_poses_temp = it->second;
+  for (const auto &it : object_pose_pairs_) {
+    std::pair<int, int> object_pair_idx = it.first;
+    std::vector<cv::Mat> object_poses_temp = it.second;
     cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
     cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
 
@@ -1719,9 +1580,9 @@ void Calibration::initInterObjectsTransform() {
     // Median
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
-    for (int i = 0; i < object_poses_temp.size(); i++) {
+    for (const auto &object_pose_temp : object_poses_temp) {
       cv::Mat R, T;
-      Proj2RT(object_poses_temp[i], R, T);
+      Proj2RT(object_pose_temp, R, T);
       r1.push_back(R.at<double>(0));
       r2.push_back(R.at<double>(1));
       r3.push_back(R.at<double>(2));
@@ -1751,19 +1612,15 @@ void Calibration::initInterObjectsGraph() {
 
   covis_objects_graph_.clearGraph();
   // Each object is a vertex if it has been observed at least once
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it =
-           object_3d_.begin();
-       it != object_3d_.end(); ++it) {
-    if (it->second->object_observations_.size() > 0) {
-      covis_objects_graph_.addVertex(it->second->obj_id_);
+  for (const auto &it : object_3d_) {
+    if (it.second->object_observations_.size() > 0) {
+      covis_objects_graph_.addVertex(it.second->obj_id_);
     }
   }
 
-  for (std::map<std::pair<int, int>, std::vector<cv::Mat>>::iterator it =
-           object_pose_pairs_.begin();
-       it != object_pose_pairs_.end(); ++it) {
-    std::pair<int, int> object_pair_idx = it->first;
-    std::vector<cv::Mat> object_poses_temp = it->second;
+  for (const auto &it : object_pose_pairs_) {
+    std::pair<int, int> object_pair_idx = it.first;
+    std::vector<cv::Mat> object_poses_temp = it.second;
     covis_objects_graph_.addEdge(object_pair_idx.first, object_pair_idx.second,
                                  ((double)1 / (object_poses_temp.size())));
   }
@@ -1824,22 +1681,18 @@ void Calibration::mergeObjects() {
     int pts_count = 0;
     // Iterate through the objects and add all of them individually in the new
     // object
-    for (std::map<int, std::shared_ptr<Object3D>>::iterator it_object =
-             object_3d_.begin();
-         it_object != object_3d_.end(); ++it_object) {
+    for (const auto &it_object : object_3d_) {
       // Check if the current object belong to the new object
-      int current_object_idx = it_object->second->obj_id_;
+      int current_object_idx = it_object.second->obj_id_;
       if (std::find(connect_comp[i].begin(), connect_comp[i].end(),
                     current_object_idx) != connect_comp[i].end()) {
         // Prepare the current object pose in the referential of the merged
         // object
-        std::shared_ptr<Object3D> current_object = it_object->second;
+        std::shared_ptr<Object3D> current_object = it_object.second;
         cv::Mat pose_in_merged = object_pose_to_ref[current_object->obj_id_];
         // the object is in the merged group so we include its boards
-        for (std::map<int, std::weak_ptr<Board>>::iterator it_board =
-                 current_object->boards_.begin();
-             it_board != current_object->boards_.end(); ++it_board) {
-          std::shared_ptr<Board> current_board = it_board->second.lock();
+        for (const auto &it_board : current_object->boards_) {
+          std::shared_ptr<Board> current_board = it_board.second.lock();
           if (current_board) {
             // Update the pose to be in the referential of the merged object
             cv::Mat pose_board_in_current_obj =
@@ -1892,57 +1745,41 @@ void Calibration::mergeObjects() {
 void Calibration::mergeAllObjectObs() {
 
   // First we erase all the object observation in the entire datastructure
-  for (std::map<int, std::shared_ptr<Camera>>::iterator it = cams_.begin();
-       it != cams_.end(); ++it) {
-    it->second->vis_object_idx_.clear();
-    it->second->object_observations_.clear();
+  for (const auto &it : cams_) {
+    it.second->vis_object_idx_.clear();
+    it.second->object_observations_.clear();
   }
 
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
-    it->second->vis_object_idx_.clear();
-    it->second->object_observations_.clear();
+  for (const auto &it : cam_group_) {
+    it.second->vis_object_idx_.clear();
+    it.second->object_observations_.clear();
   }
 
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraGroupObs>>::iterator
-           it = cams_group_obs_.begin();
-       it != cams_group_obs_.end(); ++it) {
-    it->second->object_idx_.clear();
-    it->second->object_observations_.clear();
+  for (const auto &it : cams_group_obs_) {
+    it.second->object_idx_.clear();
+    it.second->object_observations_.clear();
   }
 
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator it =
-           cams_obs_.begin();
-       it != cams_obs_.end(); ++it) {
-    it->second->object_observations_.clear();
-    it->second->object_idx_.clear();
+  for (const auto &it : cams_obs_) {
+    it.second->object_observations_.clear();
+    it.second->object_idx_.clear();
   }
 
-  for (std::map<int, std::shared_ptr<Frame>>::iterator it = frames_.begin();
-       it != frames_.end(); ++it) {
-    it->second->object_observations_.clear();
-    it->second->objects_idx_.clear();
+  for (const auto &it : frames_) {
+    it.second->object_observations_.clear();
+    it.second->objects_idx_.clear();
   }
 
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it =
-           object_3d_.begin();
-       it != object_3d_.end(); ++it) {
-    it->second->object_observations_.clear();
-  }
+  for (const auto &it : object_3d_)
+    it.second->object_observations_.clear();
 
   object_observations_.clear();
 
   // Reinitialize all the 3D object
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it_object =
-           object_3d_.begin();
-       it_object != object_3d_.end(); ++it_object) {
+  for (const auto &it_object : object_3d_) {
     // Reinitialize all object obserations
-    for (std::map<int, std::shared_ptr<Object3D>>::iterator it =
-             object_3d_.begin();
-         it != object_3d_.end(); ++it) {
-      this->init3DObjectObs(it->first);
-    }
+    for (const auto &it : object_3d_)
+      this->init3DObjectObs(it.first);
   }
 }
 
@@ -1951,11 +1788,8 @@ void Calibration::mergeAllObjectObs() {
  *
  */
 void Calibration::reproErrorAllCamGroup() {
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); it++) {
-    it->second->reproErrorCameraGroup();
-  }
+  for (const auto &it : cam_group_)
+    it.second->reproErrorCameraGroup();
 }
 
 /**
@@ -1964,25 +1798,16 @@ void Calibration::reproErrorAllCamGroup() {
  *
  */
 void Calibration::refineAllCameraGroupAndObjects() {
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
-    it->second->refineCameraGroupAndObjects(nb_iterations_);
-  }
+  for (const auto &it : cam_group_)
+    it.second->refineCameraGroupAndObjects(nb_iterations_);
 
   // Update the 3D objects
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it =
-           object_3d_.begin();
-       it != object_3d_.end(); it++) {
-    it->second->updateObjectPts();
-  }
+  for (const auto &it : object_3d_)
+    it.second->updateObjectPts();
 
   // Update the object3D observation
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraGroupObs>>::iterator
-           it = cams_group_obs_.begin();
-       it != cams_group_obs_.end(); it++) {
-    it->second->updateObjObsPose();
-  }
+  for (const auto &it : cams_group_obs_)
+    it.second->updateObjObsPose();
 }
 
 /**
@@ -2008,30 +1833,22 @@ void Calibration::saveReprojection(const int cam_id) {
   std::shared_ptr<Camera> cam = cams_[cam_id];
 
   // Iterate through the frames where this camera has visibility
-  for (std::map<int, std::shared_ptr<Frame>>::iterator it_frame =
-           frames_.begin();
-       it_frame != frames_.end(); it_frame++) {
+  for (const auto &it_frame : frames_) {
     // Open the image
-    std::string im_path = it_frame->second->frame_path_[cam_id];
+    std::string im_path = it_frame.second->frame_path_[cam_id];
     cv::Mat image = cv::imread(im_path);
 
     // Iterate through the camera group observations
     std::map<int, std::weak_ptr<CameraGroupObs>> cam_group_obs =
-        it_frame->second->cam_group_observations_;
-    for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-             it_cam_group_obs = cam_group_obs.begin();
-         it_cam_group_obs != cam_group_obs.end(); it_cam_group_obs++) {
-
-      auto it_cam_group_obs_ptr = it_cam_group_obs->second.lock();
+        it_frame.second->cam_group_observations_;
+    for (const auto &it_cam_group_obs : cam_group_obs) {
+      auto it_cam_group_obs_ptr = it_cam_group_obs.second.lock();
       if (it_cam_group_obs_ptr) {
         // Iterate through the object observation
         std::map<int, std::weak_ptr<Object3DObs>> object_observations =
             it_cam_group_obs_ptr->object_observations_;
-        for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj_obs =
-                 object_observations.begin();
-             it_obj_obs != object_observations.end(); it_obj_obs++) {
-
-          auto it_obj_obs_ptr = it_obj_obs->second.lock();
+        for (const auto &it_obj_obs : object_observations) {
+          auto it_obj_obs_ptr = it_obj_obs.second.lock();
           auto it_obj_obs_cam_group_ptr =
               it_cam_group_obs_ptr->cam_group_.lock();
           auto it_obj_obs_object_3d_ptr = it_obj_obs_ptr->object_3d_.lock();
@@ -2052,8 +1869,8 @@ void Calibration::saveReprojection(const int cam_id) {
                 it_obj_obs_object_3d_ptr->pts_3d_;
             std::vector<cv::Point3f> pts_3d;
             std::vector<cv::Point2f> pts_repro;
-            for (int i = 0; i < pts_ind.size(); i++)
-              pts_3d.push_back(pts_3d_obj[pts_ind[i]]);
+            for (const auto &pt_ind : pts_ind)
+              pts_3d.push_back(pts_3d_obj[pt_ind]);
 
             // Reproject the pts
             cv::Mat rr, tt;
@@ -2088,7 +1905,7 @@ void Calibration::saveReprojection(const int cam_id) {
 
       // Save image
       std::stringstream ss1;
-      ss1 << std::setw(6) << std::setfill('0') << it_frame->second->frame_idx_;
+      ss1 << std::setw(6) << std::setfill('0') << it_frame.second->frame_idx_;
       std::string image_name = ss1.str() + ".jpg";
       cv::imwrite(path_save + image_name, image);
     }
@@ -2100,11 +1917,8 @@ void Calibration::saveReprojection(const int cam_id) {
  *
  */
 void Calibration::saveReprojectionAllCam() {
-  for (std::map<int, std::shared_ptr<Camera>>::iterator it = cams_.begin();
-       it != cams_.end(); it++) {
-    int cam_id = it->second->cam_idx_;
-    saveReprojection(cam_id);
-  }
+  for (const auto &it : cams_)
+    saveReprojection(it.second->cam_idx_);
 }
 
 /**
@@ -2130,30 +1944,22 @@ void Calibration::saveDetection(const int cam_id) {
   std::shared_ptr<Camera> cam = cams_[cam_id];
 
   // Iterate through the frames where this camera has visibility
-  for (std::map<int, std::shared_ptr<Frame>>::iterator it_frame =
-           frames_.begin();
-       it_frame != frames_.end(); it_frame++) {
+  for (const auto &it_frame : frames_) {
     // Open the image
-    std::string im_path = it_frame->second->frame_path_[cam_id];
+    std::string im_path = it_frame.second->frame_path_[cam_id];
     cv::Mat image = cv::imread(im_path);
 
     // Iterate through the camera group observations
     std::map<int, std::weak_ptr<CameraGroupObs>> cam_group_obs =
-        it_frame->second->cam_group_observations_;
-    for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-             it_cam_group_obs = cam_group_obs.begin();
-         it_cam_group_obs != cam_group_obs.end(); it_cam_group_obs++) {
-
-      auto it_cam_group_obs_ptr = it_cam_group_obs->second.lock();
+        it_frame.second->cam_group_observations_;
+    for (const auto &it_cam_group_obs : cam_group_obs) {
+      auto it_cam_group_obs_ptr = it_cam_group_obs.second.lock();
       if (it_cam_group_obs_ptr) {
         // Iterate through the object observation
         std::map<int, std::weak_ptr<Object3DObs>> object_observations =
             it_cam_group_obs_ptr->object_observations_;
-        for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj_obs =
-                 object_observations.begin();
-             it_obj_obs != object_observations.end(); it_obj_obs++) {
-
-          auto it_obj_obs_ptr = it_obj_obs->second.lock();
+        for (const auto &it_obj_obs : object_observations) {
+          auto it_obj_obs_ptr = it_obj_obs.second.lock();
           auto it_obj_obs_object_3d_ptr = it_obj_obs_ptr->object_3d_.lock();
           if (it_obj_obs_ptr && it_obj_obs_ptr->camera_id_ == cam_id &&
               it_obj_obs_object_3d_ptr) {
@@ -2161,10 +1967,10 @@ void Calibration::saveDetection(const int cam_id) {
             std::vector<cv::Point2f> pts_2d = it_obj_obs_ptr->pts_2d_;
             // plot the keypoints on the image (red project // green detected)
             std::vector<double> color = it_obj_obs_object_3d_ptr->color_;
-            for (int i = 0; i < pts_2d.size(); i++) {
-              circle(image, cv::Point(pts_2d[i].x, pts_2d[i].y), 4,
-                     cv::Scalar(color[0], color[1], color[2]), cv::FILLED, 8,
-                     0);
+            for (const auto &pt_2d : pts_2d) {
+              cv::circle(image, cv::Point(pt_2d.x, pt_2d.y), 4,
+                         cv::Scalar(color[0], color[1], color[2]), cv::FILLED,
+                         8, 0);
             }
           }
         }
@@ -2178,9 +1984,9 @@ void Calibration::saveDetection(const int cam_id) {
 
       // Save image
       std::stringstream ss1;
-      ss1 << std::setw(6) << std::setfill('0') << it_frame->second->frame_idx_;
+      ss1 << std::setw(6) << std::setfill('0') << it_frame.second->frame_idx_;
       std::string image_name = ss1.str() + ".jpg";
-      imwrite(path_save + image_name, image);
+      cv::imwrite(path_save + image_name, image);
     }
   }
 }
@@ -2190,11 +1996,8 @@ void Calibration::saveDetection(const int cam_id) {
  *
  */
 void Calibration::saveDetectionAllCam() {
-  for (std::map<int, std::shared_ptr<Camera>>::iterator it = cams_.begin();
-       it != cams_.end(); it++) {
-    int cam_id = it->second->cam_idx_;
-    saveDetection(cam_id);
-  }
+  for (const auto &it : cams_)
+    saveDetection(it.second->cam_idx_);
 }
 
 /**
@@ -2293,18 +2096,13 @@ double Calibration::computeAvgReprojectionError() {
   cv::Scalar total_avg_error_sum;
   int number_of_adds = 0;
 
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); it++) {
-    int cam_group_idx = it->second->cam_group_idx_;
-    std::shared_ptr<CameraGroup> cur_cam_group = it->second;
+  for (const auto &it : cam_group_) {
+    int cam_group_idx = it.second->cam_group_idx_;
+    std::shared_ptr<CameraGroup> cur_cam_group = it.second;
 
     // iterate through frames
-    for (std::map<int, std::weak_ptr<Frame>>::iterator it_frame =
-             cur_cam_group->frames_.begin();
-         it_frame != cur_cam_group->frames_.end(); ++it_frame) {
-
-      auto it_frame_ptr = it_frame->second.lock();
+    for (const auto &it_frame : cur_cam_group->frames_) {
+      auto it_frame_ptr = it_frame.second.lock();
       if (it_frame_ptr) {
         cv::Mat camera_list;
         frame_list.push_back(it_frame_ptr->frame_idx_);
@@ -2312,24 +2110,17 @@ double Calibration::computeAvgReprojectionError() {
         // iterate through cameraGroupObs
         std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
             it_frame_ptr->cam_group_observations_;
-        for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-                 it_cam_group_obs = current_cam_group_obs_vec.begin();
-             it_cam_group_obs != current_cam_group_obs_vec.end();
-             ++it_cam_group_obs) {
-
+        for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
           // check if the current group is the camera group of interest
-          auto it_cam_group_obs_ptr = it_cam_group_obs->second.lock();
+          auto it_cam_group_obs_ptr = it_cam_group_obs.second.lock();
           if (it_cam_group_obs_ptr &&
               cam_group_idx == it_cam_group_obs_ptr->cam_group_idx_) {
             std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
                 it_cam_group_obs_ptr->object_observations_;
 
             // iterate through 3D object obs
-            for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj3d =
-                     current_obj3d_obs_vec.begin();
-                 it_obj3d != current_obj3d_obs_vec.end(); ++it_obj3d) {
-
-              auto it_obj3d_ptr = it_obj3d->second.lock();
+            for (const auto &it_obj3d : current_obj3d_obs_vec) {
+              auto it_obj3d_ptr = it_obj3d.second.lock();
               auto it_obj3d_object_3d_ptr = it_obj3d_ptr->object_3d_.lock();
               auto it_obj3d_cam_ptr = it_obj3d_ptr->cam_.lock();
               if (it_obj3d_ptr && it_obj3d_object_3d_ptr && it_obj3d_cam_ptr) {
@@ -2342,8 +2133,8 @@ double Calibration::computeAvgReprojectionError() {
 
                 // compute the reprojection error
                 std::vector<cv::Point3f> object_pts;
-                for (int i = 0; i < obj_pts_idx.size(); i++)
-                  object_pts.push_back(obj_pts_3d[obj_pts_idx[i]]);
+                for (const auto &obj_pt_idx : obj_pts_idx)
+                  object_pts.push_back(obj_pts_3d[obj_pt_idx]);
 
                 // apply object pose transform
                 std::vector<cv::Point3f> object_pts_trans1 =
@@ -2357,8 +2148,8 @@ double Calibration::computeAvgReprojectionError() {
                 std::shared_ptr<Camera> cam_ptr = it_obj3d_cam_ptr;
                 projectPointsWithDistortion(
                     object_pts_trans1,
-                    it->second->getCameraRotVec(current_cam_id),
-                    it->second->getCameraTransVec(current_cam_id),
+                    it.second->getCameraRotVec(current_cam_id),
+                    it.second->getCameraTransVec(current_cam_id),
                     cam_ptr->getCameraMat(),
                     cam_ptr->getDistortionVectorVector(), repro_pts,
                     cam_ptr->distortion_model_);
@@ -2390,19 +2181,14 @@ void Calibration::saveReprojectionErrorToFile() {
   int nb_cam_group = cam_group_.size();
   fs << "nb_camera_group" << nb_cam_group;
 
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); it++) {
-    int cam_group_idx = it->second->cam_group_idx_;
+  for (const auto &it : cam_group_) {
+    int cam_group_idx = it.second->cam_group_idx_;
     fs << "camera_group_" + std::to_string(cam_group_idx);
     fs << "{";
-    std::shared_ptr<CameraGroup> cur_cam_group = it->second;
+    std::shared_ptr<CameraGroup> cur_cam_group = it.second;
     // iterate through frames
-    for (std::map<int, std::weak_ptr<Frame>>::iterator it_frame =
-             cur_cam_group->frames_.begin();
-         it_frame != cur_cam_group->frames_.end(); ++it_frame) {
-
-      std::shared_ptr<Frame> it_frame_ptr = it_frame->second.lock();
+    for (const auto &it_frame : cur_cam_group->frames_) {
+      std::shared_ptr<Frame> it_frame_ptr = it_frame.second.lock();
       if (it_frame_ptr) {
         cv::Mat camera_list;
         fs << "frame_" + std::to_string(it_frame_ptr->frame_idx_);
@@ -2412,12 +2198,8 @@ void Calibration::saveReprojectionErrorToFile() {
         // iterate through cameraGroupObs
         std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
             it_frame_ptr->cam_group_observations_;
-        for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-                 it_cam_group_obs = current_cam_group_obs_vec.begin();
-             it_cam_group_obs != current_cam_group_obs_vec.end();
-             ++it_cam_group_obs) {
-
-          auto it_cam_group_obs_ptr = it_cam_group_obs->second.lock();
+        for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
+          auto it_cam_group_obs_ptr = it_cam_group_obs.second.lock();
           // check if the current group is the camera group of interest
           if (it_cam_group_obs_ptr &&
               cam_group_idx == it_cam_group_obs_ptr->cam_group_idx_) {
@@ -2425,13 +2207,10 @@ void Calibration::saveReprojectionErrorToFile() {
                 it_cam_group_obs_ptr->object_observations_;
 
             // iterate through 3D object obs
-            for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj3d =
-                     current_obj3d_obs_vec.begin();
-                 it_obj3d != current_obj3d_obs_vec.end(); ++it_obj3d) {
-
-              auto it_obj3d_ptr = it_obj3d->second.lock();
+            for (const auto &it_obj3d : current_obj3d_obs_vec) {
+              auto it_obj3d_ptr = it_obj3d.second.lock();
               auto it_obj3d_object_3d_ptr = it_obj3d_ptr->object_3d_.lock();
-              auto it_cam_group_obs_ptr = it_cam_group_obs->second.lock();
+              auto it_cam_group_obs_ptr = it_cam_group_obs.second.lock();
               auto it_obj3d_cam_ptr = it_obj3d_ptr->cam_.lock();
               if (it_obj3d_ptr && it_obj3d_object_3d_ptr &&
                   it_cam_group_obs_ptr && it_obj3d_cam_ptr) {
@@ -2446,8 +2225,8 @@ void Calibration::saveReprojectionErrorToFile() {
 
                 // compute the reprojection error
                 std::vector<cv::Point3f> object_pts;
-                for (int i = 0; i < obj_pts_idx.size(); i++)
-                  object_pts.push_back(obj_pts_3d[obj_pts_idx[i]]);
+                for (const auto &obj_pt_idx : obj_pts_idx)
+                  object_pts.push_back(obj_pts_3d[obj_pt_idx]);
 
                 int nb_pts = obj_pts_idx.size();
                 fs << "nb_pts" << nb_pts;
@@ -2464,8 +2243,8 @@ void Calibration::saveReprojectionErrorToFile() {
                 std::shared_ptr<Camera> cam_ptr = it_obj3d_cam_ptr;
                 projectPointsWithDistortion(
                     object_pts_trans1,
-                    it->second->getCameraRotVec(current_cam_id),
-                    it->second->getCameraTransVec(current_cam_id),
+                    it.second->getCameraRotVec(current_cam_id),
+                    it.second->getCameraTransVec(current_cam_id),
                     cam_ptr->getCameraMat(),
                     cam_ptr->getDistortionVectorVector(), repro_pts,
                     cam_ptr->distortion_model_);
@@ -2491,24 +2270,14 @@ void Calibration::saveReprojectionErrorToFile() {
  *
  */
 void Calibration::refineAllCameraGroupAndObjectsAndIntrinsic() {
-  for (std::map<int, std::shared_ptr<CameraGroup>>::iterator it =
-           cam_group_.begin();
-       it != cam_group_.end(); ++it) {
-
-    it->second->refineCameraGroupAndObjectsAndIntrinsics(nb_iterations_);
-  }
+  for (const auto &it : cam_group_)
+    it.second->refineCameraGroupAndObjectsAndIntrinsics(nb_iterations_);
 
   // Update the 3D objects
-  for (std::map<int, std::shared_ptr<Object3D>>::iterator it =
-           object_3d_.begin();
-       it != object_3d_.end(); it++) {
-    it->second->updateObjectPts();
-  }
+  for (const auto &it : object_3d_)
+    it.second->updateObjectPts();
 
   // Update the object3D observation
-  for (std::map<std::pair<int, int>, std::shared_ptr<CameraGroupObs>>::iterator
-           it = cams_group_obs_.begin();
-       it != cams_group_obs_.end(); it++) {
-    it->second->updateObjObsPose();
-  }
+  for (const auto &it : cams_group_obs_)
+    it.second->updateObjObsPose();
 }

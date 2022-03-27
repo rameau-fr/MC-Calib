@@ -127,10 +127,10 @@ void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
  */
 void BoardObs::estimatePose(const float ransac_thresh) {
   std::vector<cv::Point3f> board_pts_temp;
-  for (int i = 0; i < charuco_id_.size(); i++) {
+  for (const int &charuco_id : charuco_id_) {
     std::shared_ptr<Board> board_3d_ptr = board_3d_.lock();
     if (board_3d_ptr)
-      board_pts_temp.push_back(board_3d_ptr->pts_3d_[charuco_id_[i]]);
+      board_pts_temp.push_back(board_3d_ptr->pts_3d_[charuco_id]);
   }
 
   // Estimate the pose using a RANSAC
@@ -169,10 +169,10 @@ void BoardObs::estimatePose(const float ransac_thresh) {
 float BoardObs::computeReprojectionError() {
   float sum_err_board = 0;
   std::vector<cv::Point3f> board_pts_temp;
-  for (int i = 0; i < charuco_id_.size(); i++) {
+  for (const int &charuco_id : charuco_id_) {
     std::shared_ptr<Board> board_3d_ptr = board_3d_.lock();
     if (board_3d_ptr)
-      board_pts_temp.push_back(board_3d_ptr->pts_3d_[charuco_id_[i]]);
+      board_pts_temp.push_back(board_3d_ptr->pts_3d_[charuco_id]);
   }
   // Project the 3D pts on the image
   std::vector<cv::Point2f> repro_pts;

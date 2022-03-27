@@ -155,30 +155,22 @@ cv::Mat CameraGroup::getCameraTransVec(int id_cam) {
  *
  */
 void CameraGroup::computeObjPoseInCameraGroup() {
-  for (std::map<int, std::weak_ptr<Frame>>::iterator it_frame = frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-
-    auto frame_ptr = it_frame->second.lock();
+  for (const auto &it_frame : frames_) {
+    auto frame_ptr = it_frame.second.lock();
     if (frame_ptr) {
       // Iterate through cameraGroupObs
       std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
           frame_ptr->cam_group_observations_;
-      for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-               it_cam_group_obs = current_cam_group_obs_vec.begin();
-           it_cam_group_obs != current_cam_group_obs_vec.end();
-           ++it_cam_group_obs) {
-
-        auto cam_group_obs_ptr = it_cam_group_obs->second.lock();
+      for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
+        auto cam_group_obs_ptr = it_cam_group_obs.second.lock();
         if (cam_group_obs_ptr &&
             cam_group_idx_ == cam_group_obs_ptr->cam_group_idx_) {
           // iterate through 3D object obs
           std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
               cam_group_obs_ptr->object_observations_;
-          for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj3d =
-                   current_obj3d_obs_vec.begin();
-               it_obj3d != current_obj3d_obs_vec.end(); ++it_obj3d) {
+          for (const auto &it_obj3d : current_obj3d_obs_vec) {
             // Transform the 3D object in the referential of the group
-            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d->second.lock();
+            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d.second.lock();
             if (it_obj3d_ptr) {
               int current_cam_id = it_obj3d_ptr->camera_id_;
               cv::Mat pose_cam_mat = getCameraPoseMat(current_cam_id);
@@ -205,31 +197,23 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
   LOG_INFO << "Number of frames for camera group optimization  :: "
            << frames_.size();
   // Iterate through frames
-  for (std::map<int, std::weak_ptr<Frame>>::iterator it_frame = frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-
-    auto frame_ptr = it_frame->second.lock();
+  for (const auto &it_frame : frames_) {
+    auto frame_ptr = it_frame.second.lock();
     if (frame_ptr) {
       // Iterate through cameraGroupObs
       std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
           frame_ptr->cam_group_observations_;
-      for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-               it_cam_group_obs = current_cam_group_obs_vec.begin();
-           it_cam_group_obs != current_cam_group_obs_vec.end();
-           ++it_cam_group_obs) {
-
-        auto cam_group_obs_ptr = it_cam_group_obs->second.lock();
+      for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
+        auto cam_group_obs_ptr = it_cam_group_obs.second.lock();
         if (cam_group_obs_ptr) {
           // Check if the current group the group we refine (be careful)
           if (cam_group_idx_ == cam_group_obs_ptr->cam_group_idx_) {
             // iterate through 3D object obs
             std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
                 cam_group_obs_ptr->object_observations_;
-            for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj3d =
-                     current_obj3d_obs_vec.begin();
-                 it_obj3d != current_obj3d_obs_vec.end(); ++it_obj3d) {
+            for (const auto &it_obj3d : current_obj3d_obs_vec) {
               std::shared_ptr<Object3DObs> it_obj3d_ptr =
-                  it_obj3d->second.lock();
+                  it_obj3d.second.lock();
               if (it_obj3d_ptr) {
                 int current_cam_id = it_obj3d_ptr->camera_id_;
                 auto object_3d_ptr = it_obj3d_ptr->object_3d_.lock();
@@ -293,11 +277,8 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
   ceres::Solve(options, &problem, &summary);
 
   // Display poses in the group
-  for (std::map<int, std::vector<double>>::iterator it =
-           relative_camera_pose_.begin();
-       it != relative_camera_pose_.end(); ++it) {
-    LOG_INFO << "Camera  " << it->first
-             << "  :: " << getCameraPoseMat(it->first);
+  for (const auto &it : relative_camera_pose_) {
+    LOG_INFO << "Camera  " << it.first << "  :: " << getCameraPoseMat(it.first);
   }
 }
 
@@ -308,30 +289,22 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
 void CameraGroup::reproErrorCameraGroup() {
 
   // Iterate through frames
-  for (std::map<int, std::weak_ptr<Frame>>::iterator it_frame = frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-
-    auto frame_ptr = it_frame->second.lock();
+  for (const auto &it_frame : frames_) {
+    auto frame_ptr = it_frame.second.lock();
     if (frame_ptr) {
       // Iterate through cameraGroupObs
       std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
           frame_ptr->cam_group_observations_;
-      for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-               it_cam_group_obs = current_cam_group_obs_vec.begin();
-           it_cam_group_obs != current_cam_group_obs_vec.end();
-           ++it_cam_group_obs) {
-
-        auto cam_group_obs_ptr = it_cam_group_obs->second.lock();
+      for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
+        auto cam_group_obs_ptr = it_cam_group_obs.second.lock();
         // Check if the current group is the camera group of interest
         if (cam_group_obs_ptr &&
             cam_group_idx_ == cam_group_obs_ptr->cam_group_idx_) {
           // iterate through 3D object obs
           std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
               cam_group_obs_ptr->object_observations_;
-          for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj3d =
-                   current_obj3d_obs_vec.begin();
-               it_obj3d != current_obj3d_obs_vec.end(); ++it_obj3d) {
-            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d->second.lock();
+          for (const auto &it_obj3d : current_obj3d_obs_vec) {
+            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d.second.lock();
             if (it_obj3d_ptr) {
               int current_cam_id = it_obj3d_ptr->camera_id_;
               auto object_3d_ptr = it_obj3d_ptr->object_3d_.lock();
@@ -342,8 +315,8 @@ void CameraGroup::reproErrorCameraGroup() {
 
                 // Compute the reprojection error
                 std::vector<cv::Point3f> object_pts;
-                for (int i = 0; i < obj_pts_idx.size(); i++)
-                  object_pts.push_back(obj_pts_3d[obj_pts_idx[i]]);
+                for (const auto &obj_pt_idx : obj_pts_idx)
+                  object_pts.push_back(obj_pts_3d[obj_pt_idx]);
 
                 // Apply object pose transform
                 std::vector<cv::Point3f> object_pts_trans1 =
@@ -396,30 +369,22 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
   LOG_INFO << "Number of frames for camera group optimization  :: "
            << frames_.size();
   // Iterate through frames
-  for (std::map<int, std::weak_ptr<Frame>>::iterator it_frame = frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-
-    auto frame_ptr = it_frame->second.lock();
+  for (const auto &it_frame : frames_) {
+    auto frame_ptr = it_frame.second.lock();
     if (frame_ptr) {
       // Iterate through cameraGroupObs
       std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
           frame_ptr->cam_group_observations_;
-      for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-               it_cam_group_obs = current_cam_group_obs_vec.begin();
-           it_cam_group_obs != current_cam_group_obs_vec.end();
-           ++it_cam_group_obs) {
-
-        auto cam_group_obs_ptr = it_cam_group_obs->second.lock();
+      for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
+        auto cam_group_obs_ptr = it_cam_group_obs.second.lock();
         // Check if the current group the group we refine (be careful)
         if (cam_group_obs_ptr &&
             cam_group_idx_ == cam_group_obs_ptr->cam_group_idx_) {
           // iterate through 3D object obs
           std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
               cam_group_obs_ptr->object_observations_;
-          for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj3d =
-                   current_obj3d_obs_vec.begin();
-               it_obj3d != current_obj3d_obs_vec.end(); ++it_obj3d) {
-            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d->second.lock();
+          for (const auto &it_obj3d : current_obj3d_obs_vec) {
+            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d.second.lock();
             if (it_obj3d_ptr) {
               int current_cam_id = it_obj3d_ptr->camera_id_;
               std::shared_ptr<Object3D> object_3d_ptr =
@@ -505,11 +470,8 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
   ceres::Solve(options, &problem, &summary);
 
   // Display poses in the group
-  for (std::map<int, std::vector<double>>::iterator it =
-           relative_camera_pose_.begin();
-       it != relative_camera_pose_.end(); ++it) {
-    LOG_INFO << "Camera  " << it->first
-             << "  :: " << getCameraPoseMat(it->first);
+  for (const auto &it : relative_camera_pose_) {
+    LOG_INFO << "Camera  " << it.first << "  :: " << getCameraPoseMat(it.first);
   }
 }
 
@@ -526,30 +488,22 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
   LOG_INFO << "Number of frames for camera group optimization  :: "
            << frames_.size();
   // Iterate through frames
-  for (std::map<int, std::weak_ptr<Frame>>::iterator it_frame = frames_.begin();
-       it_frame != frames_.end(); ++it_frame) {
-
-    auto frame_ptr = it_frame->second.lock();
+  for (const auto &it_frame : frames_) {
+    auto frame_ptr = it_frame.second.lock();
     if (frame_ptr) {
       // Iterate through cameraGroupObs
       std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
           frame_ptr->cam_group_observations_;
-      for (std::map<int, std::weak_ptr<CameraGroupObs>>::iterator
-               it_cam_group_obs = current_cam_group_obs_vec.begin();
-           it_cam_group_obs != current_cam_group_obs_vec.end();
-           ++it_cam_group_obs) {
-
-        auto cam_group_obs_ptr = it_cam_group_obs->second.lock();
+      for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
+        auto cam_group_obs_ptr = it_cam_group_obs.second.lock();
         // Check if the current group the group we refine (be careful)
         if (cam_group_obs_ptr &&
             cam_group_idx_ == cam_group_obs_ptr->cam_group_idx_) {
           // iterate through 3D object obs
           std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
               cam_group_obs_ptr->object_observations_;
-          for (std::map<int, std::weak_ptr<Object3DObs>>::iterator it_obj3d =
-                   current_obj3d_obs_vec.begin();
-               it_obj3d != current_obj3d_obs_vec.end(); ++it_obj3d) {
-            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d->second.lock();
+          for (const auto &it_obj3d : current_obj3d_obs_vec) {
+            std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d.second.lock();
             if (it_obj3d_ptr) {
               int current_cam_id = it_obj3d_ptr->camera_id_;
               std::shared_ptr<Object3D> object_3d_ptr =
@@ -626,10 +580,7 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
   ceres::Solve(options, &problem, &summary);
 
   // Display poses in the group
-  for (std::map<int, std::vector<double>>::iterator it =
-           relative_camera_pose_.begin();
-       it != relative_camera_pose_.end(); ++it) {
-    LOG_INFO << "Camera  " << it->first
-             << "  :: " << getCameraPoseMat(it->first);
+  for (const auto &it : relative_camera_pose_) {
+    LOG_INFO << "Camera  " << it.first << "  :: " << getCameraPoseMat(it.first);
   }
 }

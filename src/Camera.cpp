@@ -166,14 +166,11 @@ void Camera::initializeCalibration() {
 
   // Subsample the total number of images (because the OpenCV function is
   // significantly too slow...)
-  std::vector<int> indbv;
-  for (int i = 0; i < board_observations_.size(); i++) {
-    indbv.push_back(i);
-  }
+  std::vector<int> indbv(board_observations_.size());
+  std::iota(indbv.begin(), indbv.end(), 0);
   std::srand(unsigned(std::time(0)));
-  std::vector<int> shuffled_board_ind;
-  for (unsigned int i = 0; i < indbv.size(); ++i)
-    shuffled_board_ind.push_back(i);
+  std::vector<int> shuffled_board_ind(indbv.size());
+  std::iota(shuffled_board_ind.begin(), shuffled_board_ind.end(), 0);
   random_shuffle(shuffled_board_ind.begin(), shuffled_board_ind.end());
 
   // Prepare list of 2D-3D correspondences
@@ -198,8 +195,8 @@ void Camera::initializeCalibration() {
       std::vector<cv::Point3f> pts_3d_temp;
       std::shared_ptr<Board> board_3d_ptr = board_obs_temp->board_3d_.lock();
       if (board_3d_ptr) {
-        for (int k = 0; k < corners_idx_temp.size(); k++)
-          pts_3d_temp.push_back(board_3d_ptr->pts_3d_[corners_idx_temp[k]]);
+        for (const auto &corner_idx_temp : corners_idx_temp)
+          pts_3d_temp.push_back(board_3d_ptr->pts_3d_[corner_idx_temp]);
       }
       obj_points.push_back(pts_3d_temp);
     }
@@ -243,10 +240,8 @@ void Camera::initializeCalibration() {
 void Camera::computeReproErrAllBoard() {
   std::vector<float> err_vec;
   float sum_err = 0;
-  for (std::map<int, std::weak_ptr<BoardObs>>::iterator it =
-           board_observations_.begin();
-       it != board_observations_.end(); ++it) {
-    std::shared_ptr<BoardObs> board_obs_ptr = it->second.lock();
+  for (const auto &it : board_observations_) {
+    std::shared_ptr<BoardObs> board_obs_ptr = it.second.lock();
     if (board_obs_ptr)
       float err = board_obs_ptr->computeReprojectionError();
   }
@@ -261,10 +256,8 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
   double loss = 1.0;
   LOG_INFO << "Parameters before optimization :: " << this->getCameraMat();
   LOG_INFO << "distortion vector :: " << getDistortionVectorVector();
-  for (std::map<int, std::weak_ptr<BoardObs>>::iterator it =
-           board_observations_.begin();
-       it != board_observations_.end(); ++it) {
-    std::shared_ptr<BoardObs> board_obs_ptr = it->second.lock();
+  for (const auto &it : board_observations_) {
+    std::shared_ptr<BoardObs> board_obs_ptr = it.second.lock();
     if (board_obs_ptr && board_obs_ptr->valid_ == true) {
       std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
       if (board_3d_ptr) {
