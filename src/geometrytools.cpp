@@ -127,16 +127,16 @@ void calcLinePara(std::vector<cv::Point2f> pts, double &a, double &b, double &c,
   res = 0;
   cv::Vec4f line;
   std::vector<cv::Point2f> ptsF;
-  for (unsigned int i = 0; i < pts.size(); i++)
-    ptsF.push_back(pts[i]);
+  for (const auto &pt : pts)
+    ptsF.push_back(pt);
 
   cv::fitLine(ptsF, line, cv::DistanceTypes::DIST_L2, 0, 1e-2, 1e-2);
   a = line[1];
   b = -line[0];
   c = line[0] * line[3] - line[1] * line[2];
 
-  for (unsigned int i = 0; i < pts.size(); i++) {
-    double resid_ = fabs(pts[i].x * a + pts[i].y * b + c);
+  for (const auto &pt : pts) {
+    double resid_ = fabs(pt.x * a + pt.y * b + c);
     res += resid_;
   }
   res /= pts.size();
@@ -161,9 +161,8 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
 
   // Vector of index to shuffle
   std::srand(unsigned(std::time(0)));
-  std::vector<int> myvector;
-  for (unsigned int i = 0; i < point2d.size(); ++i)
-    myvector.push_back(i); // 1 2 3 4 5 6 7 8 9
+  std::vector<int> myvector(point2d.size());
+  std::iota(myvector.begin(), myvector.end(), 0);
 
   // Ransac iterations
   while (N > trialcount && countit < it) {
@@ -250,9 +249,8 @@ cv::Mat ransacP3P(std::vector<cv::Point3f> scenePoints,
 
   // Vector of index to shuffle
   std::srand(unsigned(std::time(0)));
-  std::vector<int> myvector;
-  for (unsigned int i = 0; i < imagePoints.size(); ++i)
-    myvector.push_back(i); // 1 2 3 4 5 6 7 8 9
+  std::vector<int> myvector(imagePoints.size());
+  std::iota(myvector.begin(), myvector.end(), 0);
 
   // Ransac iterations
   while (N > trialcount && countit < it) {
@@ -351,13 +349,13 @@ std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
   double ty = Trans.at<double>(1);
   double tz = Trans.at<double>(2);
 
-  for (int i = 0; i < pts3D.size(); i++) {
-    float x = tx + r11 * pts3D[i].x + r12 * pts3D[i].y + r13 * pts3D[i].z;
-    float y = ty + r21 * pts3D[i].x + r22 * pts3D[i].y + r23 * pts3D[i].z;
-    float z = tz + r31 * pts3D[i].x + r32 * pts3D[i].y + r33 * pts3D[i].z;
-    pts3D[i].x = x;
-    pts3D[i].y = y;
-    pts3D[i].z = z;
+  for (auto &pt3D : pts3D) {
+    float x = tx + r11 * pt3D.x + r12 * pt3D.y + r13 * pt3D.z;
+    float y = ty + r21 * pt3D.x + r22 * pt3D.y + r23 * pt3D.z;
+    float z = tz + r31 * pt3D.x + r32 * pt3D.y + r33 * pt3D.z;
+    pt3D.x = x;
+    pt3D.y = y;
+    pt3D.z = z;
   }
 
   return pts3D;
@@ -451,9 +449,8 @@ cv::Mat handeyeBootstratpTranslationCalibration(
   for (unsigned int iter = 0; iter < nb_it; iter++) {
 
     // pick from n of these clusters randomly
-    std::vector<unsigned int> shuffled_ind;
-    for (unsigned int k = 0; k < nb_cluster; ++k)
-      shuffled_ind.push_back(k);
+    std::vector<unsigned int> shuffled_ind(nb_cluster);
+    std::iota(shuffled_ind.begin(), shuffled_ind.end(), 0);
     std::random_device rd; // initialize random number generator
     std::mt19937 g(rd());
     std::shuffle(shuffled_ind.begin(), shuffled_ind.end(), g);
@@ -464,8 +461,7 @@ cv::Mat handeyeBootstratpTranslationCalibration(
 
     // Select one pair of pose for each cluster
     std::vector<unsigned int> pose_ind;
-    for (unsigned int i = 0; i < cluster_select.size(); i++) {
-      unsigned int clust_ind = cluster_select[i];
+    for (const unsigned int &clust_ind : cluster_select) {
       std::vector<unsigned int> idx;
       for (unsigned int j = 0; j < pose_abs_2.size(); j++) {
         if (labels.at<unsigned int>(j) == clust_ind) {
@@ -484,10 +480,10 @@ cv::Mat handeyeBootstratpTranslationCalibration(
     // Prepare the poses for handeye calibration
     std::vector<cv::Mat> r_cam_group_1, t_cam_group_1, r_cam_group_2,
         t_cam_group_2;
-    for (unsigned int i = 0; i < pose_ind.size(); i++) {
+    for (const auto &pose_ind_i : pose_ind) {
       // get the poses
-      cv::Mat pose_cam_group_1 = pose_abs_1[pose_ind[i]].inv();
-      cv::Mat pose_cam_group_2 = pose_abs_2[pose_ind[i]];
+      cv::Mat pose_cam_group_1 = pose_abs_1[pose_ind_i].inv();
+      cv::Mat pose_cam_group_2 = pose_abs_2[pose_ind_i];
 
       // save in datastruct
       cv::Mat r_1, r_2, t_1, t_2;
@@ -603,12 +599,12 @@ cv::Mat ransacP3PDistortion(std::vector<cv::Point3f> scene_points,
 
     // multiply by K to go into cam ref (because the OpenCV function is so
     // broken ...)
-    for (int i = 0; i < imagePointsUndis.size(); i++) {
-      imagePointsUndis[i].x =
-          imagePointsUndis[i].x * float(intrinsic.at<double>(0, 0)) +
+    for (auto &imagePointUndis : imagePointsUndis) {
+      imagePointUndis.x =
+          imagePointUndis.x * float(intrinsic.at<double>(0, 0)) +
           float(intrinsic.at<double>(0, 2));
-      imagePointsUndis[i].y =
-          imagePointsUndis[i].y * float(intrinsic.at<double>(1, 1)) +
+      imagePointUndis.y =
+          imagePointUndis.y * float(intrinsic.at<double>(1, 1)) +
           float(intrinsic.at<double>(1, 2));
     }
     // Run p3p

@@ -1,5 +1,6 @@
 #include "opencv2/core/core.hpp"
 #include <iostream>
+#include <numeric>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
@@ -28,8 +29,8 @@ Board::Board(const std::string config_path, const int board_idx) {
   fs["boards_index"] >> boards_index;
 
   if (boards_index.size() == 0) {
-    for (int i = 0; i < nb_board; i++)
-      boards_index.push_back(i);
+    boards_index.resize(nb_board);
+    std::iota(boards_index.begin(), boards_index.end(), 0);
   }
 
   if (square_size_per_board.size() == 0) {
