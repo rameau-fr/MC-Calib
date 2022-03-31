@@ -90,7 +90,12 @@ void runCalibrationWorkflow(std::string config_path) {
 
 int main(int argc, char *argv[]) {
   std::string config_path = argv[1];
-
+  const bool is_file_available =
+      boost::filesystem::exists(config_path) && config_path.length() > 0;
+  if (!is_file_available) {
+    LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
+    return -1;
+  }
   runCalibrationWorkflow(config_path);
 
   return 0;

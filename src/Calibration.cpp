@@ -21,6 +21,12 @@ Calibration::Calibration(const std::string config_path) {
   std::vector<int> boards_index;
   int nb_x_square, nb_y_square;
   float length_square, length_marker;
+  const bool is_file_available =
+      boost::filesystem::exists(config_path) && config_path.length() > 0;
+  if (!is_file_available) {
+    LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
+    return;
+  }
   fs.open(config_path, cv::FileStorage::READ);
   fs["number_camera"] >> nb_camera_;
   fs["number_board"] >> nb_board_;
@@ -480,6 +486,14 @@ void Calibration::insertNewObjectObservation(
 void Calibration::initializeCalibrationAllCam() {
   if (!cam_params_path_.empty() && cam_params_path_ != "None") {
     cv::FileStorage fs;
+    const bool is_file_available =
+        boost::filesystem::exists(cam_params_path_) &&
+        cam_params_path_.length() > 0;
+    if (!is_file_available) {
+      LOG_FATAL << "Camera parameters path '" << cam_params_path_
+                << "' doesn't exist.";
+      return;
+    }
     fs.open(cam_params_path_, cv::FileStorage::READ);
 
     LOG_INFO << "Initializing camera calibration from " << cam_params_path_;

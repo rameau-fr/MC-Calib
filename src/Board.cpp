@@ -1,3 +1,4 @@
+#include "boost/filesystem.hpp"
 #include "opencv2/core/core.hpp"
 #include <iostream>
 #include <numeric>
@@ -21,6 +22,12 @@ Board::Board(const std::string config_path, const int board_idx) {
   std::vector<int> boards_index;
   int nb_board;
   cv::FileStorage fs; // FileStorage object to read calibration params from file
+  const bool is_file_available =
+      boost::filesystem::exists(config_path) && config_path.length() > 0;
+  if (!is_file_available) {
+    LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
+    return;
+  }
   fs.open(config_path, cv::FileStorage::READ);
   fs["number_board"] >> nb_board;
   fs["number_x_square_per_board"] >> number_x_square_per_board;

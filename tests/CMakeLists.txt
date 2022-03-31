@@ -1,4 +1,4 @@
-find_package (Boost REQUIRED COMPONENTS unit_test_framework log_setup log)
+find_package (Boost REQUIRED COMPONENTS unit_test_framework log_setup log filesystem REQUIRED)
 
 include_directories (${Boost_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src)
 
