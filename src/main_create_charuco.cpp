@@ -1,3 +1,4 @@
+#include "boost/filesystem.hpp"
 #include <iomanip>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
@@ -20,6 +21,12 @@ int main(int argc, char *argv[]) {
   std::vector<int> resolution_x_per_board, resolution_y_per_board;
   std::vector<double> square_size_per_board;
   cv::FileStorage fs; // FileStorage to read calibration params from file
+  const bool is_file_available =
+      boost::filesystem::exists(pathInt) && pathInt.length() > 0;
+  if (!is_file_available) {
+    std::cout << "Config path '" << pathInt << "' doesn't exist." << std::endl;
+    return -1;
+  }
   fs.open(pathInt, cv::FileStorage::READ);
   fs["number_x_square"] >> num_x_square;
   fs["number_y_square"] >> num_y_square;

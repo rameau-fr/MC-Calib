@@ -15,7 +15,7 @@ find_package(Ceres REQUIRED)
 # boost related setup
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-find_package(Boost REQUIRED log)
+find_package(Boost COMPONENTS log system filesystem REQUIRED)
 message(STATUS "Boost version: ${Boost_VERSION}")
 
 # This is needed if your Boost version is newer than your CMake version
@@ -73,14 +73,14 @@ list(REMOVE_ITEM MC_CALIB_SRC ${PROJECT_SOURCE_DIR}/src/main_calibrate.cpp ${PRO
 add_executable(calibrate src/main_calibrate.cpp ${MC_CALIB_SRC})
 
 target_link_libraries(calibrate
- -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log
+ -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log Boost::system Boost::filesystem 
  )
 
 ##################Generate Charuco######################
 add_executable(generate_charuco src/main_create_charuco.cpp)
 
 target_link_libraries(generate_charuco
- -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log
+ -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log Boost::system Boost::filesystem
  )
 
 # unit tests related
