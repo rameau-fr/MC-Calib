@@ -11,7 +11,7 @@ cv::Mat RVecT2Proj(cv::Mat RVec, cv::Mat T);
 cv::Mat RVecT2ProjInt(cv::Mat RVec, cv::Mat T, cv::Mat K);
 void Proj2RT(cv::Mat Proj, cv::Mat &R, cv::Mat &T);
 cv::Mat vectorProj(std::vector<float> ProjV);
-std::vector<float> ProjToVec(cv::Mat Proj);
+std::array<float, 6> ProjToVec(cv::Mat Proj);
 void invertRvecT(cv::Mat Rvec, cv::Mat T, cv::Mat &iR, cv::Mat &iT);
 void invertRvecT(cv::Mat &Rvec, cv::Mat &T);
 cv::Point3f triangulateNViewLinearEigen(std::vector<cv::Point2f> Pts2D,

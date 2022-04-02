@@ -307,8 +307,9 @@ void CameraGroup::reproErrorCameraGroup() {
 
                 // Compute the reprojection error
                 std::vector<cv::Point3f> object_pts;
+                object_pts.reserve(obj_pts_idx.size());
                 for (const auto &obj_pt_idx : obj_pts_idx)
-                  object_pts.push_back(obj_pts_3d[obj_pt_idx]);
+                  object_pts.emplace_back(obj_pts_3d[obj_pt_idx]);
 
                 // Apply object pose transform
                 std::vector<cv::Point3f> object_pts_trans1 =

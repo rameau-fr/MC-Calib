@@ -118,23 +118,17 @@ Calibration::Calibration(const std::string config_path) {
     // Initialize board
     std::shared_ptr<Board> new_board = std::make_shared<Board>(config_path, i);
     boards_3d_[i] = new_board;
-    LOG_DEBUG << "Here1";
-    // Prepare the 3D pts of the boards
-    for (int y = 0; y < boards_3d_[i]->nb_y_square_ - 1; y++) {
-      for (int x = 0; x < boards_3d_[i]->nb_x_square_ - 1; x++) {
-        float X = x * boards_3d_[i]->square_size_;
-        float Y = y * boards_3d_[i]->square_size_;
-        cv::Point3f pts_3d_temp;
-        pts_3d_temp.x = X;
-        pts_3d_temp.y = Y;
-        pts_3d_temp.z = 0;
-        boards_3d_[i]->pts_3d_.push_back(pts_3d_temp);
-      }
-    }
-    LOG_DEBUG << "Here2";
     boards_3d_[i]->nb_pts_ =
         (boards_3d_[i]->nb_x_square_ - 1) * (boards_3d_[i]->nb_y_square_ - 1);
     boards_3d_[i]->charuco_board_ = charuco_boards[boards_index[i]];
+    boards_3d_[i]->pts_3d_.reserve(boards_3d_[i]->nb_pts_);
+    // Prepare the 3D pts of the boards
+    for (int y = 0; y < boards_3d_[i]->nb_y_square_ - 1; y++) {
+      for (int x = 0; x < boards_3d_[i]->nb_x_square_ - 1; x++) {
+        boards_3d_[i]->pts_3d_.emplace_back(x * boards_3d_[i]->square_size_,
+                                            y * boards_3d_[i]->square_size_, 0);
+      }
+    }
   }
 }
 
@@ -236,7 +230,7 @@ void Calibration::detectBoards(const cv::Mat image, const int cam_idx,
         saddleSubpixelRefinement(graymat, charuco_corners[i], refined,
                                  corner_ref_window_, corner_ref_max_iter_);
         for (int j = 0; j < charuco_corners[i].size(); j++) {
-          if (isinf(refined[j].x) || isinf(refined[j].y)) {
+          if (std::isinf(refined[j].x) || std::isinf(refined[j].y)) {
             break;
           }
           charuco_corners[i][j].x = refined[j].x;
@@ -246,11 +240,11 @@ void Calibration::detectBoards(const cv::Mat image, const int cam_idx,
 
       // Check for colinnerarity
       std::vector<cv::Point2f> pts_on_board_2d;
+      pts_on_board_2d.reserve(charuco_idx[i].size());
       for (const auto &charuco_idx_at_board_id : charuco_idx[i]) {
-        cv::Point2f temp_pts;
-        temp_pts.x = boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].x;
-        temp_pts.y = boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].y;
-        pts_on_board_2d.push_back(temp_pts);
+        pts_on_board_2d.emplace_back(
+            boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].x,
+            boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].y);
       }
       double dum_a, dum_b, dum_c;
       double residual;
@@ -622,8 +616,15 @@ void Calibration::initInterBoardsTransform() {
     average_rotation = average_rotation / board_poses_temp.size();*/
 
     // Median
+    const size_t num_poses = board_poses_temp.size();
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
+    r1.reserve(num_poses);
+    r2.reserve(num_poses);
+    r3.reserve(num_poses);
+    t1.reserve(num_poses);
+    t2.reserve(num_poses);
+    t3.reserve(num_poses);
     for (const auto &board_pose_temp : board_poses_temp) {
       cv::Mat R, T;
       Proj2RT(board_pose_temp, R, T);
@@ -827,6 +828,7 @@ void Calibration::estimatePoseAllObjects() {
  */
 void Calibration::computeReproErrAllObject() {
   std::vector<float> err_vec;
+  err_vec.reserve(object_observations_.size());
   for (const auto &it : object_observations_)
     err_vec.push_back(it.second->computeReprojectionError());
 
@@ -917,8 +919,15 @@ void Calibration::initInterCamerasTransform() {
     average_rotation = average_rotation / camera_poses_temp.size();*/
 
     // Median technique
+    const size_t num_poses = camera_poses_temp.size();
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
+    r1.reserve(num_poses);
+    r2.reserve(num_poses);
+    r3.reserve(num_poses);
+    t1.reserve(num_poses);
+    t2.reserve(num_poses);
+    t3.reserve(num_poses);
     for (const auto &camera_pose_temp : camera_poses_temp) {
       cv::Mat R, T;
       Proj2RT(camera_pose_temp, R, T);
@@ -1592,8 +1601,15 @@ void Calibration::initInterObjectsTransform() {
     average_rotation = average_rotation / object_poses_temp.size();*/
 
     // Median
+    const size_t num_poses = object_poses_temp.size();
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
+    r1.reserve(num_poses);
+    r2.reserve(num_poses);
+    r3.reserve(num_poses);
+    t1.reserve(num_poses);
+    t2.reserve(num_poses);
+    t3.reserve(num_poses);
     for (const auto &object_pose_temp : object_poses_temp) {
       cv::Mat R, T;
       Proj2RT(object_pose_temp, R, T);
@@ -1881,10 +1897,11 @@ void Calibration::saveReprojection(const int cam_id) {
             std::vector<int> pts_ind = it_obj_obs_ptr->pts_id_;
             std::vector<cv::Point3f> pts_3d_obj =
                 it_obj_obs_object_3d_ptr->pts_3d_;
-            std::vector<cv::Point3f> pts_3d;
             std::vector<cv::Point2f> pts_repro;
+            std::vector<cv::Point3f> pts_3d;
+            pts_3d.reserve(pts_ind.size());
             for (const auto &pt_ind : pts_ind)
-              pts_3d.push_back(pts_3d_obj[pt_ind]);
+              pts_3d.emplace_back(pts_3d_obj[pt_ind]);
 
             // Reproject the pts
             cv::Mat rr, tt;

@@ -173,9 +173,6 @@ void Camera::initializeCalibration() {
   std::iota(shuffled_board_ind.begin(), shuffled_board_ind.end(), 0);
   random_shuffle(shuffled_board_ind.begin(), shuffled_board_ind.end());
 
-  // Prepare list of 2D-3D correspondences
-  std::vector<std::vector<cv::Point3f>> obj_points;
-  std::vector<std::vector<cv::Point2f>> img_points;
   // nb of boards used for the initial estimation of intrinsic parameters
   //(at least 50 boards for perspective)
   int nb_board_est = 50;
@@ -186,19 +183,25 @@ void Camera::initializeCalibration() {
   if (indbv.size() < nb_board_est)
     nb_board_est = indbv.size();
 
+  // Prepare list of 2D-3D correspondences
+  std::vector<std::vector<cv::Point3f>> obj_points;
+  std::vector<std::vector<cv::Point2f>> img_points;
+  obj_points.reserve(nb_board_est);
+  img_points.reserve(nb_board_est);
   for (int i = 0; i < nb_board_est; i++) {
     std::shared_ptr<BoardObs> board_obs_temp =
         board_observations_[indbv[shuffled_board_ind[i]]].lock();
     if (board_obs_temp) {
-      img_points.push_back(board_obs_temp->pts_2d_);
+      img_points.emplace_back(board_obs_temp->pts_2d_);
       std::vector<int> corners_idx_temp = board_obs_temp->charuco_id_;
-      std::vector<cv::Point3f> pts_3d_temp;
       std::shared_ptr<Board> board_3d_ptr = board_obs_temp->board_3d_.lock();
       if (board_3d_ptr) {
+        std::vector<cv::Point3f> pts_3d_temp;
+        pts_3d_temp.reserve(corners_idx_temp.size());
         for (const auto &corner_idx_temp : corners_idx_temp)
-          pts_3d_temp.push_back(board_3d_ptr->pts_3d_[corner_idx_temp]);
+          pts_3d_temp.emplace_back(board_3d_ptr->pts_3d_[corner_idx_temp]);
+        obj_points.emplace_back(pts_3d_temp);
       }
-      obj_points.push_back(pts_3d_temp);
     }
   }
 
