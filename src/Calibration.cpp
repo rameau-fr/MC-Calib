@@ -390,7 +390,7 @@ void Calibration::displayBoards(const cv::Mat image, const int cam_idx,
         std::vector<cv::Point2f> current_pts = board_obs_ptr->pts_2d_;
         std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
         if (board_3d_ptr) {
-          std::vector<double> color_temp = board_3d_ptr->color_;
+          std::array<int, 3> &color_temp = board_3d_ptr->color_;
           for (const auto &current_pt : current_pts) {
             LOG_DEBUG << "Pts x :: " << current_pt.x
                       << "   y :: " << current_pt.y;
@@ -1980,7 +1980,7 @@ void Calibration::saveDetection(const int cam_id) {
             // Get the 2d and 3d pts
             std::vector<cv::Point2f> pts_2d = it_obj_obs_ptr->pts_2d_;
             // plot the keypoints on the image (red project // green detected)
-            std::vector<double> color = it_obj_obs_object_3d_ptr->color_;
+            std::array<int, 3> &color = it_obj_obs_object_3d_ptr->color_;
             for (const auto &pt_2d : pts_2d) {
               cv::circle(image, cv::Point(pt_2d.x, pt_2d.y), 4,
                          cv::Scalar(color[0], color[1], color[2]), cv::FILLED,

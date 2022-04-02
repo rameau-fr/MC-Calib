@@ -59,9 +59,8 @@ Board::Board(const std::string config_path, const int board_idx) {
 
   // initialize color of the board
   cv::RNG my_rng(cv::getTickCount());
-  color_.push_back(my_rng.uniform(0, 255));
-  color_.push_back(my_rng.uniform(0, 255));
-  color_.push_back(my_rng.uniform(0, 255));
+  color_ = {my_rng.uniform(0, 255), my_rng.uniform(0, 255),
+            my_rng.uniform(0, 255)};
 }
 
 /**

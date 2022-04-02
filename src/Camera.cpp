@@ -272,11 +272,9 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
               double(current_pts_2d.x), double(current_pts_2d.y),
               double(current_pts_3d.x), double(current_pts_3d.y),
               double(current_pts_3d.z), distortion_model_);
-          // problem.AddResidualBlock(ReprojectionError, new
-          // ceres::ArctanLoss(loss), poses[i], Intrinsics);
-          problem.AddResidualBlock(reprojection_error,
-                                   new ceres::HuberLoss(1.0),
-                                   board_obs_ptr->pose_, intrinsics_);
+          problem.AddResidualBlock(
+              reprojection_error, new ceres::HuberLoss(1.0),
+              board_obs_ptr->pose_.data(), intrinsics_.data());
         }
       }
     }

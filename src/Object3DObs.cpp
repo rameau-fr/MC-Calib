@@ -47,11 +47,6 @@ void Object3DObs::insertNewBoardObs(std::shared_ptr<BoardObs> new_board_obs) {
   }
 }
 
-Object3DObs::~Object3DObs() {
-  delete[] pose_;
-  delete[] group_pose_;
-}
-
 /**
  * @brief Get the pose of the object w.r.t. the camera
  *
@@ -116,12 +111,8 @@ cv::Mat Object3DObs::getTransVec() const {
 void Object3DObs::setPoseMat(cv::Mat pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
-  pose_[0] = r_vec.at<double>(0);
-  pose_[1] = r_vec.at<double>(1);
-  pose_[2] = r_vec.at<double>(2);
-  pose_[3] = t_vec.at<double>(0);
-  pose_[4] = t_vec.at<double>(1);
-  pose_[5] = t_vec.at<double>(2);
+  pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+           t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -132,12 +123,8 @@ void Object3DObs::setPoseMat(cv::Mat pose) {
  * @param t_vec translation vector
  */
 void Object3DObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
-  pose_[0] = r_vec.at<double>(0);
-  pose_[1] = r_vec.at<double>(1);
-  pose_[2] = r_vec.at<double>(2);
-  pose_[3] = t_vec.at<double>(0);
-  pose_[4] = t_vec.at<double>(1);
-  pose_[5] = t_vec.at<double>(2);
+  pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+           t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -149,12 +136,8 @@ void Object3DObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
 void Object3DObs::setPoseInGroupMat(cv::Mat pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
-  group_pose_[0] = r_vec.at<double>(0);
-  group_pose_[1] = r_vec.at<double>(1);
-  group_pose_[2] = r_vec.at<double>(2);
-  group_pose_[3] = t_vec.at<double>(0);
-  group_pose_[4] = t_vec.at<double>(1);
-  group_pose_[5] = t_vec.at<double>(2);
+  group_pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+                 t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -165,12 +148,8 @@ void Object3DObs::setPoseInGroupMat(cv::Mat pose) {
  * @param t_vec translation vector
  */
 void Object3DObs::setPoseInGroupVec(const cv::Mat r_vec, const cv::Mat t_vec) {
-  group_pose_[0] = r_vec.at<double>(0);
-  group_pose_[1] = r_vec.at<double>(1);
-  group_pose_[2] = r_vec.at<double>(2);
-  group_pose_[3] = t_vec.at<double>(0);
-  group_pose_[4] = t_vec.at<double>(1);
-  group_pose_[5] = t_vec.at<double>(2);
+  group_pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+                 t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**

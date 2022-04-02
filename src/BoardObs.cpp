@@ -92,12 +92,8 @@ cv::Mat BoardObs::getTransVec() const {
 void BoardObs::setPoseMat(const cv::Mat pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
-  pose_[0] = r_vec.at<double>(0);
-  pose_[1] = r_vec.at<double>(1);
-  pose_[2] = r_vec.at<double>(2);
-  pose_[3] = t_vec.at<double>(0);
-  pose_[4] = t_vec.at<double>(1);
-  pose_[5] = t_vec.at<double>(2);
+  pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+           t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -108,12 +104,8 @@ void BoardObs::setPoseMat(const cv::Mat pose) {
  * @param t_vec translation vector
  */
 void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
-  pose_[0] = r_vec.at<double>(0);
-  pose_[1] = r_vec.at<double>(1);
-  pose_[2] = r_vec.at<double>(2);
-  pose_[3] = t_vec.at<double>(0);
-  pose_[4] = t_vec.at<double>(1);
-  pose_[5] = t_vec.at<double>(2);
+  pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+           t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**

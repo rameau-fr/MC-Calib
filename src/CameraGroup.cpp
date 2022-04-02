@@ -96,15 +96,11 @@ cv::Mat CameraGroup::getCameraPoseMat(int id_cam) {
  * @param id_cam index of the camera of interest in the group
  */
 void CameraGroup::setCameraPoseMat(cv::Mat pose, int id_cam) {
-  relative_camera_pose_[id_cam] = std::vector<double>(6);
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
-  relative_camera_pose_[id_cam][0] = r_vec.at<double>(0);
-  relative_camera_pose_[id_cam][1] = r_vec.at<double>(1);
-  relative_camera_pose_[id_cam][2] = r_vec.at<double>(2);
-  relative_camera_pose_[id_cam][3] = t_vec.at<double>(0);
-  relative_camera_pose_[id_cam][4] = t_vec.at<double>(1);
-  relative_camera_pose_[id_cam][5] = t_vec.at<double>(2);
+  relative_camera_pose_[id_cam] = {r_vec.at<double>(0), r_vec.at<double>(1),
+                                   r_vec.at<double>(2), t_vec.at<double>(0),
+                                   t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -115,13 +111,9 @@ void CameraGroup::setCameraPoseMat(cv::Mat pose, int id_cam) {
  * @param id_cam index of the camera of interest in the group
  */
 void CameraGroup::setCameraPoseVec(cv::Mat r_vec, cv::Mat t_vec, int id_cam) {
-  relative_camera_pose_[id_cam] = std::vector<double>(6);
-  relative_camera_pose_[id_cam][0] = r_vec.at<double>(0);
-  relative_camera_pose_[id_cam][1] = r_vec.at<double>(1);
-  relative_camera_pose_[id_cam][2] = r_vec.at<double>(2);
-  relative_camera_pose_[id_cam][3] = t_vec.at<double>(0);
-  relative_camera_pose_[id_cam][4] = t_vec.at<double>(1);
-  relative_camera_pose_[id_cam][5] = t_vec.at<double>(2);
+  relative_camera_pose_[id_cam] = {r_vec.at<double>(0), r_vec.at<double>(1),
+                                   r_vec.at<double>(2), t_vec.at<double>(0),
+                                   t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -450,7 +442,8 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
                               ->object_pose_[it_obj3d_ptr->object_3d_id_]
                               .data(),
                           object_3d_ptr
-                              ->relative_board_pose_[board_id_pts_id.first]);
+                              ->relative_board_pose_[board_id_pts_id.first]
+                              .data());
                     }
                   }
                 }
@@ -559,8 +552,9 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                               ->object_pose_[it_obj3d_ptr->object_3d_id_]
                               .data(),
                           object_3d_ptr
-                              ->relative_board_pose_[board_id_pts_id.first],
-                          cam_ptr->intrinsics_);
+                              ->relative_board_pose_[board_id_pts_id.first]
+                              .data(),
+                          cam_ptr->intrinsics_.data());
                     }
                   }
                 }
