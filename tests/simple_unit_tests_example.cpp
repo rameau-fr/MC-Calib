@@ -11,9 +11,9 @@ BOOST_AUTO_TEST_SUITE(CheckGeometryTools)
 BOOST_AUTO_TEST_CASE(ProjToVecAllZeros) {
   cv::Mat proj_matrix = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
                          1, 0, 0, 0, 0, 1);
-  std::vector<float> output = ProjToVec(proj_matrix);
+  std::array<float, 6> output = ProjToVec(proj_matrix);
 
-  std::vector<float> answer = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  std::array<float, 6> answer = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
   BOOST_REQUIRE_EQUAL_COLLECTIONS(output.begin(), output.end(), answer.begin(),
                                   answer.end());

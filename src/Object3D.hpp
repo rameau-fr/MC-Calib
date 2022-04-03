@@ -25,10 +25,10 @@ class Camera;
 class Object3D final {
 public:
   // Parameters
-  int nb_boards_;             // number of boards constituting the 3D object
-  int nb_pts_;                // Number of points in the 3D object
-  std::vector<double> color_; // color of the 3D object
-  int obj_id_;                // id of the 3D object
+  int nb_boards_;            // number of boards constituting the 3D object
+  int nb_pts_;               // Number of points in the 3D object
+  std::array<int, 3> color_; // color of the 3D object
+  int obj_id_;               // id of the 3D object
   int ref_board_id_; // the id of the reference board (which will take the pose
                      // I|0)
 
@@ -43,7 +43,7 @@ public:
 
   // Boards composing the object
   std::map<int, std::weak_ptr<Board>> boards_;
-  std::map<int, double *> relative_board_pose_;
+  std::map<int, std::array<double, 6>> relative_board_pose_;
 
   // List of object observation for this 3D object
   std::map<int, std::weak_ptr<Object3DObs>> object_observations_;
@@ -53,9 +53,9 @@ public:
 
   // Functions
   Object3D() = delete;
-  ~Object3D();
+  ~Object3D(){};
   Object3D(const int nb_boards, const int ref_board_id, const int obj_id,
-           const std::vector<double> color);
+           const std::array<int, 3> color);
   void insertBoardInObject(std::shared_ptr<Board> new_board);
   void insertNewObject(std::shared_ptr<Object3DObs> new_object);
   void insertNewFrame(std::shared_ptr<Frame> new_frame);

@@ -29,7 +29,7 @@ void Object3D::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
  * @param color color of the 3D object
  */
 Object3D::Object3D(const int nb_boards, const int ref_board_id,
-                   const int obj_id, const std::vector<double> color)
+                   const int obj_id, const std::array<int, 3> color)
     : nb_boards_(nb_boards), ref_board_id_(ref_board_id), obj_id_(obj_id),
       nb_pts_(0), color_(color){};
 
@@ -51,12 +51,6 @@ void Object3D::insertBoardInObject(std::shared_ptr<Board> new_board) {
  */
 void Object3D::insertNewFrame(std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
-}
-
-Object3D::~Object3D() {
-  for (auto const &item : relative_board_pose_)
-    delete[] item.second;
-  relative_board_pose_.clear();
 }
 
 /**
@@ -102,15 +96,11 @@ cv::Mat Object3D::getBoardPoseMat(int board_id) {
  * @param board_id board index of interest
  */
 void Object3D::setBoardPoseMat(cv::Mat pose, int board_id) {
-  relative_board_pose_[board_id] = new double[6];
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
-  relative_board_pose_[board_id][0] = r_vec.at<double>(0);
-  relative_board_pose_[board_id][1] = r_vec.at<double>(1);
-  relative_board_pose_[board_id][2] = r_vec.at<double>(2);
-  relative_board_pose_[board_id][3] = t_vec.at<double>(0);
-  relative_board_pose_[board_id][4] = t_vec.at<double>(1);
-  relative_board_pose_[board_id][5] = t_vec.at<double>(2);
+  relative_board_pose_[board_id] = {r_vec.at<double>(0), r_vec.at<double>(1),
+                                    r_vec.at<double>(2), t_vec.at<double>(0),
+                                    t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -121,13 +111,9 @@ void Object3D::setBoardPoseMat(cv::Mat pose, int board_id) {
  * @param board_id board index of interest
  */
 void Object3D::setBoardPoseVec(cv::Mat r_vec, cv::Mat t_vec, int board_id) {
-  relative_board_pose_[board_id] = new double[6];
-  relative_board_pose_[board_id][0] = r_vec.at<double>(0);
-  relative_board_pose_[board_id][1] = r_vec.at<double>(1);
-  relative_board_pose_[board_id][2] = r_vec.at<double>(2);
-  relative_board_pose_[board_id][3] = t_vec.at<double>(0);
-  relative_board_pose_[board_id][4] = t_vec.at<double>(1);
-  relative_board_pose_[board_id][5] = t_vec.at<double>(2);
+  relative_board_pose_[board_id] = {r_vec.at<double>(0), r_vec.at<double>(1),
+                                    r_vec.at<double>(2), t_vec.at<double>(0),
+                                    t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -212,8 +198,8 @@ void Object3D::refineObject(const int nb_iterations) {
                         t1, t2, refine_board, cam_ptr->distortion_model_);
                 problem.AddResidualBlock(
                     reprojection_error, new ceres::HuberLoss(1.0),
-                    current_object_obs->pose_,
-                    relative_board_pose_[board_obs_ptr->board_id_]);
+                    current_object_obs->pose_.data(),
+                    relative_board_pose_[board_obs_ptr->board_id_].data());
               }
             }
           }

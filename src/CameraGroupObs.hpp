@@ -24,7 +24,7 @@ public:
   std::vector<int> object_idx_; // index of the visible 3d objects
   std::map<int, std::weak_ptr<Object3DObs>>
       object_observations_; // Objects stored
-  std::map<int, std::vector<double>>
+  std::map<int, std::array<double, 6>>
       object_pose_; // object pose wrt. the ref. cam of the group
 
   // Camera group

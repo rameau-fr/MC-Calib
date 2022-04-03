@@ -28,7 +28,7 @@ public:
   int board_id_;
 
   // Pose
-  double *pose_ = new double[6];
+  std::array<double, 6> pose_;
 
   // points
   std::vector<cv::Point2f> pts_2d_;
@@ -46,7 +46,7 @@ public:
 
   // Functions
   BoardObs() = delete;
-  ~BoardObs() { delete[] pose_; };
+  ~BoardObs(){};
   BoardObs(const int camera_id, const int frame_id, const int board_id,
            const std::vector<cv::Point2f> pts_2d,
            const std::vector<int> charuco_id, std::shared_ptr<Camera> cam,

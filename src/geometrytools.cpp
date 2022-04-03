@@ -63,20 +63,16 @@ cv::Mat vectorProj(std::vector<float> ProjV) // R Rodrigues | T vector
   return Proj;
 }
 
-std::vector<float> ProjToVec(cv::Mat Proj) // Projection matrix to float vector
-{
+// Projection matrix to float array
+std::array<float, 6> ProjToVec(cv::Mat Proj) {
   cv::Mat R(1, 3, CV_64F);
   cv::Mat T(3, 1, CV_64F);
   cv::Rodrigues(Proj(cv::Range(0, 3), cv::Range(0, 3)), R);
   T = Proj(cv::Range(0, 3), cv::Range(3, 4));
-  std::vector<float> Output;
-  Output.push_back((float)R.at<double>(0));
-  Output.push_back((float)R.at<double>(1));
-  Output.push_back((float)R.at<double>(2));
-  Output.push_back((float)T.at<double>(0));
-  Output.push_back((float)T.at<double>(1));
-  Output.push_back((float)T.at<double>(2));
-  return Output;
+  std::array<float, 6> output = {
+      (float)R.at<double>(0), (float)R.at<double>(1), (float)R.at<double>(2),
+      (float)T.at<double>(0), (float)T.at<double>(1), (float)T.at<double>(2)};
+  return output;
 }
 
 // Invert vector representation
@@ -127,8 +123,9 @@ void calcLinePara(std::vector<cv::Point2f> pts, double &a, double &b, double &c,
   res = 0;
   cv::Vec4f line;
   std::vector<cv::Point2f> ptsF;
+  ptsF.reserve(pts.size());
   for (const auto &pt : pts)
-    ptsF.push_back(pt);
+    ptsF.emplace_back(pt);
 
   cv::fitLine(ptsF, line, cv::DistanceTypes::DIST_L2, 0, 1e-2, 1e-2);
   a = line[1];
@@ -168,22 +165,14 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
   while (N > trialcount && countit < it) {
     // pick 2 points
     std::random_shuffle(myvector.begin(), myvector.end());
-    std::vector<int> idx;
-    idx.push_back(myvector[0]);
-    idx.push_back(myvector[1]);
-    idx.push_back(myvector[2]);
-    idx.push_back(myvector[3]);
+    std::array<int, 4> idx = {myvector[0], myvector[1], myvector[2],
+                              myvector[3]};
 
     // Select the corresponding sample of 2D pts and corresponding rot and trans
-    std::vector<cv::Point2f> image2Pts;
-    image2Pts.push_back(point2d[idx[0]]);
-    image2Pts.push_back(point2d[idx[1]]);
-    std::vector<cv::Mat> Rot2Pts;
-    Rot2Pts.push_back(rotation_vec[idx[0]]);
-    Rot2Pts.push_back(rotation_vec[idx[1]]);
-    std::vector<cv::Mat> Trans2Pts;
-    Trans2Pts.push_back(translation_vec[idx[0]]);
-    Trans2Pts.push_back(translation_vec[idx[1]]);
+    std::vector<cv::Point2f> image2Pts = {point2d[idx[0]], point2d[idx[1]]};
+    std::vector<cv::Mat> Rot2Pts = {rotation_vec[idx[0]], rotation_vec[idx[1]]};
+    std::vector<cv::Mat> Trans2Pts = {translation_vec[idx[0]],
+                                      translation_vec[idx[1]]};
 
     // Triangulate with these 2 pts
     cv::Point3f PtsTrip =
@@ -195,12 +184,12 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
     for (int k = 0; k < rotation_vec.size(); k++) {
       // Reproject points
       std::vector<cv::Point2f> reprojected_pts;
-      std::vector<cv::Point3f> point3d_tmp;
-      point3d_tmp.push_back(PtsTrip);
+      std::vector<cv::Point3f> point3d_tmp = {PtsTrip};
       projectPoints(point3d_tmp, rotation_vec[k], translation_vec[k], intrinsic,
                     distortion_vector, reprojected_pts);
-      if (sqrt(pow((point2d[k].x - reprojected_pts[0].x), 2) +
-               pow((point2d[k].y - reprojected_pts[0].y), 2)) < thresh) {
+      if (std::sqrt(std::pow((point2d[k].x - reprojected_pts[0].x), 2) +
+                    std::pow((point2d[k].y - reprojected_pts[0].y), 2)) <
+          thresh) {
         Index.push_back(k);
         NbInliers++;
       }
@@ -257,23 +246,16 @@ cv::Mat ransacP3P(std::vector<cv::Point3f> scenePoints,
 
     // pick 4 points
     std::random_shuffle(myvector.begin(), myvector.end());
-    std::vector<int> idx;
-    idx.push_back(myvector[0]);
-    idx.push_back(myvector[1]);
-    idx.push_back(myvector[2]);
-    idx.push_back(myvector[3]);
+    std::array<int, 4> idx = {myvector[0], myvector[1], myvector[2],
+                              myvector[3]};
 
     // Select the corresponding sample
-    std::vector<cv::Point3f> scenePoints3Pts;
-    scenePoints3Pts.push_back(scenePoints[idx[0]]);
-    scenePoints3Pts.push_back(scenePoints[idx[1]]);
-    scenePoints3Pts.push_back(scenePoints[idx[2]]);
-    scenePoints3Pts.push_back(scenePoints[idx[3]]);
-    std::vector<cv::Point2f> imagePoints3Pts;
-    imagePoints3Pts.push_back(imagePoints[idx[0]]);
-    imagePoints3Pts.push_back(imagePoints[idx[1]]);
-    imagePoints3Pts.push_back(imagePoints[idx[2]]);
-    imagePoints3Pts.push_back(imagePoints[idx[3]]);
+    std::vector<cv::Point3f> scenePoints3Pts = {
+        scenePoints[idx[0]], scenePoints[idx[1]], scenePoints[idx[2]],
+        scenePoints[idx[3]]};
+    std::vector<cv::Point2f> imagePoints3Pts = {
+        imagePoints[idx[0]], imagePoints[idx[1]], imagePoints[idx[2]],
+        imagePoints[idx[3]]};
 
     // Apply P3P (fourth point for disambiguation)
     solvePnP(scenePoints3Pts, imagePoints3Pts, Intrinsic, Disto, Rot, Trans,
@@ -319,12 +301,12 @@ cv::Mat ransacP3P(std::vector<cv::Point3f> scenePoints,
   }
 
   if (refine == true & (BestInNb >= 4)) {
-    std::vector<cv::Point3f> scenePointsInliers;
-    std::vector<cv::Point2f> imagePointsInliers;
+    std::vector<cv::Point3f> scenePointsInliers(BestInNb);
+    std::vector<cv::Point2f> imagePointsInliers(BestInNb);
 
     for (int j = 0; j < BestInNb; j++) {
-      imagePointsInliers.push_back(imagePoints[InliersR.at<int>(j)]);
-      scenePointsInliers.push_back(scenePoints[InliersR.at<int>(j)]);
+      imagePointsInliers[j] = imagePoints[InliersR.at<int>(j)];
+      scenePointsInliers[j] = scenePoints[InliersR.at<int>(j)];
     }
     solvePnP(scenePointsInliers, imagePointsInliers, Intrinsic, Disto, BestR,
              BestT, true, 0); // CV_ITERATIVE = 0 non linear
@@ -370,9 +352,10 @@ cv::Mat handeyeCalibration(std::vector<cv::Mat> pose_abs_1,
                            std::vector<cv::Mat> pose_abs_2) {
 
   // Prepare the poses for handeye calibration
-  std::vector<cv::Mat> r_cam_group_1, t_cam_group_1, r_cam_group_2,
-      t_cam_group_2;
-  for (int i = 0; i < pose_abs_1.size(); i++) {
+  const size_t num_poses = pose_abs_1.size();
+  std::vector<cv::Mat> r_cam_group_1(num_poses), t_cam_group_1(num_poses),
+      r_cam_group_2(num_poses), t_cam_group_2(num_poses);
+  for (size_t i = 0; i < num_poses; i++) {
     // get the poses
     cv::Mat pose_cam_group_1 = pose_abs_1[i].inv();
     cv::Mat pose_cam_group_2 = pose_abs_2[i];
@@ -384,10 +367,10 @@ cv::Mat handeyeCalibration(std::vector<cv::Mat> pose_abs_1,
     cv::Mat r_1_mat, r_2_mat;
     Rodrigues(r_1, r_1_mat);
     Rodrigues(r_2, r_2_mat);
-    r_cam_group_1.push_back(r_1_mat);
-    t_cam_group_1.push_back(t_1);
-    r_cam_group_2.push_back(r_2_mat);
-    t_cam_group_2.push_back(t_2);
+    r_cam_group_1[i] = r_1_mat;
+    t_cam_group_1[i] = t_1;
+    r_cam_group_2[i] = r_2_mat;
+    t_cam_group_2[i] = t_2;
   }
 
   // Hand-eye calibration
@@ -455,12 +438,14 @@ cv::Mat handeyeBootstratpTranslationCalibration(
     std::mt19937 g(rd());
     std::shuffle(shuffled_ind.begin(), shuffled_ind.end(), g);
     std::vector<unsigned int> cluster_select;
+    cluster_select.reserve(nb_clust_pick);
     for (unsigned int k = 0; k < nb_clust_pick; ++k) {
       cluster_select.push_back(shuffled_ind[k]);
     }
 
     // Select one pair of pose for each cluster
     std::vector<unsigned int> pose_ind;
+    pose_ind.reserve(cluster_select.size());
     for (const unsigned int &clust_ind : cluster_select) {
       std::vector<unsigned int> idx;
       for (unsigned int j = 0; j < pose_abs_2.size(); j++) {
@@ -480,6 +465,10 @@ cv::Mat handeyeBootstratpTranslationCalibration(
     // Prepare the poses for handeye calibration
     std::vector<cv::Mat> r_cam_group_1, t_cam_group_1, r_cam_group_2,
         t_cam_group_2;
+    r_cam_group_1.reserve(pose_ind.size());
+    t_cam_group_1.reserve(pose_ind.size());
+    r_cam_group_2.reserve(pose_ind.size());
+    t_cam_group_2.reserve(pose_ind.size());
     for (const auto &pose_ind_i : pose_ind) {
       // get the poses
       cv::Mat pose_cam_group_1 = pose_abs_1[pose_ind_i].inv();
@@ -563,9 +552,10 @@ cv::Mat handeyeBootstratpTranslationCalibration(
   }
 }
 
+// median of the vector but modifies original vector
 double median(std::vector<double> &v) {
   size_t n = v.size() / 2;
-  nth_element(v.begin(), v.begin() + n, v.end());
+  std::nth_element(v.begin(), v.begin() + n, v.end());
   return v[n];
 }
 

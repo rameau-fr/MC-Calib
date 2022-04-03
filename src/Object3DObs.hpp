@@ -36,12 +36,10 @@ public:
   int object_3d_id_;
 
   // Pose
-  double *pose_ = new double[6];
+  std::array<double, 6> pose_;
 
-  // Pose in camera group
-  double *group_pose_ =
-      new double[6]; // pose of the object expressed in camera group referential
-  // int cam_group_id_;
+  // Pose of the object expressed in camera group referential
+  std::array<double, 6> group_pose_;
 
   // points
   std::vector<cv::Point2f> pts_2d_;
@@ -65,7 +63,7 @@ public:
 
   // Functions
   Object3DObs() = delete;
-  ~Object3DObs();
+  ~Object3DObs(){};
   Object3DObs(std::shared_ptr<Object3D> obj_obs, const int object_idx);
   void insertNewBoardObs(std::shared_ptr<BoardObs> new_board_obs);
   void getPoseVec(cv::Mat &R, cv::Mat &T) const;

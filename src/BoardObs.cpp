@@ -92,12 +92,8 @@ cv::Mat BoardObs::getTransVec() const {
 void BoardObs::setPoseMat(const cv::Mat pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
-  pose_[0] = r_vec.at<double>(0);
-  pose_[1] = r_vec.at<double>(1);
-  pose_[2] = r_vec.at<double>(2);
-  pose_[3] = t_vec.at<double>(0);
-  pose_[4] = t_vec.at<double>(1);
-  pose_[5] = t_vec.at<double>(2);
+  pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+           t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -108,12 +104,8 @@ void BoardObs::setPoseMat(const cv::Mat pose) {
  * @param t_vec translation vector
  */
 void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
-  pose_[0] = r_vec.at<double>(0);
-  pose_[1] = r_vec.at<double>(1);
-  pose_[2] = r_vec.at<double>(2);
-  pose_[3] = t_vec.at<double>(0);
-  pose_[4] = t_vec.at<double>(1);
-  pose_[5] = t_vec.at<double>(2);
+  pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
+           t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
 
 /**
@@ -127,10 +119,11 @@ void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
  */
 void BoardObs::estimatePose(const float ransac_thresh) {
   std::vector<cv::Point3f> board_pts_temp;
+  board_pts_temp.reserve(charuco_id_.size());
   for (const int &charuco_id : charuco_id_) {
     std::shared_ptr<Board> board_3d_ptr = board_3d_.lock();
     if (board_3d_ptr)
-      board_pts_temp.push_back(board_3d_ptr->pts_3d_[charuco_id]);
+      board_pts_temp.emplace_back(board_3d_ptr->pts_3d_[charuco_id]);
   }
 
   // Estimate the pose using a RANSAC
@@ -155,11 +148,11 @@ void BoardObs::estimatePose(const float ransac_thresh) {
     }
 
     // remove outliers
-    std::vector<cv::Point2f> new_pts_vec;
-    std::vector<int> new_charuco_id;
+    std::vector<cv::Point2f> new_pts_vec(inliers.rows);
+    std::vector<int> new_charuco_id(inliers.rows);
     for (int i = 0; i < inliers.rows; i++) {
-      new_pts_vec.push_back(pts_2d_[inliers.at<int>(i)]);
-      new_charuco_id.push_back(charuco_id_[inliers.at<int>(i)]);
+      new_pts_vec[i] = pts_2d_[inliers.at<int>(i)];
+      new_charuco_id[i] = charuco_id_[inliers.at<int>(i)];
     }
     pts_2d_ = new_pts_vec;
     charuco_id_ = new_charuco_id;
@@ -169,10 +162,11 @@ void BoardObs::estimatePose(const float ransac_thresh) {
 float BoardObs::computeReprojectionError() {
   float sum_err_board = 0;
   std::vector<cv::Point3f> board_pts_temp;
+  board_pts_temp.reserve(charuco_id_.size());
   for (const int &charuco_id : charuco_id_) {
     std::shared_ptr<Board> board_3d_ptr = board_3d_.lock();
     if (board_3d_ptr)
-      board_pts_temp.push_back(board_3d_ptr->pts_3d_[charuco_id]);
+      board_pts_temp.emplace_back(board_3d_ptr->pts_3d_[charuco_id]);
   }
   // Project the 3D pts on the image
   std::vector<cv::Point2f> repro_pts;
@@ -184,8 +178,8 @@ float BoardObs::computeReprojectionError() {
                                 cam_ptr->getDistortionVectorVector(), repro_pts,
                                 cam_ptr->distortion_model_);
     for (int j = 0; j < repro_pts.size(); j++) {
-      float rep_err = sqrt(pow((pts_2d_[j].x - repro_pts[j].x), 2) +
-                           pow((pts_2d_[j].y - repro_pts[j].y), 2));
+      float rep_err = std::sqrt(std::pow((pts_2d_[j].x - repro_pts[j].x), 2) +
+                                std::pow((pts_2d_[j].y - repro_pts[j].y), 2));
       error_board_vec.push_back(rep_err);
       sum_err_board += rep_err;
       // if (rep_err > 6.0)
