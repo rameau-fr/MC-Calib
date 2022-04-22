@@ -588,21 +588,28 @@ void Calibration::computeBoardsPairPose() {
 }
 
 /**
- * @brief Compute the mean transformation between all boards' observations
+ * @brief Compute the mean transformation between pose pairs
  *
- * Multiple interboard pose can be computed per frames, these measurements are
- * averaged in this function.
+ * Multiple poses can be computed per frames, these measurements are then
+ * averaged.
+ *
+ * @param pose_pairs from {board_pose_pairs_, camera_pose_pairs_,
+ * object_pose_pairs_}
+ * @param inter_transform from {inter_board_transform_, inter_camera_transform_,
+ * inter_object_transform_}
  */
-void Calibration::initInterBoardsTransform() {
-  inter_board_transform_.clear();
-  for (const auto &it : board_pose_pairs_) {
-    std::pair<int, int> board_pair_idx = it.first;
-    std::vector<cv::Mat> board_poses_temp = it.second;
+void Calibration::initInterTransform(
+    const std::map<std::pair<int, int>, std::vector<cv::Mat>> &pose_pairs,
+    std::map<std::pair<int, int>, cv::Mat> &inter_transform) {
+  inter_transform.clear();
+  for (const auto &it : pose_pairs) {
+    const std::pair<int, int> &pair_idx = it.first;
+    const std::vector<cv::Mat> &poses_temp = it.second;
     cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
     cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
 
     // Median
-    const size_t num_poses = board_poses_temp.size();
+    const size_t num_poses = poses_temp.size();
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
     r1.reserve(num_poses);
@@ -611,9 +618,9 @@ void Calibration::initInterBoardsTransform() {
     t1.reserve(num_poses);
     t2.reserve(num_poses);
     t3.reserve(num_poses);
-    for (const auto &board_pose_temp : board_poses_temp) {
+    for (const auto &pose_temp : poses_temp) {
       cv::Mat R, T;
-      Proj2RT(board_pose_temp, R, T);
+      Proj2RT(pose_temp, R, T);
       r1.push_back(R.at<double>(0));
       r2.push_back(R.at<double>(1));
       r3.push_back(R.at<double>(2));
@@ -628,7 +635,7 @@ void Calibration::initInterBoardsTransform() {
     average_translation.at<double>(1) = median(t2);
     average_translation.at<double>(2) = median(t3);
 
-    inter_board_transform_[board_pair_idx] =
+    inter_transform[pair_idx] =
         RVecT2Proj(average_rotation, average_translation);
     LOG_DEBUG << "Average Rot :: " << average_rotation
               << "    Average Trans :: " << average_translation;
@@ -871,52 +878,6 @@ void Calibration::computeCamerasPairPose() {
         }
       }
     }
-  }
-}
-
-/**
- * @brief Find average transformation between pairs of cameras to form groups
- *
- */
-void Calibration::initInterCamerasTransform() {
-  inter_camera_transform_.clear();
-  for (const auto &it : camera_pose_pairs_) {
-    std::pair<int, int> camera_pair_idx = it.first;
-    std::vector<cv::Mat> camera_poses_temp = it.second;
-    cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
-    cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
-
-    // Median technique
-    const size_t num_poses = camera_poses_temp.size();
-    std::vector<double> r1, r2, r3;
-    std::vector<double> t1, t2, t3;
-    r1.reserve(num_poses);
-    r2.reserve(num_poses);
-    r3.reserve(num_poses);
-    t1.reserve(num_poses);
-    t2.reserve(num_poses);
-    t3.reserve(num_poses);
-    for (const auto &camera_pose_temp : camera_poses_temp) {
-      cv::Mat R, T;
-      Proj2RT(camera_pose_temp, R, T);
-      r1.push_back(R.at<double>(0));
-      r2.push_back(R.at<double>(1));
-      r3.push_back(R.at<double>(2));
-      t1.push_back(T.at<double>(0));
-      t2.push_back(T.at<double>(1));
-      t3.push_back(T.at<double>(2));
-    }
-    average_rotation.at<double>(0) = median(r1);
-    average_rotation.at<double>(1) = median(r2);
-    average_rotation.at<double>(2) = median(r3);
-    average_translation.at<double>(0) = median(t1);
-    average_translation.at<double>(1) = median(t2);
-    average_translation.at<double>(2) = median(t3);
-
-    inter_camera_transform_[camera_pair_idx] =
-        RVecT2Proj(average_rotation, average_translation);
-    LOG_DEBUG << "Average Rot :: " << average_rotation
-              << "    Average Trans :: " << average_translation;
   }
 }
 
@@ -1531,54 +1492,6 @@ void Calibration::computeObjectsPairPose() {
 }
 
 /**
- * @brief Compute the mean transformation between all objects' observations
- *
- * Multiple interobject pose can be computed per frames, these measurements are
- * averaged in this function.
- */
-void Calibration::initInterObjectsTransform() {
-  inter_object_transform_.clear();
-  for (const auto &it : object_pose_pairs_) {
-    std::pair<int, int> object_pair_idx = it.first;
-    std::vector<cv::Mat> object_poses_temp = it.second;
-    cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
-    cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
-
-    // Median
-    const size_t num_poses = object_poses_temp.size();
-    std::vector<double> r1, r2, r3;
-    std::vector<double> t1, t2, t3;
-    r1.reserve(num_poses);
-    r2.reserve(num_poses);
-    r3.reserve(num_poses);
-    t1.reserve(num_poses);
-    t2.reserve(num_poses);
-    t3.reserve(num_poses);
-    for (const auto &object_pose_temp : object_poses_temp) {
-      cv::Mat R, T;
-      Proj2RT(object_pose_temp, R, T);
-      r1.push_back(R.at<double>(0));
-      r2.push_back(R.at<double>(1));
-      r3.push_back(R.at<double>(2));
-      t1.push_back(T.at<double>(0));
-      t2.push_back(T.at<double>(1));
-      t3.push_back(T.at<double>(2));
-    }
-    average_rotation.at<double>(0) = median(r1);
-    average_rotation.at<double>(1) = median(r2);
-    average_rotation.at<double>(2) = median(r3);
-    average_translation.at<double>(0) = median(t1);
-    average_translation.at<double>(1) = median(t2);
-    average_translation.at<double>(2) = median(t3);
-
-    inter_object_transform_[object_pair_idx] =
-        RVecT2Proj(average_rotation, average_translation);
-    LOG_DEBUG << "Average Rot :: " << average_rotation
-              << "    Average Trans :: " << average_translation;
-  }
-}
-
-/**
  * @brief Initialize the graph with the poses between objects
  *
  */
@@ -1988,7 +1901,7 @@ void Calibration::initIntrinsic() {
  */
 void Calibration::calibrate3DObjects() {
   computeBoardsPairPose();
-  initInterBoardsTransform();
+  initInterTransform(board_pose_pairs_, inter_board_transform_);
   initInterBoardsGraph();
   init3DObjects();
   initAll3DObjectObs();
@@ -2004,7 +1917,7 @@ void Calibration::calibrate3DObjects() {
  */
 void Calibration::calibrateCameraGroup() {
   computeCamerasPairPose();
-  initInterCamerasTransform();
+  initInterTransform(camera_pose_pairs_, inter_camera_transform_);
   initInterCamerasGraph();
   initCameraGroup();
   initAllCameraGroupObs();
@@ -2021,7 +1934,7 @@ void Calibration::merge3DObjects() {
   estimatePoseAllObjects();
   computeAllObjPoseInCameraGroup();
   computeObjectsPairPose();
-  initInterObjectsTransform();
+  initInterTransform(object_pose_pairs_, inter_object_transform_);
   initInterObjectsGraph();
   this->reproErrorAllCamGroup();
   mergeObjects();
