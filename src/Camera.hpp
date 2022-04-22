@@ -59,5 +59,4 @@ public:
   cv::Mat getDistortionVectorVector() const;
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
   void setIntrinsics(const cv::Mat K, const cv::Mat distortion_vector);
-  void computeReproErrAllBoard();
 };

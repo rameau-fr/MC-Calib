@@ -34,7 +34,6 @@ CameraGroupObs::~CameraGroupObs() {}
 /**
  * @brief Compute pose of object in the camera obs
  *
- * @todo remove dead code
  */
 void CameraGroupObs::computeObjectsPose() {
 
@@ -88,12 +87,6 @@ void CameraGroupObs::computeObjectsPose() {
       // Average version
       group_pose_t = average_translation / it_obj_obs.second.size();
       group_pose_r = average_rotation / it_obj_obs.second.size();
-
-      // One board version (arbitrary)
-      // group_pose_r =
-      // object_observations_[it_obj_obs->second[0]]->getRotInGroupVec();
-      // group_pose_t =
-      // object_observations_[it_obj_obs->second[0]]->getTransInGroupVec();
     }
 
     // set the pose and update the observation
@@ -101,16 +94,8 @@ void CameraGroupObs::computeObjectsPose() {
     // update the object observations
     for (int i = 0; i < it_obj_obs.second.size(); i++) {
       auto obj_obs_ptr = object_observations_[it_obj_obs.second[i]].lock();
-      if (obj_obs_ptr) {
+      if (obj_obs_ptr)
         obj_obs_ptr->setPoseInGroupVec(group_pose_r, group_pose_t);
-        // Get the pose in the camera referential (no need here, maybe...)
-        /*cv::Mat pose_cam_in_group =
-        cam_group_->getCameraPoseMat(object_observations_[it_obj_obs->second[i]]->camera_id_);
-        cv::Mat pose_object_in_group =
-        object_observations_[it_obj_obs->second[i]]->getPoseInGroupMat(); Mat
-        trans = pose_cam_in_group.inv()*pose_object_in_group;
-        object_observations_[it_obj_obs->second[i]]->setPoseMat(trans);*/
-      }
     }
   }
 }

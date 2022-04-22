@@ -155,8 +155,6 @@ void Camera::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
  * @brief Initialize the calibration parameters using a subset of images
  *
  * A subset of images is used since the OpenCV function is slow.
- *
- * @todo remove dead code
  */
 void Camera::initializeCalibration() {
   LOG_INFO << "NB of board available in this camera :: "
@@ -214,13 +212,6 @@ void Camera::initializeCalibration() {
     LOG_INFO << "distCoeffs : " << distortion_coeffs;
   }
   if (distortion_model_ == 1) {
-    // cv::fisheye::calibrate(obj_points, img_points, cv::Size(im_cols_,
-    // im_rows_),
-    //                    camera_matrix, distortion_coeffs, r_vec, t_vec,
-    //                    cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC  |
-    //                    cv::fisheye::CALIB_FIX_SKEW  |
-    //                    cv::fisheye::CALIB_FIX_K2 | cv::fisheye::CALIB_FIX_K3
-    //                    | cv::fisheye::CALIB_FIX_K4);
     cv::fisheye::calibrate(obj_points, img_points, cv::Size(im_cols_, im_rows_),
                            camera_matrix, distortion_coeffs, r_vec, t_vec,
                            cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC |
@@ -232,22 +223,6 @@ void Camera::initializeCalibration() {
 
   // Save data in the structure
   setIntrinsics(camera_matrix, distortion_coeffs);
-}
-
-/**
- * @brief Compute the reprojection error for each boards for this camera
- *
- * @todo double-check whether it is used, duplication in
- * Calibration::computeReproErrAllBoard()
- */
-void Camera::computeReproErrAllBoard() {
-  std::vector<float> err_vec;
-  float sum_err = 0;
-  for (const auto &it : board_observations_) {
-    std::shared_ptr<BoardObs> board_obs_ptr = it.second.lock();
-    if (board_obs_ptr)
-      float err = board_obs_ptr->computeReprojectionError();
-  }
 }
 
 /**
