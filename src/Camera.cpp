@@ -191,7 +191,7 @@ void Camera::initializeCalibration() {
         board_observations_[indbv[shuffled_board_ind[i]]].lock();
     if (board_obs_temp) {
       img_points.emplace_back(board_obs_temp->pts_2d_);
-      std::vector<int> corners_idx_temp = board_obs_temp->charuco_id_;
+      const std::vector<int> &corners_idx_temp = board_obs_temp->charuco_id_;
       std::shared_ptr<Board> board_3d_ptr = board_obs_temp->board_3d_.lock();
       if (board_3d_ptr) {
         std::vector<cv::Point3f> pts_3d_temp;
@@ -239,9 +239,9 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
     if (board_obs_ptr && board_obs_ptr->valid_ == true) {
       std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
       if (board_3d_ptr) {
-        std::vector<cv::Point3f> board_pts_3d = board_3d_ptr->pts_3d_;
-        std::vector<int> board_pts_idx = board_obs_ptr->charuco_id_;
-        std::vector<cv::Point2f> board_pts_2d = board_obs_ptr->pts_2d_;
+        const std::vector<cv::Point3f> &board_pts_3d = board_3d_ptr->pts_3d_;
+        const std::vector<int> &board_pts_idx = board_obs_ptr->charuco_id_;
+        const std::vector<cv::Point2f> &board_pts_2d = board_obs_ptr->pts_2d_;
         for (int i = 0; i < board_pts_idx.size(); i++) {
           cv::Point3f current_pts_3d =
               board_pts_3d[board_pts_idx[i]];           // Current 3D pts

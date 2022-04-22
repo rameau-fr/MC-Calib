@@ -90,10 +90,11 @@ void invertRvecT(cv::Mat &Rvec, cv::Mat &T) {
 
 // My SVD triangulation
 // Triangulate a 3D point from multiple observations
-cv::Point3f triangulateNViewLinearEigen(std::vector<cv::Point2f> Pts2D,
-                                        std::vector<cv::Mat> RotationVec,
-                                        std::vector<cv::Mat> TranslationVec,
-                                        cv::Mat Intrinsic) {
+cv::Point3f
+triangulateNViewLinearEigen(const std::vector<cv::Point2f> Pts2D,
+                            const std::vector<cv::Mat> RotationVec,
+                            const std::vector<cv::Mat> TranslationVec,
+                            cv::Mat Intrinsic) {
   cv::Mat A; // Projection matrix
   for (int i = 0; i < RotationVec.size(); i++) {
     cv::Mat cam_temp =
@@ -221,8 +222,8 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
 // RANSAC algorithm
 // Return Inliers, p = proba (typical = 0.99), Output : Rot and Trans Mat,
 // Thresh = reprojection tolerance in pixels, it = max iteration
-cv::Mat ransacP3P(std::vector<cv::Point3f> scenePoints,
-                  std::vector<cv::Point2f> imagePoints, cv::Mat Intrinsic,
+cv::Mat ransacP3P(const std::vector<cv::Point3f> scenePoints,
+                  const std::vector<cv::Point2f> imagePoints, cv::Mat Intrinsic,
                   cv::Mat Disto, cv::Mat &BestR, cv::Mat &BestT,
                   const float thresh, double p, int it, bool refine) {
 
@@ -348,8 +349,8 @@ std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
  *
 
  */
-cv::Mat handeyeCalibration(std::vector<cv::Mat> pose_abs_1,
-                           std::vector<cv::Mat> pose_abs_2) {
+cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
+                           const std::vector<cv::Mat> pose_abs_2) {
 
   // Prepare the poses for handeye calibration
   const size_t num_poses = pose_abs_1.size();

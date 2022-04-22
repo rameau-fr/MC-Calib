@@ -13,7 +13,7 @@ Graph::GraphUndirectedWeighted Graph::getGraph() { return graph_; }
  * @param v2 vertex two
  * @param weight edge weight
  */
-void Graph::addEdge(int v1, int v2, double weight) {
+void Graph::addEdge(const int v1, const int v2, const double weight) {
   // create a new vertex only when no vertex with the same name (i.e.
   // boost::vertex_name_t) is available, reuse vertices otherwise
   Vertex vertex1 = (idx_to_vertex_.find(v1) != idx_to_vertex_.end())
@@ -36,7 +36,7 @@ void Graph::addEdge(int v1, int v2, double weight) {
  *
  * @param vertex vertex to be created
  */
-void Graph::addVertex(int vertex) {
+void Graph::addVertex(const int vertex) {
   // create a new vertex only when no vertex with the same name (i.e.
   // boost::vertex_name_t) is available
   if (idx_to_vertex_.find(vertex) != idx_to_vertex_.end()) {
@@ -101,7 +101,7 @@ std::vector<std::vector<int>> Graph::connectedComponents() {
  *
  * @return vector of vertices belonging to the path
  */
-std::vector<int> Graph::shortestPathBetween(int v1, int v2) {
+std::vector<int> Graph::shortestPathBetween(const int v1, const int v2) {
   std::vector<int> vert_in_path;
 
   if (idx_to_vertex_.find(v1) == idx_to_vertex_.end() ||
