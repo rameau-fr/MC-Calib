@@ -41,6 +41,7 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 .. code-block:: bash
 
     cd build
+    apt update
     apt install valgrind
     valgrind --leak-check=full \
       --leak-check=full \
