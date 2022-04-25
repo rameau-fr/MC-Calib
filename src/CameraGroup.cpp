@@ -210,9 +210,11 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
                 int current_cam_id = it_obj3d_ptr->camera_id_;
                 auto object_3d_ptr = it_obj3d_ptr->object_3d_.lock();
                 if (object_3d_ptr) {
-                  std::vector<cv::Point3f> obj_pts_3d = object_3d_ptr->pts_3d_;
-                  std::vector<int> obj_pts_idx = it_obj3d_ptr->pts_id_;
-                  std::vector<cv::Point2f> obj_pts_2d = it_obj3d_ptr->pts_2d_;
+                  const std::vector<cv::Point3f> &obj_pts_3d =
+                      object_3d_ptr->pts_3d_;
+                  const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
+                  const std::vector<cv::Point2f> &obj_pts_2d =
+                      it_obj3d_ptr->pts_2d_;
                   std::shared_ptr<Camera> cam_ptr = it_obj3d_ptr->cam_.lock();
                   if (cam_ptr) {
                     double fx = cam_ptr->intrinsics_[0];
@@ -301,9 +303,11 @@ void CameraGroup::reproErrorCameraGroup() {
               int current_cam_id = it_obj3d_ptr->camera_id_;
               auto object_3d_ptr = it_obj3d_ptr->object_3d_.lock();
               if (object_3d_ptr) {
-                std::vector<cv::Point3f> obj_pts_3d = object_3d_ptr->pts_3d_;
-                std::vector<int> obj_pts_idx = it_obj3d_ptr->pts_id_;
-                std::vector<cv::Point2f> obj_pts_2d = it_obj3d_ptr->pts_2d_;
+                const std::vector<cv::Point3f> &obj_pts_3d =
+                    object_3d_ptr->pts_3d_;
+                const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
+                const std::vector<cv::Point2f> &obj_pts_2d =
+                    it_obj3d_ptr->pts_2d_;
 
                 // Compute the reprojection error
                 std::vector<cv::Point3f> object_pts;
@@ -383,9 +387,11 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
               std::shared_ptr<Object3D> object_3d_ptr =
                   it_obj3d_ptr->object_3d_.lock();
               if (object_3d_ptr) {
-                std::vector<cv::Point3f> obj_pts_3d = object_3d_ptr->pts_3d_;
-                std::vector<int> obj_pts_idx = it_obj3d_ptr->pts_id_;
-                std::vector<cv::Point2f> obj_pts_2d = it_obj3d_ptr->pts_2d_;
+                const std::vector<cv::Point3f> &obj_pts_3d =
+                    object_3d_ptr->pts_3d_;
+                const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
+                const std::vector<cv::Point2f> &obj_pts_2d =
+                    it_obj3d_ptr->pts_2d_;
                 std::shared_ptr<Camera> cam_ptr = it_obj3d_ptr->cam_.lock();
                 if (cam_ptr) {
                   double fx = cam_ptr->intrinsics_[0];
@@ -503,9 +509,11 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
               std::shared_ptr<Object3D> object_3d_ptr =
                   it_obj3d_ptr->object_3d_.lock();
               if (object_3d_ptr) {
-                std::vector<cv::Point3f> obj_pts_3d = object_3d_ptr->pts_3d_;
-                std::vector<int> obj_pts_idx = it_obj3d_ptr->pts_id_;
-                std::vector<cv::Point2f> obj_pts_2d = it_obj3d_ptr->pts_2d_;
+                const std::vector<cv::Point3f> &obj_pts_3d =
+                    object_3d_ptr->pts_3d_;
+                const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
+                const std::vector<cv::Point2f> &obj_pts_2d =
+                    it_obj3d_ptr->pts_2d_;
                 std::shared_ptr<Camera> cam_ptr = it_obj3d_ptr->cam_.lock();
                 if (cam_ptr) {
                   bool refine_cam = true;

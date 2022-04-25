@@ -381,7 +381,7 @@ void Calibration::displayBoards(const cv::Mat image, const int cam_idx,
     for (const auto &it : cams_obs_[cam_frame]->board_observations_) {
       auto board_obs_ptr = it.second.lock();
       if (board_obs_ptr) {
-        std::vector<cv::Point2f> current_pts = board_obs_ptr->pts_2d_;
+        const std::vector<cv::Point2f> &current_pts = board_obs_ptr->pts_2d_;
         std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
         if (board_3d_ptr) {
           std::array<int, 3> &color_temp = board_3d_ptr->color_;
@@ -556,7 +556,7 @@ void Calibration::computeBoardsPairPose() {
   board_pose_pairs_.clear();
   for (const auto &it : cams_obs_) {
     std::shared_ptr<CameraObs> current_board = it.second;
-    std::vector<int> BoardIdx = current_board->board_idx_;
+    const std::vector<int> &BoardIdx = current_board->board_idx_;
 
     if (BoardIdx.size() > 1) // if more than one board is visible
     {
@@ -588,35 +588,28 @@ void Calibration::computeBoardsPairPose() {
 }
 
 /**
- * @brief Compute the mean transformation between all boards' observations
+ * @brief Compute the mean transformation between pose pairs
  *
- * Multiple interboard pose can be computed per frames, these measurements are
- * averaged in this function.
+ * Multiple poses can be computed per frames, these measurements are then
+ * averaged.
  *
- * @todo remove dead code
+ * @param pose_pairs from {board_pose_pairs_, camera_pose_pairs_,
+ * object_pose_pairs_}
+ * @param inter_transform from {inter_board_transform_, inter_camera_transform_,
+ * inter_object_transform_}
  */
-void Calibration::initInterBoardsTransform() {
-  inter_board_transform_.clear();
-  for (const auto &it : board_pose_pairs_) {
-    std::pair<int, int> board_pair_idx = it.first;
-    std::vector<cv::Mat> board_poses_temp = it.second;
+void Calibration::initInterTransform(
+    const std::map<std::pair<int, int>, std::vector<cv::Mat>> &pose_pairs,
+    std::map<std::pair<int, int>, cv::Mat> &inter_transform) {
+  inter_transform.clear();
+  for (const auto &it : pose_pairs) {
+    const std::pair<int, int> &pair_idx = it.first;
+    const std::vector<cv::Mat> &poses_temp = it.second;
     cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
     cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
 
-    // Averaging technique
-    /*for (int i = 0; i < board_poses_temp.size(); i++) {
-      cv::Mat R, T;
-      Proj2RT(board_poses_temp[i], R, T);
-      average_rotation += R;
-      average_translation += T;
-    }
-    LOG_DEBUG << "Number images where the 2 boards appear :: "
-             << board_poses_temp.size()  ;
-    average_translation = average_translation / board_poses_temp.size();
-    average_rotation = average_rotation / board_poses_temp.size();*/
-
     // Median
-    const size_t num_poses = board_poses_temp.size();
+    const size_t num_poses = poses_temp.size();
     std::vector<double> r1, r2, r3;
     std::vector<double> t1, t2, t3;
     r1.reserve(num_poses);
@@ -625,9 +618,9 @@ void Calibration::initInterBoardsTransform() {
     t1.reserve(num_poses);
     t2.reserve(num_poses);
     t3.reserve(num_poses);
-    for (const auto &board_pose_temp : board_poses_temp) {
+    for (const auto &pose_temp : poses_temp) {
       cv::Mat R, T;
-      Proj2RT(board_pose_temp, R, T);
+      Proj2RT(pose_temp, R, T);
       r1.push_back(R.at<double>(0));
       r2.push_back(R.at<double>(1));
       r3.push_back(R.at<double>(2));
@@ -641,13 +634,8 @@ void Calibration::initInterBoardsTransform() {
     average_translation.at<double>(0) = median(t1);
     average_translation.at<double>(1) = median(t2);
     average_translation.at<double>(2) = median(t3);
-    // TEST
-    /* cv::Mat R, T;
-     Proj2RT(board_poses_temp[0], R, T);
-     average_translation = T;
-     average_rotation = R;*/
-    //
-    inter_board_transform_[board_pair_idx] =
+
+    inter_transform[pair_idx] =
         RVecT2Proj(average_rotation, average_translation);
     LOG_DEBUG << "Average Rot :: " << average_rotation
               << "    Average Trans :: " << average_translation;
@@ -670,8 +658,8 @@ void Calibration::initInterBoardsGraph() {
   }
 
   for (const auto &it : board_pose_pairs_) {
-    std::pair<int, int> board_pair_idx = it.first;
-    std::vector<cv::Mat> board_poses_temp = it.second;
+    const std::pair<int, int> &board_pair_idx = it.first;
+    const std::vector<cv::Mat> &board_poses_temp = it.second;
     covis_boards_graph_.addEdge(board_pair_idx.first, board_pair_idx.second,
                                 ((double)1 / board_poses_temp.size()));
   }
@@ -894,65 +882,6 @@ void Calibration::computeCamerasPairPose() {
 }
 
 /**
- * @brief Find average transformation between pairs of cameras to form groups
- *
- * @todo remove dead code
- */
-void Calibration::initInterCamerasTransform() {
-  inter_camera_transform_.clear();
-  for (const auto &it : camera_pose_pairs_) {
-    std::pair<int, int> camera_pair_idx = it.first;
-    std::vector<cv::Mat> camera_poses_temp = it.second;
-    cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
-    cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
-
-    // Averaging technique
-    /*for (int i = 0; i < camera_poses_temp.size(); i++) {
-      cv::Mat R, T;
-      Proj2RT(camera_poses_temp[i], R, T);
-      average_rotation += R;
-      average_translation += T;
-    }
-    LOG_DEBUG << "Number images where the 2 camera see the same object :: "
-             << camera_poses_temp.size()  ;
-    average_translation = average_translation / camera_poses_temp.size();
-    average_rotation = average_rotation / camera_poses_temp.size();*/
-
-    // Median technique
-    const size_t num_poses = camera_poses_temp.size();
-    std::vector<double> r1, r2, r3;
-    std::vector<double> t1, t2, t3;
-    r1.reserve(num_poses);
-    r2.reserve(num_poses);
-    r3.reserve(num_poses);
-    t1.reserve(num_poses);
-    t2.reserve(num_poses);
-    t3.reserve(num_poses);
-    for (const auto &camera_pose_temp : camera_poses_temp) {
-      cv::Mat R, T;
-      Proj2RT(camera_pose_temp, R, T);
-      r1.push_back(R.at<double>(0));
-      r2.push_back(R.at<double>(1));
-      r3.push_back(R.at<double>(2));
-      t1.push_back(T.at<double>(0));
-      t2.push_back(T.at<double>(1));
-      t3.push_back(T.at<double>(2));
-    }
-    average_rotation.at<double>(0) = median(r1);
-    average_rotation.at<double>(1) = median(r2);
-    average_rotation.at<double>(2) = median(r3);
-    average_translation.at<double>(0) = median(t1);
-    average_translation.at<double>(1) = median(t2);
-    average_translation.at<double>(2) = median(t3);
-
-    inter_camera_transform_[camera_pair_idx] =
-        RVecT2Proj(average_rotation, average_translation);
-    LOG_DEBUG << "Average Rot :: " << average_rotation
-              << "    Average Trans :: " << average_translation;
-  }
-}
-
-/**
  * @brief Initialize the relationship graph between cameras to form groups
  *
  */
@@ -966,8 +895,8 @@ void Calibration::initInterCamerasGraph() {
   }
   // Build the graph with cameras' pairs
   for (const auto &it : camera_pose_pairs_) {
-    std::pair<int, int> camera_pair_idx = it.first;
-    std::vector<cv::Mat> camera_poses_temp = it.second;
+    const std::pair<int, int> &camera_pair_idx = it.first;
+    const std::vector<cv::Mat> &camera_poses_temp = it.second;
     covis_camera_graph_.addEdge(camera_pair_idx.first, camera_pair_idx.second,
                                 ((double)1 / camera_poses_temp.size()));
   }
@@ -1034,7 +963,7 @@ void Calibration::initCameraGroup() {
  */
 void Calibration::initCameraGroupObs(const int camera_group_idx) {
   // List of camera idx in the group
-  std::vector<int> cam_in_group = cam_group_[camera_group_idx]->cam_idx;
+  const std::vector<int> &cam_in_group = cam_group_[camera_group_idx]->cam_idx;
 
   // Iterate through frame
   for (const auto &it_frame : frames_) {
@@ -1226,7 +1155,6 @@ void Calibration::findPairObjectForNonOverlap() {
  * @brief Handeye calibration of a pair of non overlapping pair of group of
  * cameras
  *
- * @todo remove dead code
  */
 void Calibration::initNonOverlapPair(const int cam_group_id1,
                                      const int cam_group_id2) {
@@ -1243,8 +1171,8 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
   // Prepare the 3D objects
   std::shared_ptr<Object3D> object_3D_1 = object_3d_[object_cam_1];
   std::shared_ptr<Object3D> object_3D_2 = object_3d_[object_cam_2];
-  std::vector<cv::Point3f> pts_3d_obj_1 = object_3D_1->pts_3d_;
-  std::vector<cv::Point3f> pts_3d_obj_2 = object_3D_2->pts_3d_;
+  const std::vector<cv::Point3f> &pts_3d_obj_1 = object_3D_1->pts_3d_;
+  const std::vector<cv::Point3f> &pts_3d_obj_2 = object_3D_2->pts_3d_;
 
   // std::vector to store data for non-overlapping calibration
   std::vector<cv::Mat> pose_abs_1,
@@ -1296,8 +1224,10 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
     auto cam_group_obs1_ptr = cam_group_obs1.lock();
     auto cam_group_obs2_ptr = cam_group_obs2.lock();
     if (cam_group_obs1_ptr && cam_group_obs2_ptr) {
-      std::vector<int> cam_group_obs_obj1 = cam_group_obs1_ptr->object_idx_;
-      std::vector<int> cam_group_obs_obj2 = cam_group_obs2_ptr->object_idx_;
+      const std::vector<int> &cam_group_obs_obj1 =
+          cam_group_obs1_ptr->object_idx_;
+      const std::vector<int> &cam_group_obs_obj2 =
+          cam_group_obs2_ptr->object_idx_;
       auto it1 = find(cam_group_obs_obj1.begin(), cam_group_obs_obj1.end(),
                       object_cam_1);
       auto it2 = find(cam_group_obs_obj2.begin(), cam_group_obs_obj2.end(),
@@ -1321,15 +1251,6 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
           std::weak_ptr<Camera> ref_cam_2 =
               cam_group_obs2_cam_group_ptr
                   ->cameras_[cam_group_obs2_cam_group_ptr->id_ref_cam_];
-
-          ////// TODO: potentially dead code //////
-          cv::Mat cam_mat_1, dist_1;
-          cv::Mat cam_mat_2, dist_2;
-          if (auto ref_cam_1_ptr = ref_cam_1.lock())
-            ref_cam_1_ptr->getIntrinsics(cam_mat_1, dist_1);
-          if (auto ref_cam_2_ptr = ref_cam_2.lock())
-            ref_cam_2_ptr->getIntrinsics(cam_mat_2, dist_2);
-          /////////////////////////////////////////
 
           auto obj_obs1_ptr =
               cam_group_obs1_ptr->object_observations_[index_objobs_1].lock();
@@ -1405,8 +1326,8 @@ void Calibration::initInterCamGroupGraph() {
 
   // Create the graph
   for (const auto &it : no_overlap_camgroup_pair_pose_) {
-    std::pair<int, int> camgroup_pair_idx = it.first;
-    cv::Mat camgroup_poses_temp = it.second;
+    const std::pair<int, int> &camgroup_pair_idx = it.first;
+    const cv::Mat &camgroup_poses_temp = it.second;
     int nb_common_frame =
         no_overlap__camgroup_pair_common_cnt_[camgroup_pair_idx];
     no_overlap_camgroup_graph_.addEdge(camgroup_pair_idx.first,
@@ -1573,68 +1494,6 @@ void Calibration::computeObjectsPairPose() {
 }
 
 /**
- * @brief Compute the mean transformation between all objects' observations
- *
- * Multiple interobject pose can be computed per frames, these measurements are
- * averaged in this function.
- *
- * @todo remove dead code
- */
-void Calibration::initInterObjectsTransform() {
-  inter_object_transform_.clear();
-  for (const auto &it : object_pose_pairs_) {
-    std::pair<int, int> object_pair_idx = it.first;
-    std::vector<cv::Mat> object_poses_temp = it.second;
-    cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
-    cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
-
-    // Average technique
-    /*for (int i = 0; i < object_poses_temp.size(); i++) {
-      cv::Mat R, T;
-      Proj2RT(object_poses_temp[i], R, T);
-      average_rotation += R;
-      average_translation += T;
-    }
-    LOG_DEBUG << "Number images where the 2 object appear :: "
-             << object_poses_temp.size()  ;
-    average_translation = average_translation / object_poses_temp.size();
-    average_rotation = average_rotation / object_poses_temp.size();*/
-
-    // Median
-    const size_t num_poses = object_poses_temp.size();
-    std::vector<double> r1, r2, r3;
-    std::vector<double> t1, t2, t3;
-    r1.reserve(num_poses);
-    r2.reserve(num_poses);
-    r3.reserve(num_poses);
-    t1.reserve(num_poses);
-    t2.reserve(num_poses);
-    t3.reserve(num_poses);
-    for (const auto &object_pose_temp : object_poses_temp) {
-      cv::Mat R, T;
-      Proj2RT(object_pose_temp, R, T);
-      r1.push_back(R.at<double>(0));
-      r2.push_back(R.at<double>(1));
-      r3.push_back(R.at<double>(2));
-      t1.push_back(T.at<double>(0));
-      t2.push_back(T.at<double>(1));
-      t3.push_back(T.at<double>(2));
-    }
-    average_rotation.at<double>(0) = median(r1);
-    average_rotation.at<double>(1) = median(r2);
-    average_rotation.at<double>(2) = median(r3);
-    average_translation.at<double>(0) = median(t1);
-    average_translation.at<double>(1) = median(t2);
-    average_translation.at<double>(2) = median(t3);
-
-    inter_object_transform_[object_pair_idx] =
-        RVecT2Proj(average_rotation, average_translation);
-    LOG_DEBUG << "Average Rot :: " << average_rotation
-              << "    Average Trans :: " << average_translation;
-  }
-}
-
-/**
  * @brief Initialize the graph with the poses between objects
  *
  */
@@ -1649,8 +1508,8 @@ void Calibration::initInterObjectsGraph() {
   }
 
   for (const auto &it : object_pose_pairs_) {
-    std::pair<int, int> object_pair_idx = it.first;
-    std::vector<cv::Mat> object_poses_temp = it.second;
+    const std::pair<int, int> &object_pair_idx = it.first;
+    const std::vector<cv::Mat> &object_poses_temp = it.second;
     covis_objects_graph_.addEdge(object_pair_idx.first, object_pair_idx.second,
                                  ((double)1 / (object_poses_temp.size())));
   }
@@ -1660,7 +1519,6 @@ void Calibration::initInterObjectsGraph() {
 /**
  * @brief Merge all objects groups which have been visible in same camera groups
  *
- * @todo remove dead code
  */
 void Calibration::mergeObjects() {
   // find the connected objects in the graph
@@ -1727,12 +1585,6 @@ void Calibration::mergeObjects() {
             // Update the pose to be in the referential of the merged object
             cv::Mat pose_board_in_current_obj =
                 current_object->getBoardPoseMat(current_board->board_id_);
-            // cv::Mat transform = pose_board_in_current_obj*pose_in_merged; //
-            // previous wrong version cv::Mat transform =
-            // pose_in_merged*pose_board_in_current_obj.inv(); // second version
-            // that failed cv::Mat transform =
-            // pose_board_in_current_obj.inv()*pose_in_merged; // Does not work
-            // at all
             cv::Mat transform = pose_in_merged * pose_board_in_current_obj;
 
             // insert new board
@@ -1893,9 +1745,9 @@ void Calibration::saveReprojection(const int cam_id) {
             Proj2RT(cam_pose, rot_vec, trans_vec);
 
             // Get the 2d and 3d pts
-            std::vector<cv::Point2f> pts_2d = it_obj_obs_ptr->pts_2d_;
-            std::vector<int> pts_ind = it_obj_obs_ptr->pts_id_;
-            std::vector<cv::Point3f> pts_3d_obj =
+            const std::vector<cv::Point2f> &pts_2d = it_obj_obs_ptr->pts_2d_;
+            const std::vector<int> &pts_ind = it_obj_obs_ptr->pts_id_;
+            const std::vector<cv::Point3f> &pts_3d_obj =
                 it_obj_obs_object_3d_ptr->pts_3d_;
             std::vector<cv::Point2f> pts_repro;
             std::vector<cv::Point3f> pts_3d;
@@ -1995,7 +1847,7 @@ void Calibration::saveDetection(const int cam_id) {
           if (it_obj_obs_ptr && it_obj_obs_ptr->camera_id_ == cam_id &&
               it_obj_obs_object_3d_ptr) {
             // Get the 2d and 3d pts
-            std::vector<cv::Point2f> pts_2d = it_obj_obs_ptr->pts_2d_;
+            const std::vector<cv::Point2f> &pts_2d = it_obj_obs_ptr->pts_2d_;
             // plot the keypoints on the image (red project // green detected)
             std::array<int, 3> &color = it_obj_obs_object_3d_ptr->color_;
             for (const auto &pt_2d : pts_2d) {
@@ -2051,7 +1903,7 @@ void Calibration::initIntrinsic() {
  */
 void Calibration::calibrate3DObjects() {
   computeBoardsPairPose();
-  initInterBoardsTransform();
+  initInterTransform(board_pose_pairs_, inter_board_transform_);
   initInterBoardsGraph();
   init3DObjects();
   initAll3DObjectObs();
@@ -2064,18 +1916,15 @@ void Calibration::calibrate3DObjects() {
 /**
  * @brief Calibrate Camera groups
  *
- * @todo remove dead code
  */
 void Calibration::calibrateCameraGroup() {
   computeCamerasPairPose();
-  initInterCamerasTransform();
+  initInterTransform(camera_pose_pairs_, inter_camera_transform_);
   initInterCamerasGraph();
   initCameraGroup();
   initAllCameraGroupObs();
   computeAllObjPoseInCameraGroup();
-  // this->reproErrorAllCamGroup();
   refineAllCameraGroupAndObjects();
-  // this->reproErrorAllCamGroup();
 }
 
 /**
@@ -2087,7 +1936,7 @@ void Calibration::merge3DObjects() {
   estimatePoseAllObjects();
   computeAllObjPoseInCameraGroup();
   computeObjectsPairPose();
-  initInterObjectsTransform();
+  initInterTransform(object_pose_pairs_, inter_object_transform_);
   initInterObjectsGraph();
   this->reproErrorAllCamGroup();
   mergeObjects();
@@ -2156,10 +2005,11 @@ double Calibration::computeAvgReprojectionError() {
               auto it_obj3d_cam_ptr = it_obj3d_ptr->cam_.lock();
               if (it_obj3d_ptr && it_obj3d_object_3d_ptr && it_obj3d_cam_ptr) {
                 int current_cam_id = it_obj3d_ptr->camera_id_;
-                std::vector<cv::Point3f> obj_pts_3d =
+                const std::vector<cv::Point3f> &obj_pts_3d =
                     it_obj3d_object_3d_ptr->pts_3d_;
-                std::vector<int> obj_pts_idx = it_obj3d_ptr->pts_id_;
-                std::vector<cv::Point2f> obj_pts_2d = it_obj3d_ptr->pts_2d_;
+                const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
+                const std::vector<cv::Point2f> &obj_pts_2d =
+                    it_obj3d_ptr->pts_2d_;
                 camera_list.push_back(current_cam_id);
 
                 // compute the reprojection error
@@ -2246,10 +2096,11 @@ void Calibration::saveReprojectionErrorToFile() {
               if (it_obj3d_ptr && it_obj3d_object_3d_ptr &&
                   it_cam_group_obs_ptr && it_obj3d_cam_ptr) {
                 int current_cam_id = it_obj3d_ptr->camera_id_;
-                std::vector<cv::Point3f> obj_pts_3d =
+                const std::vector<cv::Point3f> &obj_pts_3d =
                     it_obj3d_object_3d_ptr->pts_3d_;
-                std::vector<int> obj_pts_idx = it_obj3d_ptr->pts_id_;
-                std::vector<cv::Point2f> obj_pts_2d = it_obj3d_ptr->pts_2d_;
+                const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
+                const std::vector<cv::Point2f> &obj_pts_2d =
+                    it_obj3d_ptr->pts_2d_;
                 camera_list.push_back(current_cam_id);
                 fs << "camera_" + std::to_string(current_cam_id);
                 fs << "{";

@@ -166,9 +166,11 @@ void Object3D::refineObject(const int nb_iterations) {
         if (board_obs_ptr && board_obs_ptr->valid_ == true) {
           std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
           if (board_3d_ptr) {
-            std::vector<cv::Point3f> board_pts_3d = board_3d_ptr->pts_3d_;
-            std::vector<int> board_pts_idx = board_obs_ptr->charuco_id_;
-            std::vector<cv::Point2f> board_pts_2d = board_obs_ptr->pts_2d_;
+            const std::vector<cv::Point3f> &board_pts_3d =
+                board_3d_ptr->pts_3d_;
+            const std::vector<int> &board_pts_idx = board_obs_ptr->charuco_id_;
+            const std::vector<cv::Point2f> &board_pts_2d =
+                board_obs_ptr->pts_2d_;
             std::shared_ptr<Camera> cam_ptr = board_obs_ptr->cam_.lock();
             if (cam_ptr) {
               double fx = cam_ptr->intrinsics_[0];
@@ -187,9 +189,10 @@ void Object3D::refineObject(const int nb_iterations) {
                 refine_board = false;
 
               for (int i = 0; i < board_pts_idx.size(); i++) {
-                cv::Point3f current_pts_3d =
-                    board_pts_3d[board_pts_idx[i]];           // Current 3D pts
-                cv::Point2f current_pts_2d = board_pts_2d[i]; // Current 2D pts
+                const cv::Point3f &current_pts_3d =
+                    board_pts_3d[board_pts_idx[i]]; // Current 3D pts
+                const cv::Point2f &current_pts_2d =
+                    board_pts_2d[i]; // Current 2D pts
                 ceres::CostFunction *reprojection_error =
                     ReprojectionError_3DObjRef::Create(
                         double(current_pts_2d.x), double(current_pts_2d.y),

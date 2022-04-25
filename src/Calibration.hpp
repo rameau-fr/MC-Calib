@@ -164,12 +164,15 @@ public:
                                        // pose wrt. the boards
   void computeReproErrAllBoard();      // compute the reprojection error for al
                                        // the boards
-  void computeBoardsPairPose();    // compute the poses between all the pairs of
-                                   // boards visible simultaneous in an image
-  void initInterBoardsTransform(); // compute the mean transformation between
-                                   // the pairs of boards
-  void initInterBoardsGraph();     // Initialize the graph
-  void init3DObjects(); // initialize the 3D objects with the board graph
+  void computeBoardsPairPose(); // compute the poses between all the pairs of
+                                // boards visible simultaneous in an image
+  void initInterTransform(
+      const std::map<std::pair<int, int>, std::vector<cv::Mat>> &pose_pairs,
+      std::map<std::pair<int, int>, cv::Mat>
+          &inter_transform); // compute the mean transformation between pair of
+                             // poses
+  void initInterBoardsGraph(); // Initialize the graph
+  void init3DObjects();        // initialize the 3D objects with the board graph
   void init3DObjectObs(
       const int object_idx);       // initialize the 3D objects observations
   void initAll3DObjectObs();       // initialize all the 3D objects observations
@@ -180,10 +183,8 @@ public:
   void refineAllObject3D();        // Refine all the 3D objects
   void computeCamerasPairPose();   // compute the poses between all the pairs of
                                    // cameras seeings objects simultaneously
-  void initInterCamerasTransform(); // compute the mean transformation between
-                                    // the pairs of cameras
-  void initInterCamerasGraph();     // Initialize the graph for cameras
-  void initCameraGroup();           // Initialize camera group
+  void initInterCamerasGraph();    // Initialize the graph for cameras
+  void initCameraGroup();          // Initialize camera group
   void initCameraGroupObs(
       const int camera_group_idx); // Initialize observation of cameraGroup
   void initAllCameraGroupObs();    // initialize all camera groups
@@ -206,7 +207,6 @@ public:
   computeDistanceBetweenPoints(const std::vector<cv::Point2f> obj_pts_2d,
                                const std::vector<cv::Point2f> repro_pts);
   double computeAvgReprojectionError();
-  void initInterObjectsTransform();
   void initInterObjectsGraph();
   void mergeObjects();
   void mergeAllObjectObs();

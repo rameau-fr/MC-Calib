@@ -114,8 +114,6 @@ void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
  * It uses PnP RANSAC under the hood.
  *
  * @param ransac_thresh RANSAC threshold in pixels to remove strong outliers
- *
- * @todo possible division by zero on the return
  */
 void BoardObs::estimatePose(const float ransac_thresh) {
   std::vector<cv::Point3f> board_pts_temp;
@@ -182,8 +180,6 @@ float BoardObs::computeReprojectionError() {
                                 std::pow((pts_2d_[j].y - repro_pts[j].y), 2));
       error_board_vec.push_back(rep_err);
       sum_err_board += rep_err;
-      // if (rep_err > 6.0)
-      // LOG_WARNING << "LARGE REPROJECTION ERROR ::: " << rep_err  ;
     }
 
     if ((sum_err_board / error_board_vec.size()) > 10) {
@@ -196,5 +192,6 @@ float BoardObs::computeReprojectionError() {
   }
 
   // return mean error for the board
-  return sum_err_board / error_board_vec.size();
+  return (error_board_vec.size() > 0) ? sum_err_board / error_board_vec.size()
+                                      : 0.f;
 }
