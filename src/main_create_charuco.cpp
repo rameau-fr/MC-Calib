@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
   // Create the charuco
   cv::Ptr<cv::aruco::Dictionary> dict =
       cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
-  std::vector<cv::Ptr<cv::aruco::CharucoBoard>> charucoBoards(NbBoard);
+  std::vector<cv::Ptr<cv::aruco::CharucoBoard>> charucoBoards;
   int offset_count = 0;
   for (int i = 0; i < NbBoard; i++) {
     // declare the board
