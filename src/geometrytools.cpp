@@ -568,8 +568,8 @@ cv::Mat ransacP3PDistortion(std::vector<cv::Point3f> scene_points,
                             std::vector<cv::Point2f> image_points,
                             cv::Mat intrinsic, cv::Mat distortion_vector,
                             cv::Mat &best_R, cv::Mat &best_T,
-                            const float thresh, double p, int it, bool refine,
-                            int distortion_type) {
+                            const float thresh, int it, int distortion_type,
+                            double p, bool refine) {
   cv::Mat Inliers;
   // P3P for perspective (Brown model)
   if (distortion_type == 0) {

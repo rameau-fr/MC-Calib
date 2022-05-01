@@ -216,7 +216,8 @@ cv::Mat Object3DObs::getTransInGroupVec() const {
  * It using a PnP RANSAC algorithm.
  *
  */
-void Object3DObs::estimatePose(const float ransac_thresh) {
+void Object3DObs::estimatePose(const float ransac_thresh,
+                               const int ransac_iterations) {
   std::vector<cv::Point3f> object_pts_temp;
   object_pts_temp.reserve(pts_id_.size());
   for (const auto &pt_id : pts_id_) {
@@ -231,8 +232,8 @@ void Object3DObs::estimatePose(const float ransac_thresh) {
   if (cam_ptr) {
     cv::Mat inliers = ransacP3PDistortion(
         object_pts_temp, pts_2d_, cam_ptr->getCameraMat(),
-        cam_ptr->getDistortionVectorVector(), r_vec, t_vec, ransac_thresh, 0.99,
-        1000, true, cam_ptr->distortion_model_);
+        cam_ptr->getDistortionVectorVector(), r_vec, t_vec, ransac_thresh,
+        ransac_iterations, cam_ptr->distortion_model_);
     LOG_DEBUG << "Trans :: " << t_vec << "       Rot :: " << r_vec;
     LOG_DEBUG << "input pts 3D :: " << object_pts_temp.size();
     LOG_DEBUG << "Inliers :: " << inliers.rows;

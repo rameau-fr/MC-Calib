@@ -72,7 +72,7 @@ public:
   void setPoseVec(const cv::Mat Rvec, const cv::Mat T);
   cv::Mat getRotVec() const;
   cv::Mat getTransVec() const;
-  void estimatePose(const float ransac_thresh);
+  void estimatePose(const float ransac_thresh, const int ransac_iterations);
   float computeReprojectionError() const;
   void setPoseInGroupMat(const cv::Mat pose);
   void setPoseInGroupVec(const cv::Mat r_vec, const cv::Mat t_vec);

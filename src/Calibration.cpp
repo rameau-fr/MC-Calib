@@ -520,7 +520,7 @@ void Calibration::initializeCalibrationAllCam() {
  */
 void Calibration::estimatePoseAllBoards() {
   for (const auto &it : board_observations_)
-    it.second->estimatePose(ransac_thresh_);
+    it.second->estimatePose(ransac_thresh_, nb_iterations_);
 }
 
 /**
@@ -807,7 +807,7 @@ void Calibration::initAll3DObjectObs() {
  */
 void Calibration::estimatePoseAllObjects() {
   for (const auto &it : object_observations_)
-    it.second->estimatePose(ransac_thresh_);
+    it.second->estimatePose(ransac_thresh_, nb_iterations_);
 }
 
 /**
