@@ -57,12 +57,12 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
       ./calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
 
     # current state of this repository:
-    ==1616== LEAK SUMMARY:
-    ==1616==    definitely lost: 0 bytes in 0 blocks
-    ==1616==    indirectly lost: 0 bytes in 0 blocks
-    ==1616==      possibly lost: 0 bytes in 0 blocks
-    ==1616==    still reachable: 44,906 bytes in 772 blocks
-    ==1616==         suppressed: 375,047 bytes in 2,940 blocks
+    ==1204== LEAK SUMMARY:
+    ==1204==    definitely lost: 0 bytes in 0 blocks
+    ==1204==    indirectly lost: 0 bytes in 0 blocks
+    ==1204==      possibly lost: 0 bytes in 0 blocks
+    ==1204==    still reachable: 0 bytes in 0 blocks
+    ==1204==         suppressed: 419,953 bytes in 3,712 blocks
 
 7. Create pull request.
 
