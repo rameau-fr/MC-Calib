@@ -93,7 +93,7 @@ cv::Mat Camera::getDistortionVectorVector() const {
 
   else {
     LOG_FATAL << "Unsupported distortion model";
-    std::exit(0);
+    return cv::Mat(1, 5, CV_64F, cv::Scalar(0));
   }
 }
 
