@@ -227,7 +227,8 @@ void Object3DObs::estimatePose(const float ransac_thresh,
   }
 
   // Estimate the pose using a RANSAC
-  cv::Mat r_vec, t_vec;
+  cv::Mat r_vec(1, 3, CV_64F);
+  cv::Mat t_vec(1, 3, CV_64F);
   std::shared_ptr<Camera> cam_ptr = cam_.lock();
   if (cam_ptr) {
     cv::Mat inliers = ransacP3PDistortion(

@@ -222,10 +222,11 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
 // RANSAC algorithm
 // Return Inliers, p = proba (typical = 0.99), Output : Rot and Trans Mat,
 // Thresh = reprojection tolerance in pixels, it = max iteration
-cv::Mat ransacP3P(const std::vector<cv::Point3f> scenePoints,
-                  const std::vector<cv::Point2f> imagePoints, cv::Mat Intrinsic,
-                  cv::Mat Disto, cv::Mat &BestR, cv::Mat &BestT,
-                  const float thresh, double p, int it, bool refine) {
+cv::Mat ransacP3P(const std::vector<cv::Point3f> &scenePoints,
+                  const std::vector<cv::Point2f> &imagePoints,
+                  const cv::Mat Intrinsic, const cv::Mat Disto, cv::Mat &BestR,
+                  cv::Mat &BestT, const float thresh, const int it,
+                  const double p, const bool refine) {
 
   // Init parameters
   int N = it;
@@ -259,8 +260,8 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> scenePoints,
         imagePoints[idx[3]]};
 
     // Apply P3P (fourth point for disambiguation)
-    solvePnP(scenePoints3Pts, imagePoints3Pts, Intrinsic, Disto, Rot, Trans,
-             false, 2); // CV_P3P = 2
+    cv::solvePnP(scenePoints3Pts, imagePoints3Pts, Intrinsic, Disto, Rot, Trans,
+                 false, 2); // CV_P3P = 2
 
     // Reproject points
     std::vector<cv::Point2f> reprojected_pts;
@@ -309,8 +310,8 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> scenePoints,
       imagePointsInliers[j] = imagePoints[InliersR.at<int>(j)];
       scenePointsInliers[j] = scenePoints[InliersR.at<int>(j)];
     }
-    solvePnP(scenePointsInliers, imagePointsInliers, Intrinsic, Disto, BestR,
-             BestT, true, 0); // CV_ITERATIVE = 0 non linear
+    cv::solvePnP(scenePointsInliers, imagePointsInliers, Intrinsic, Disto,
+                 BestR, BestT, true, 0); // CV_ITERATIVE = 0 non linear
   }
   return InliersR;
 }
@@ -564,27 +565,26 @@ double median(std::vector<double> &v) {
 // Return Inliers, p = proba (typical = 0.99), Output : Rot and Trans Mat,
 // Thresh = reprojection tolerance in pixels, it = max iteration
 // distortion_type: 0 (perspective), 1 (fisheye)
-cv::Mat ransacP3PDistortion(std::vector<cv::Point3f> scene_points,
-                            std::vector<cv::Point2f> image_points,
-                            cv::Mat intrinsic, cv::Mat distortion_vector,
+cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
+                            const std::vector<cv::Point2f> &image_points,
+                            const cv::Mat intrinsic, cv::Mat distortion_vector,
                             cv::Mat &best_R, cv::Mat &best_T,
-                            const float thresh, int it, int distortion_type,
-                            double p, bool refine) {
+                            const float thresh, const int it,
+                            const int distortion_type, const double p,
+                            const bool refine) {
   cv::Mat Inliers;
   // P3P for perspective (Brown model)
   if (distortion_type == 0) {
     Inliers =
         ransacP3P(scene_points, image_points, intrinsic, distortion_vector,
-                  best_R, best_T, thresh, p, it, refine);
+                  best_R, best_T, thresh, it, p, refine);
   }
 
   // P3P for fisheye
   if (distortion_type == 1) {
     // undistord the point
     std::vector<cv::Point2f> imagePointsUndis;
-    cv::Mat New_Intrinsic;
-    intrinsic.copyTo(New_Intrinsic);
-    cv::Mat I = cv::Mat::eye(3, 3, CV_32F);
+    cv::Mat New_Intrinsic = intrinsic.clone();
     cv::fisheye::undistortPoints(image_points, imagePointsUndis, intrinsic,
                                  distortion_vector);
 
@@ -599,10 +599,10 @@ cv::Mat ransacP3PDistortion(std::vector<cv::Point3f> scene_points,
           float(intrinsic.at<double>(1, 2));
     }
     // Run p3p
-    cv::Mat distortion_vector = (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
+    distortion_vector = (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
     Inliers =
         ransacP3P(scene_points, imagePointsUndis, New_Intrinsic,
-                  distortion_vector, best_R, best_T, thresh, p, it, refine);
+                  distortion_vector, best_R, best_T, thresh, it, p, refine);
   }
 
   return Inliers;
