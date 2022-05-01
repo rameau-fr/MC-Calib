@@ -46,10 +46,14 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
     valgrind --leak-check=full \
       --leak-check=full \
       --track-origins=yes \
+      --show-reachable=yes \
+      --error-limit=no \
+      --gen-suppressions=all \
       --verbose \
       --log-file=valgrind-out.txt \
       --suppressions=../tests/valgrind_suppress/opencv_valgrind.supp \
       --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
+      --suppressions=../tests/valgrind_suppress/boost_valgrind.supp \
       ./calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
 
     # current state of this repository:
