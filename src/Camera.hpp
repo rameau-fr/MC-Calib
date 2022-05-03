@@ -38,7 +38,7 @@ public:
   // fx,fy,u0,v0,k1,k2,k3,k4 (Kannala)
   std::array<double, 9> intrinsics_;
 
-  int distortion_model_;
+  int distortion_model_ = 0;
   int im_cols_, im_rows_;
 
   // camera index

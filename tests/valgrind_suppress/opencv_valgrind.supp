@@ -287,3 +287,46 @@
    fun:allocate_dtv
    fun:_dl_allocate_tls
 }
+
+{
+   <libopencv_calib3d_cond_jump>
+   Memcheck:Cond
+   ...
+   obj:*/libopencv_calib3d.so.*
+   ...
+}
+
+{
+   <libopencv_calib3d_value8>
+   Memcheck:Value8
+   ...
+   obj:*/libopencv_calib3d.so.*
+   ...
+}
+
+{
+   <libopencv_imgcodecs_memory_leak>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libopencv_imgcodecs.so.*
+   ...
+}
+
+{
+   <libopencv_core_memory_leak>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libopencv_core.so.*
+   ...
+}
+
+{
+   <libopencv_imgproc_memory_leak>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   obj:*/libopencv_imgproc.so.*
+   ...
+}

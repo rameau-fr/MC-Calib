@@ -54,19 +54,19 @@ public:
   std::vector<double> square_size_per_board_;
 
   // parameters corner refinement
-  bool refine_corner_;
+  bool refine_corner_ = true;
   int corner_ref_window_ = 5;    // half size window for corner ref
   int corner_ref_max_iter_ = 20; // max iterations for corner ref
 
   // Optimization parameters
-  float ransac_thresh_; // threshold in pixel
-  int nb_iterations_;   // max number of iteration for refinements
+  float ransac_thresh_ = 10; // threshold in pixel
+  int nb_iterations_ = 1000; // max number of iteration for refinements
 
   // hand-eye technique
-  int he_approach_;
+  int he_approach_ = 0;
 
   // fix intrinsic parameters
-  int fix_intrinsic_;
+  int fix_intrinsic_ = 0;
 
   // Data structures
   std::map<int, std::shared_ptr<BoardObs>>

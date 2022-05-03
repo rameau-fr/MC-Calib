@@ -115,7 +115,8 @@ void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
  *
  * @param ransac_thresh RANSAC threshold in pixels to remove strong outliers
  */
-void BoardObs::estimatePose(const float ransac_thresh) {
+void BoardObs::estimatePose(const float ransac_thresh,
+                            const int ransac_iterations) {
   std::vector<cv::Point3f> board_pts_temp;
   board_pts_temp.reserve(charuco_id_.size());
   for (const int &charuco_id : charuco_id_) {
@@ -125,13 +126,14 @@ void BoardObs::estimatePose(const float ransac_thresh) {
   }
 
   // Estimate the pose using a RANSAC
-  cv::Mat r_vec, t_vec;
+  cv::Mat r_vec(1, 3, CV_64F);
+  cv::Mat t_vec(1, 3, CV_64F);
   std::shared_ptr<Camera> cam_ptr = cam_.lock();
   if (cam_ptr) {
     cv::Mat inliers = ransacP3PDistortion(
         board_pts_temp, pts_2d_, cam_ptr->getCameraMat(),
-        cam_ptr->getDistortionVectorVector(), r_vec, t_vec, ransac_thresh, 0.99,
-        1000, true, cam_ptr->distortion_model_);
+        cam_ptr->getDistortionVectorVector(), r_vec, t_vec, ransac_thresh,
+        ransac_iterations, cam_ptr->distortion_model_);
     LOG_DEBUG << "Trans :: " << t_vec << "       Rot :: " << r_vec;
     LOG_DEBUG << "input pts 3D :: " << board_pts_temp.size();
     LOG_DEBUG << "Inliers :: " << inliers.rows;

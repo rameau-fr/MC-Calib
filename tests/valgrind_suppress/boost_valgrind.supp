@@ -1,0 +1,8 @@
+{
+   <boost_log_memory_leak>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_ZN5boost3log12v2s_*
+   ...
+}
