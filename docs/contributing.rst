@@ -46,6 +46,13 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
     # known errors:
     logger.h:19:1: error: There is an unknown macro here somewhere. Configuration is required. If BOOST_LOG_GLOBAL_LOGGER is a macro then please configure it. [unknownMacro] BOOST_LOG_GLOBAL_LOGGER(logger, boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>)
+    ##############
+
+    apt install clang-tidy
+    cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug 
+    run-clang-tidy
+
+
 
 7. Perform valgrind test and fix introduced memory leaks:
 

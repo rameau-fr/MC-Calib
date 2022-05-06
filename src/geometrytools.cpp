@@ -302,7 +302,7 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> &scenePoints,
     countit++;
   }
 
-  if (refine == true & (BestInNb >= 4)) {
+  if (refine == true && BestInNb >= 4) {
     std::vector<cv::Point3f> scenePointsInliers(BestInNb);
     std::vector<cv::Point2f> imagePointsInliers(BestInNb);
 
