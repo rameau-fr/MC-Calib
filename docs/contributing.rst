@@ -34,6 +34,7 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
     mkdir build
     cd build
+    cmake -DCMAKE_BUILD_TYPE=Debug ..
     ./tests/boost_tests_run
 
 6. Run static analysis tools and fix introduced dangerous code constructs:
@@ -49,7 +50,7 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
     ##############
 
     apt install clang-tidy
-    cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug 
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
     run-clang-tidy
 
 
