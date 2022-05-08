@@ -277,7 +277,9 @@ struct ReprojectionError_CameraGroupRef {
 
     // 2. Refine the camera if it is not the referential
     if (refine_camera != 0) {
-      ceres::AngleAxisRotatePoint(camera, pobj, pobj);
+      T pobj_refine[3];
+      ceres::AngleAxisRotatePoint(camera, pobj, pobj_refine);
+      std::copy_n(pobj_refine, 3, pobj);
       pobj[0] += camera[3];
       pobj[1] += camera[4];
       pobj[2] += camera[5];
@@ -398,7 +400,9 @@ struct ReprojectionError_CameraGroupAndObjectRef {
     // 1. Apply the board transformation in teh object
     T point[3] = {T(x), T(y), T(z)};
     if (refine_board != 0) {
-      ceres::AngleAxisRotatePoint(board_pose, point, point);
+      T point_refine[3];
+      ceres::AngleAxisRotatePoint(board_pose, point, point_refine);
+      std::copy_n(point_refine, 3, point);
       point[0] += board_pose[3];
       point[1] += board_pose[4];
       point[2] += board_pose[5];
@@ -414,7 +418,9 @@ struct ReprojectionError_CameraGroupAndObjectRef {
 
     // 3. Refine the camera if it is not the referential
     if (refine_camera != 0) {
-      ceres::AngleAxisRotatePoint(camera, pobj, pobj);
+      T pobj_refine[3];
+      ceres::AngleAxisRotatePoint(camera, pobj, pobj_refine);
+      std::copy_n(pobj_refine, 3, pobj);
       pobj[0] += camera[3];
       pobj[1] += camera[4];
       pobj[2] += camera[5];
@@ -545,7 +551,9 @@ struct ReprojectionError_CameraGroupAndObjectRefAndIntrinsics {
     // 1. Apply the board transformation in teh object
     T point[3] = {T(x), T(y), T(z)};
     if (refine_board != 0) {
-      ceres::AngleAxisRotatePoint(board_pose, point, point);
+      T point_refine[3];
+      ceres::AngleAxisRotatePoint(board_pose, point, point_refine);
+      std::copy_n(point_refine, 3, point);
       point[0] += board_pose[3];
       point[1] += board_pose[4];
       point[2] += board_pose[5];
@@ -561,7 +569,9 @@ struct ReprojectionError_CameraGroupAndObjectRefAndIntrinsics {
 
     // 3. Refine the camera if it is not the referential
     if (refine_camera != 0) {
-      ceres::AngleAxisRotatePoint(camera, pobj, pobj);
+      T pobj_refine[3];
+      ceres::AngleAxisRotatePoint(camera, pobj, pobj_refine);
+      std::copy_n(pobj_refine, 3, pobj);
       pobj[0] += camera[3];
       pobj[1] += camera[4];
       pobj[2] += camera[5];
