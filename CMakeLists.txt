@@ -26,9 +26,11 @@ if(NOT TARGET Boost::filesystem)
         INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
 endif()
 
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
+# sanitizers https://www.jetbrains.com/help/clion/google-sanitizers.html#Configuration
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,leak")
 
 include_directories(
 	include
