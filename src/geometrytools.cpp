@@ -419,7 +419,7 @@ cv::Mat handeyeBootstratpTranslationCalibration(
   cv::Mat labels;
   cv::Mat centers;
   int nb_kmean_iterations = 5;
-  double compactness =
+  std::ignore =
       cv::kmeans(position_1_2, nb_cluster, labels,
                  cv::TermCriteria(
                      cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 0.01),
