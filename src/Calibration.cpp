@@ -541,7 +541,7 @@ void Calibration::computeReproErrAllBoard() {
   std::vector<float> err_vec;
   float sum_err = 0;
   for (const auto &it : board_observations_) {
-    float err = it.second->computeReprojectionError();
+    std::ignore = it.second->computeReprojectionError();
   }
 }
 
@@ -978,14 +978,10 @@ void Calibration::initCameraGroupObs(const int camera_group_idx) {
       auto obj_obs_ptr = it_obj_obs.second.lock();
       if (obj_obs_ptr) {
         int current_cam_id = obj_obs_ptr->camera_id_;
-        int current_obj_id = obj_obs_ptr->object_3d_id_;
 
         // Check if this camera id belongs to the group
         if (std::find(cam_in_group.begin(), cam_in_group.end(),
                       current_cam_id) != cam_in_group.end()) {
-          // if (count(cam_in_group.begin(), cam_in_group.end(),
-          // current_cam_id))
-          // {
           // the camera is in the group so this object is visible in the cam
           // group udpate the observation
           new_cam_group_obs->insertObjectObservation(obj_obs_ptr);

@@ -34,13 +34,31 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
     mkdir build
     cd build
+    cmake -DCMAKE_BUILD_TYPE=Debug ..
     ./tests/boost_tests_run
 
-6. Perform valgrind test and fix introduced memory leaks:
+6. Run static analysis tools and fix introduced dangerous code constructs:
 
 .. code-block:: bash
 
     cd build
+    apt install cppcheck
+    cppcheck ../src
+
+    # known errors:
+    logger.h:19:1: error: There is an unknown macro here somewhere. Configuration is required. If BOOST_LOG_GLOBAL_LOGGER is a macro then please configure it. [unknownMacro] BOOST_LOG_GLOBAL_LOGGER(logger, boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>)
+    ##############
+
+    apt install clang-tidy
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
+    run-clang-tidy
+
+
+
+7. Perform valgrind test and fix introduced memory leaks:
+
+.. code-block:: bash
+
     apt update
     apt install valgrind
     valgrind --leak-check=full \
@@ -57,14 +75,14 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
       ./calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
 
     # current state of this repository:
-    ==1204== LEAK SUMMARY:
-    ==1204==    definitely lost: 0 bytes in 0 blocks
-    ==1204==    indirectly lost: 0 bytes in 0 blocks
-    ==1204==      possibly lost: 0 bytes in 0 blocks
-    ==1204==    still reachable: 0 bytes in 0 blocks
-    ==1204==         suppressed: 419,953 bytes in 3,712 blocks
+    ==6274== LEAK SUMMARY:
+    ==6274==    definitely lost: 0 bytes in 0 blocks
+    ==6274==    indirectly lost: 0 bytes in 0 blocks
+    ==6274==      possibly lost: 0 bytes in 0 blocks
+    ==6274==    still reachable: 0 bytes in 0 blocks
+    ==6274==         suppressed: 420,593 bytes in 3,714 blocks
 
-7. Create pull request.
+8. Create pull request.
 
 
 Naming convention:

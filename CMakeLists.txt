@@ -3,8 +3,6 @@ project(MC-Calib)
 
 add_definitions(-std=c++14)
 set(CMAKE_CXX_FLAGS "-std=c++14") # required for Ceres https://github.com/colmap/colmap/issues/905#issuecomment-731138700
-set(CMAKE_BUILD_TYPE Release)
-set(DCMAKE_BUILD_TYPE Release)
 set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 
 find_package(OpenCV REQUIRED)
@@ -28,9 +26,11 @@ if(NOT TARGET Boost::filesystem)
         INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
 endif()
 
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
+# sanitizers https://www.jetbrains.com/help/clion/google-sanitizers.html#Configuration
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,leak")
 
 include_directories(
 	include

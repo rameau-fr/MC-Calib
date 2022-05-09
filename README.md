@@ -67,7 +67,7 @@ Then the following should do the job of compiling the code:
    ```bash
    mkdir build
    cd build
-   cmake ..
+   cmake -DCMAKE_BUILD_TYPE=Release ..
    make -j10  
    ```
 
