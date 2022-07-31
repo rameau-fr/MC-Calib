@@ -3,6 +3,7 @@
 #include "boost/filesystem.hpp"
 #include "opencv2/core/core.hpp"
 #include <iostream>
+#include <mutex>
 #include <numeric>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
@@ -138,13 +139,15 @@ public:
   Calibration(
       const std::string config_path); // initialize the charuco pattern, nb
                                       // of cameras, nb of boards etc.
+  Calibration(const Calibration &) = delete;
+  Calibration &operator=(const Calibration &) = delete;
+
   void boardExtraction();
-  void detectBoards(
-      const cv::Mat image, const int cam_idx, const int frame_idx,
-      const std::string frame_path); // detect the board in the input frame
-  void saveCamerasParams();          // Save all cameras params
-  void save3DObj();                  // Save 3D objects
-  void save3DObjPose();              // Save 3D objects pose
+  void detectBoards(const std::vector<cv::String> &fn,
+                    const int cam); // detect the boards in all images
+  void saveCamerasParams();         // Save all cameras params
+  void save3DObj();                 // Save 3D objects
+  void save3DObjPose();             // Save 3D objects pose
   void displayBoards(const cv::Mat image, const int cam_idx,
                      const int frame_idx);
   void
@@ -218,4 +221,11 @@ public:
   void saveDetection(const int cam_id);
   void saveDetectionAllCam();
   void saveReprojectionErrorToFile();
+
+private:
+  void detectBoardsInImage(
+      const std::string frame_path, const int cam_idx,
+      const int frame_idx); // detect the boards in the input frame
+
+  std::mutex insert_new_board_lock_;
 };

@@ -32,9 +32,8 @@ double getRotationError(cv::Mat a, cv::Mat b) {
   return rot_error;
 }
 
-Calibration calibrate(std::string config_path) {
+void calibrate(Calibration &Calib) {
   // calibrate
-  Calibration Calib(config_path);
   Calib.boardExtraction();
   Calib.initIntrinsic();
   Calib.calibrate3DObjects();
@@ -55,12 +54,11 @@ Calibration calibrate(std::string config_path) {
   if (Calib.fix_intrinsic_ == 0)
     Calib.refineAllCameraGroupAndObjectsAndIntrinsic();
   Calib.reproErrorAllCamGroup();
-
-  return Calib;
 }
 
 void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
-  Calibration Calib = calibrate(config_path);
+  Calibration Calib(config_path);
+  calibrate(Calib);
 
   // read ground truth
   cv::FileStorage fs;
