@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(MC-Calib)
 
-add_definitions(-std=c++14)
-set(CMAKE_CXX_FLAGS "-std=c++14") # required for Ceres https://github.com/colmap/colmap/issues/905#issuecomment-731138700
+add_definitions(-std=c++17)
+set(CMAKE_CXX_FLAGS "-std=c++17") # required for Ceres https://github.com/colmap/colmap/issues/905#issuecomment-731138700
 set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 
 find_package(OpenCV REQUIRED)
@@ -26,7 +26,9 @@ if(NOT TARGET Boost::filesystem)
         INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
 endif()
 
+IF(SSSE3_FOUND)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
+ENDIF(SSSE3_FOUND)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 # sanitizers https://www.jetbrains.com/help/clion/google-sanitizers.html#Configuration
