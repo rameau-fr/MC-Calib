@@ -5,15 +5,6 @@ import cv2
 import pdb
 
 from mpl_toolkits.mplot3d import proj3d
-def orthogonal_proj(zfront, zback):
-    a = (zfront+zback)/(zfront-zback)
-    b = -2*(zfront*zback)/(zfront-zback)
-    return np.array([[1,0,0,0],
-                        [0,1,0,0],
-                        [0,0,a,b],
-                        [0,0,0,zback]])
-proj3d.persp_transformation = orthogonal_proj
-
 
 def axisEqual3D(ax):
     extents = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
@@ -120,6 +111,7 @@ Nb_Camera = int(Nb_Camera)
 #2. declare figure
 fig = plt.figure()
 ax = fig.gca(projection='3d')
+ax.set_proj_type('ortho')
 ax.set_title('Calibration Result')
 
 # 3. Read the data for all the cameras

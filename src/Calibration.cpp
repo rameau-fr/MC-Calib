@@ -66,7 +66,7 @@ Calibration::Calibration(const std::string config_path) {
   if (boards_index.size() != 0) {
     max_board_idx = *max_element(boards_index.begin(), boards_index.end());
   }
-  if (square_size_per_board_.size() == 0) {
+  if (number_x_square_per_board_.size() == 0) {
     number_x_square_per_board_.assign(max_board_idx + 1, nb_x_square);
     number_y_square_per_board_.assign(max_board_idx + 1, nb_y_square);
   }
