@@ -326,7 +326,9 @@ void Calibration::save3DObj() {
         // Replace the keypoints
         for (int i = 0; i < board_ptr->nb_pts_; i++) {
           std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
-          cv::Point3f curr_pts = cur_object->pts_3d_[cur_object->pts_board_2_obj_[board_id_pts_id]];
+          cv::Point3f curr_pts =
+              cur_object
+                  ->pts_3d_[cur_object->pts_board_2_obj_[board_id_pts_id]];
           pts_mat.at<float>(0, a) = curr_pts.x;
           pts_mat.at<float>(1, a) = curr_pts.y;
           pts_mat.at<float>(2, a) = curr_pts.z;
