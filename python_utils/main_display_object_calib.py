@@ -19,7 +19,7 @@ def axisEqual3D(ax):
 # 1. path to object calibration results
 #path_root = "/home/francois/Documents/CppProject/Stereo_Calibration/Images_Synth_4cam_8boards_4groups_NonOverlap/"
 path_root = "/disk/francois/Projets/Calibration_toolbox/Data/Real_Images/stereo_cube/"
-path_root = "/disk/francois/Projets/Calibration_toolbox/Data/Real_Images/2021-07-12-15-09-53/"
+path_root = "/disk/francois/Projets/Dynamic_Nerf_Dataset/0-Calibration/data/Sequence_Calib_RGB/"
 path_object_results = path_root + "calibrated_objects_data.yml"
 
 marker_size = 1
@@ -36,19 +36,12 @@ ax.set_proj_type('ortho')
 ax.set_title('3D calibrated object')
 #ax.scatter(obj_mat[0,:], obj_mat[1,:], obj_mat[2,:], c=(1.0,0.0,0.0))
 
-#To display the cube with different color on each side
-val = 0
-ax.scatter(obj_mat[0,val:val+16], obj_mat[1,val:val+16], obj_mat[2,val:val+16], c=(1.0,0.0,0.0))
-val = val + 16
-ax.scatter(obj_mat[0,val:val+16], obj_mat[1,val:val+16], obj_mat[2,val:val+16], c=(0.0,1.0,0.0))
-val = val + 16
-ax.scatter(obj_mat[0,val:val+16], obj_mat[1,val:val+16], obj_mat[2,val:val+16], c=(0.0,0.0,1.0))
-val = val + 16
-ax.scatter(obj_mat[0,val:val+16], obj_mat[1,val:val+16], obj_mat[2,val:val+16], c=(1.0,0.0,1.0))
-val = val + 16
-ax.scatter(obj_mat[0,val:val+16], obj_mat[1,val:val+16], obj_mat[2,val:val+16], c=(0.0,1.0,1.0))
-val = val + 16
-ax.scatter(obj_mat[0,val:val+16], obj_mat[1,val:val+16], obj_mat[2,val:val+16], c=(0.0,0.0,0.0))
+
+board_idx = np.unique(obj_mat[3,:]).astype(int)
+for b_idx in board_idx:
+    pts_3D = obj_mat[0:3,obj_mat[3,:]==b_idx] #gather all the points from the same board
+    color = np.random.rand(3) # random color
+    ax.scatter(pts_3D[0,:], pts_3D[1,:], pts_3D[2,:], c=(color[0],color[1],color[2]))
 
 #ax.axis('equal')
 #ax.set_aspect('equal', 'box')

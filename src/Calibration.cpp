@@ -307,22 +307,37 @@ void Calibration::saveCamerasParams() {
  * @brief Save all the 3D object
  *
  * Export 3D points constituting the objects.
- *
+ * Format: X Y Z board_id pts_id
  */
 void Calibration::save3DObj() {
   std::string save_path_object = save_path_ + "calibrated_objects_data.yml";
   cv::FileStorage fs(save_path_object, cv::FileStorage::WRITE);
 
   for (const auto &it_obj : object_3d_) {
+    unsigned int obj_pts_count = 0;
     std::shared_ptr<Object3D> cur_object = it_obj.second;
     fs << "object_" + std::to_string(cur_object->obj_id_);
     int obj_nb_pts = cur_object->nb_pts_;
-    cv::Mat pts_mat(3, obj_nb_pts, CV_32FC1);
-    for (int i = 0; i < obj_nb_pts; i++) {
-      cv::Point3f curr_pts = cur_object->pts_3d_[i];
-      pts_mat.at<float>(0, i) = curr_pts.x;
-      pts_mat.at<float>(1, i) = curr_pts.y;
-      pts_mat.at<float>(2, i) = curr_pts.z;
+    cv::Mat pts_mat(5, obj_nb_pts, CV_32FC1);
+    for (const auto &it_board : cur_object->boards_) {
+      auto board_ptr = it_board.second.lock();
+      if (board_ptr) {
+        const int board_idx = board_ptr->board_id_;
+        // Replace the keypoints
+        for (int i = 0; i < board_ptr->nb_pts_; i++) {
+          std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
+          cv::Point3f curr_pts =
+              cur_object
+                  ->pts_3d_[cur_object->pts_board_2_obj_[board_id_pts_id]];
+          pts_mat.at<float>(0, obj_pts_count) = curr_pts.x;
+          pts_mat.at<float>(1, obj_pts_count) = curr_pts.y;
+          pts_mat.at<float>(2, obj_pts_count) = curr_pts.z;
+          pts_mat.at<float>(3, obj_pts_count) = static_cast<float>(board_idx);
+          pts_mat.at<float>(4, obj_pts_count) =
+              static_cast<float>(board_id_pts_id.second);
+          obj_pts_count++;
+        }
+      }
     }
     fs << "{"
        << "points" << pts_mat;
