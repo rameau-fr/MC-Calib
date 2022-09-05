@@ -1,61 +1,57 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04 as prod
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-RUN apt-get upgrade -y
-RUN apt-get autoremove -y
-RUN apt-get install -y build-essential
-
-# Text editors
-RUN apt-get install -y \
-	gedit \
-	vim \ 
-	wget \
-	tmux \
-	sed
-
-#cmake
-RUN apt-get install -y cmake
+RUN apt update && apt install -y --no-install-recommends apt-utils && \
+	apt upgrade -y && apt autoremove -y && \
+	apt install -y build-essential cmake
 
 # suppress GTK warnings about accessibility because there's no dbus
 # (WARNING **: Couldn't connect to accessibility bus: Failed to connect to socket /tmp/dbus-dw0fOAy4vj: Connection refused)
 ENV NO_AT_BRIDGE 1
-ENV HOME /kaist
-WORKDIR /kaist
+WORKDIR /home
 
 #------------------------------	#
-#     INSTALL OPENCV 4		#
+#     INSTALL OPENCV 4		    #
 #------------------------------	#
-RUN apt install -y libopencv-dev python3-opencv
+RUN apt install -y libopencv-dev 
 
 #------------------------------	#
-#     INSTALL Boost		#
+#     INSTALL Boost		        #
 #------------------------------	#
-
 RUN apt install -y libboost-all-dev
 
 #------------------------------	#
-#     Install Ceres		#
+#     Install Ceres		        #
 #------------------------------	#
-RUN apt-get update
-RUN apt-get install 
-RUN apt-get update && apt-get install -y \
-	libgoogle-glog-dev \
-	libgflags-dev \
-	libatlas-base-dev \
-	libeigen3-dev \
-	libsuitesparse-dev
+RUN apt install -y libgoogle-glog-dev libgflags-dev libatlas-base-dev libeigen3-dev libsuitesparse-dev
+RUN apt install -y git && \
+	/bin/bash -c "git clone https://ceres-solver.googlesource.com/ceres-solver && \
+	cd ceres-solver && cmake . && \
+	make -j3 && make test && \
+	make install && \
+	cd /home && rm -rf ceres-solver"
 
-RUN apt-get install -y git
-RUN mkdir -p /Ceres
-RUN /bin/bash -c "cd /Ceres && \
-	git clone https://ceres-solver.googlesource.com/ceres-solver && \
-	cd ceres-solver && \
-	cmake . && \
-	make -j8 && \ 
-	make -j8 test && \
-	make install"
+FROM prod as dev
 
+RUN apt install -y python3-opencv
+
+#------------------------------	#
+#     Doxygen				    #
+#------------------------------	#
+RUN apt install -y flex bison && \ 
+	/bin/bash -c "git clone https://github.com/doxygen/doxygen.git && \
+	cd doxygen && mkdir build && cd build &&\
+	cmake -G 'Unix Makefiles' .. && \
+	make && \ 
+	make install && \
+	cd /home && rm -rf doxygen"
+
+#------------------------------	#
+#     For development		    #
+#------------------------------	#
+RUN apt install -y cppcheck clang-tidy valgrind
+
+	
 
 
 

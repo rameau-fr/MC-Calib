@@ -7,7 +7,7 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 # Installation
 
-Requirements: Ceres, Boost, OpenCV 4.5.x, c++14 
+Requirements: Ceres, Boost, OpenCV 4.5.x, c++17 
 
 There are several ways to get the environment ready. Choose any of them:
 
@@ -18,7 +18,8 @@ There are several ways to get the environment ready. Choose any of them:
    - Pull the image:
 
      ```bash
-     docker pull frameau/opencv-ceres
+     docker pull bailool/mc-calib-prod # production environment
+     docker pull bailool/mc-calib-dev  # development environment
      ```
 
    - Run pulled image:
@@ -33,10 +34,10 @@ There are several ways to get the environment ready. Choose any of them:
                   --env="DISPLAY" \
                   --env="QT_X11_NO_MITSHM=1" \
                   --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-                  --volume="$HOME/.Xauthority:/home/$USER/.Xauthority:rw" \
-                  --volume="${PWD}:/home/$USER/MC-Calib" \
-                  --volume="PATH_TO_DATA:/home/$USER/MC-Calib/data" \
-                  frameau/opencv-ceres
+                  --volume="$HOME/.Xauthority:/home/.Xauthority:rw" \
+                  --volume="${PWD}:/home/MC-Calib" \
+                  --volume="PATH_TO_DATA:/home/MC-Calib/data" \
+                  bailool/mc-calib-prod
       #xhost -local:root  # resetting permissions
       ```
       
@@ -47,7 +48,8 @@ There are several ways to get the environment ready. Choose any of them:
    - Create the image:
    
       ```bash
-      docker build - < Dockerfile -t SPECIFY_YOUR_NAME
+      docker build --target prod -t mc-calib-prod . # production environment
+      docker build --target dev -t mc-calib-dev .   # development environment
       ```
 
 3. Alternatively, every dependency can be installed independently without docker:
@@ -62,7 +64,7 @@ There are several ways to get the environment ready. Choose any of them:
       sudo apt install libboost-all-dev
       ```
 
-Then the following should do the job of compiling the code: 
+Then the following should do the job of compiling the code inside the `MC-Calib` root:
 
    ```bash
    mkdir build
@@ -77,7 +79,7 @@ Then the following should do the job of compiling the code:
 
 - It is also possible to generate Doxygen documentation locally:
 
-   - Install [Doxygen](https://www.doxygen.nl/download.html):
+   - Install [Doxygen](https://www.doxygen.nl/download.html) or use `mc-calib-dev` docker image:
 
       ```bash
       sudo apt install flex

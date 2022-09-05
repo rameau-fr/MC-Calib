@@ -1,3 +1,4 @@
+#include <chrono>
 #include <iomanip>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
@@ -89,14 +90,20 @@ void runCalibrationWorkflow(std::string config_path) {
 }
 
 int main(int argc, char *argv[]) {
-  std::string config_path = argv[1];
+  const std::string config_path = argv[1];
   const bool is_file_available =
       boost::filesystem::exists(config_path) && config_path.length() > 0;
   if (!is_file_available) {
     LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
     return -1;
   }
+
+  auto start = std::chrono::high_resolution_clock::now();
   runCalibrationWorkflow(config_path);
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration =
+      std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+  LOG_INFO << "Calibration took " << duration.count() << " seconds";
 
   return 0;
 }

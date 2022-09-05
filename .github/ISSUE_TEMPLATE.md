@@ -13,7 +13,9 @@
 * Types of cameras => ❔ (perspective, fisheye, hybrid)
 * Multicamera configurations => ❔ (overlapping, non-overlapping, converging)
 * Configuration file => ❔ (i.e. `*.yml`)
-* Image sequences => ❔ (if relevant and possible, please share image sequences)
+* Image sequences => ❔
+    - number of images per camera
+    - if relevant and possible, please share image sequences
 
 ### Describe the issue / bug
 
