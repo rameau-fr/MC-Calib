@@ -190,15 +190,33 @@ void Camera::initializeCalibration() {
     std::shared_ptr<BoardObs> board_obs_temp =
         board_observations_[indbv[shuffled_board_ind[i]]].lock();
     if (board_obs_temp) {
-      img_points.emplace_back(board_obs_temp->pts_2d_);
-      const std::vector<int> &corners_idx_temp = board_obs_temp->charuco_id_;
-      std::shared_ptr<Board> board_3d_ptr = board_obs_temp->board_3d_.lock();
-      if (board_3d_ptr) {
-        std::vector<cv::Point3f> pts_3d_temp;
-        pts_3d_temp.reserve(corners_idx_temp.size());
-        for (const auto &corner_idx_temp : corners_idx_temp)
-          pts_3d_temp.emplace_back(board_3d_ptr->pts_3d_[corner_idx_temp]);
-        obj_points.emplace_back(pts_3d_temp);
+      // if fisheye, check if points are not too close to borders
+      // bug fix opencv from
+      // https://github.com/realizator/stereopi-fisheye-robot/blob/master/4_calibration_fisheye.py
+      bool valid_board = true;
+      if (distortion_model_ == 1) {
+        float thresh_border_x = im_cols_ / 20;
+        float thresh_border_y = im_rows_ / 20;
+        for (int i = 0; i < board_obs_temp->pts_2d_.size(); i++) {
+          float pt_x = board_obs_temp->pts_2d_[i].x;
+          float pt_y = board_obs_temp->pts_2d_[i].y;
+          if (pt_x <= thresh_border_x || pt_x >= (im_cols_ - thresh_border_x) ||
+              pt_y <= thresh_border_y || pt_y >= (im_rows_ - thresh_border_y)) {
+            valid_board = false;
+          }
+        }
+      }
+      if (valid_board == true) {
+        img_points.emplace_back(board_obs_temp->pts_2d_);
+        const std::vector<int> &corners_idx_temp = board_obs_temp->charuco_id_;
+        std::shared_ptr<Board> board_3d_ptr = board_obs_temp->board_3d_.lock();
+        if (board_3d_ptr) {
+          std::vector<cv::Point3f> pts_3d_temp;
+          pts_3d_temp.reserve(corners_idx_temp.size());
+          for (const auto &corner_idx_temp : corners_idx_temp)
+            pts_3d_temp.emplace_back(board_3d_ptr->pts_3d_[corner_idx_temp]);
+          obj_points.emplace_back(pts_3d_temp);
+        }
       }
     }
   }
