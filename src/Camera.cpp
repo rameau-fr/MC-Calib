@@ -191,20 +191,9 @@ void Camera::initializeCalibration() {
         board_observations_[indbv[shuffled_board_ind[i]]].lock();
     if (board_obs_temp) {
       // if fisheye, check if points are not too close to borders
-      // bug fix opencv from
-      // https://github.com/realizator/stereopi-fisheye-robot/blob/master/4_calibration_fisheye.py
       bool valid_board = true;
       if (distortion_model_ == 1) {
-        float thresh_border_x = im_cols_ / 20;
-        float thresh_border_y = im_rows_ / 20;
-        for (int i = 0; i < board_obs_temp->pts_2d_.size(); i++) {
-          float pt_x = board_obs_temp->pts_2d_[i].x;
-          float pt_y = board_obs_temp->pts_2d_[i].y;
-          if (pt_x <= thresh_border_x || pt_x >= (im_cols_ - thresh_border_x) ||
-              pt_y <= thresh_border_y || pt_y >= (im_rows_ - thresh_border_y)) {
-            valid_board = false;
-          }
-        }
+        valid_board = checkBorderToleranceFisheye(board_obs_temp);
       }
       if (valid_board == true) {
         img_points.emplace_back(board_obs_temp->pts_2d_);
@@ -241,6 +230,30 @@ void Camera::initializeCalibration() {
 
   // Save data in the structure
   setIntrinsics(camera_matrix, distortion_coeffs);
+}
+
+
+/**
+ * @brief determine if the board is valid for the calibration
+ * of fisheye cameras
+ * bug fix opencv from:
+ * https://github.com/realizator/stereopi-fisheye-robot/blob/master/
+ * 4_calibration_fisheye.py
+ */
+bool Camera::checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs) {
+  bool valid_board = true;
+  const float thresh_border_x = float(im_cols_) * border_marging;
+  const float thresh_border_y = float(im_rows_) * border_marging;
+  for (int i = 0; i < board_obs->pts_2d_.size(); i++) {
+    float pt_x = board_obs->pts_2d_[i].x;
+    float pt_y = board_obs->pts_2d_[i].y;
+    if (pt_x <= thresh_border_x || pt_x >= (im_cols_ - thresh_border_x) ||
+        pt_y <= thresh_border_y || pt_y >= (im_rows_ - thresh_border_y)) {
+      valid_board = false;
+      break;
+    }
+  }
+  return valid_board;
 }
 
 /**

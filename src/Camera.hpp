@@ -44,6 +44,9 @@ public:
   // camera index
   int cam_idx_;
 
+  // fisheye border margin to exclude invalid boards during initialization
+  const float border_marging = 0.05; // border margin tolerance
+
   // Functions
   Camera() = delete;
   Camera(const int cam_idx, const int distortion_model);
@@ -59,4 +62,5 @@ public:
   cv::Mat getDistortionVectorVector() const;
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
   void setIntrinsics(const cv::Mat K, const cv::Mat distortion_vector);
+  bool checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs);
 };
