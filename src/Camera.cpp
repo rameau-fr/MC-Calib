@@ -232,7 +232,6 @@ void Camera::initializeCalibration() {
   setIntrinsics(camera_matrix, distortion_coeffs);
 }
 
-
 /**
  * @brief determine if the board is valid for the calibration
  * of fisheye cameras
