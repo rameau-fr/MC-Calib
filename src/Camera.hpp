@@ -22,6 +22,11 @@
  * - object observation
  */
 class Camera final {
+
+private:
+  // fisheye border margin to exclude invalid boards during initialization
+  const float border_marging = 0.05f; // border margin tolerance
+
 public:
   // datastructure for this camera
   std::map<int, std::weak_ptr<BoardObs>>
@@ -59,4 +64,5 @@ public:
   cv::Mat getDistortionVectorVector() const;
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
   void setIntrinsics(const cv::Mat K, const cv::Mat distortion_vector);
+  bool checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs);
 };
