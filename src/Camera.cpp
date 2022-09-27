@@ -244,8 +244,8 @@ bool Camera::checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs) {
   const float thresh_border_x = float(im_cols_) * border_marging;
   const float thresh_border_y = float(im_rows_) * border_marging;
   for (int i = 0; i < board_obs->pts_2d_.size(); i++) {
-    float pt_x = board_obs->pts_2d_[i].x;
-    float pt_y = board_obs->pts_2d_[i].y;
+    const float &pt_x = board_obs->pts_2d_[i].x;
+    const float &pt_y = board_obs->pts_2d_[i].y;
     if (pt_x <= thresh_border_x || pt_x >= (im_cols_ - thresh_border_x) ||
         pt_y <= thresh_border_y || pt_y >= (im_rows_ - thresh_border_y)) {
       valid_board = false;

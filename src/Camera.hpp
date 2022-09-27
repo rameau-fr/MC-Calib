@@ -22,6 +22,11 @@
  * - object observation
  */
 class Camera final {
+
+private:
+  // fisheye border margin to exclude invalid boards during initialization
+  const float border_marging = 0.05f; // border margin tolerance
+
 public:
   // datastructure for this camera
   std::map<int, std::weak_ptr<BoardObs>>
@@ -43,9 +48,6 @@ public:
 
   // camera index
   int cam_idx_;
-
-  // fisheye border margin to exclude invalid boards during initialization
-  const float border_marging = 0.05; // border margin tolerance
 
   // Functions
   Camera() = delete;
