@@ -90,6 +90,7 @@ void runCalibrationWorkflow(std::string config_path) {
 }
 
 int main(int argc, char *argv[]) {
+  (void)argc; // casting to fix -Werror=unused-parameter
   const std::string config_path = argv[1];
   const bool is_file_available =
       boost::filesystem::exists(config_path) && config_path.length() > 0;

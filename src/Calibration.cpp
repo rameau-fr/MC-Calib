@@ -32,8 +32,17 @@ Calibration::Calibration(const std::string config_path) {
     return;
   }
   fs.open(config_path, cv::FileStorage::READ);
-  fs["number_camera"] >> nb_camera_;
-  fs["number_board"] >> nb_board_;
+
+  int nb_camera;
+  fs["number_camera"] >> nb_camera;
+  assert(nb_camera > 0);
+  nb_camera_ = static_cast<unsigned int>(nb_camera);
+
+  int nb_board;
+  fs["number_board"] >> nb_board;
+  assert(nb_board > 0);
+  nb_board_ = static_cast<unsigned int>(nb_board);
+
   fs["refine_corner"] >> refine_corner_;
   fs["min_perc_pts"] >> min_perc_pts_;
   fs["number_x_square"] >> nb_x_square;
@@ -90,7 +99,7 @@ Calibration::Calibration(const std::string config_path) {
     distortion_per_camera.assign(nb_camera_, distortion_model);
 
   // Initialize Cameras
-  for (int i = 0; i < nb_camera_; i++) {
+  for (std::size_t i = 0; i < nb_camera_; i++) {
     std::shared_ptr<Camera> new_cam =
         std::make_shared<Camera>(i, distortion_per_camera[i]);
     cams_[i] = new_cam;
@@ -118,7 +127,7 @@ Calibration::Calibration(const std::string config_path) {
   }
 
   // Initialize the 3D boards
-  for (int i = 0; i < nb_board_; i++) {
+  for (std::size_t i = 0; i < nb_board_; i++) {
     // Initialize board
     std::shared_ptr<Board> new_board = std::make_shared<Board>(config_path, i);
     boards_3d_[i] = new_board;
@@ -145,7 +154,7 @@ void Calibration::boardExtraction() {
                                                        "jpeg", "jp2", "tiff"};
 
   // iterate through the cameras
-  for (int cam = 0; cam < nb_camera_; cam++) {
+  for (std::size_t cam = 0; cam < nb_camera_; cam++) {
     // prepare the folder's name
     std::stringstream ss;
     ss << std::setw(3) << std::setfill('0') << cam + 1;
@@ -229,7 +238,7 @@ void Calibration::detectBoardsInImage(const std::string frame_path,
 
   charuco_params_->adaptiveThreshConstant = 1;
 
-  for (int i = 0; i < nb_board_; i++) {
+  for (std::size_t i = 0; i < nb_board_; i++) {
     cv::aruco::detectMarkers(image, boards_3d_[i]->charuco_board_->dictionary,
                              marker_corners[i], marker_idx[i],
                              charuco_params_); // detect markers
@@ -241,14 +250,15 @@ void Calibration::detectBoardsInImage(const std::string frame_path,
     }
 
     if (charuco_corners[i].size() >
-        static_cast<int>(std::round(min_perc_pts_ * boards_3d_[i]->nb_pts_))) {
+        static_cast<std::size_t>(
+            std::round(min_perc_pts_ * boards_3d_[i]->nb_pts_))) {
       LOG_INFO << "Number of detected corners :: " << charuco_corners[i].size();
       // Refine the detected corners
       if (refine_corner_ == true) {
         std::vector<SaddlePoint> refined;
         saddleSubpixelRefinement(graymat, charuco_corners[i], refined,
                                  corner_ref_window_, corner_ref_max_iter_);
-        for (int j = 0; j < charuco_corners[i].size(); j++) {
+        for (std::size_t j = 0; j < charuco_corners[i].size(); j++) {
           if (std::isinf(refined[j].x) || std::isinf(refined[j].y)) {
             break;
           }
@@ -301,7 +311,7 @@ void Calibration::saveCamerasParams() {
   cv::FileStorage fs(save_path_camera_params, cv::FileStorage::WRITE);
   for (const auto &it_cam_group : cam_group_) {
     std::shared_ptr<CameraGroup> cur_cam_group = it_cam_group.second;
-    fs << "nb_camera" << nb_camera_;
+    fs << "nb_camera" << static_cast<int>(nb_camera_);
     for (const auto &it_cam : cur_cam_group->cameras_) {
       std::shared_ptr<Camera> cur_cam = it_cam.second.lock();
       if (cur_cam) {
@@ -346,7 +356,7 @@ void Calibration::save3DObj() {
       if (board_ptr) {
         const int board_idx = board_ptr->board_id_;
         // Replace the keypoints
-        for (int i = 0; i < board_ptr->nb_pts_; i++) {
+        for (std::size_t i = 0; i < board_ptr->nb_pts_; i++) {
           std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
           cv::Point3f curr_pts =
               cur_object
@@ -575,8 +585,6 @@ void Calibration::refineIntrinsicAndPoseAllCam() {
  *
  */
 void Calibration::computeReproErrAllBoard() {
-  std::vector<float> err_vec;
-  float sum_err = 0;
   for (const auto &it : board_observations_) {
     std::ignore = it.second->computeReprojectionError();
   }
@@ -717,7 +725,7 @@ void Calibration::init3DObjects() {
   LOG_DEBUG << "Number of 3D objects detected :: " << connect_comp.size();
 
   // Declare a new 3D object for each connected component
-  for (int i = 0; i < connect_comp.size(); i++) {
+  for (std::size_t i = 0; i < connect_comp.size(); i++) {
     LOG_DEBUG << "Obj Id :: " << i;
     LOG_DEBUG << "Number of boards in this object :: "
               << connect_comp[i].size();
@@ -733,7 +741,7 @@ void Calibration::init3DObjects() {
     int pts_count = 0;
 
     // Compute the shortest path between the reference and the other board
-    for (int j = 0; j < connect_comp[i].size(); j++) {
+    for (std::size_t j = 0; j < connect_comp[i].size(); j++) {
       int current_board_id = connect_comp[i][j];
       newObject3D->insertBoardInObject(boards_3d_[current_board_id]);
 
@@ -746,13 +754,16 @@ void Calibration::init3DObjects() {
       cv::Mat transform = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0,
                            0, 1, 0, 0, 0, 0,
                            1); // initialize the transformation to identity
-      for (int k = 0; k < short_path.size() - 1; k++) {
-        int current_board = short_path[k];
-        int next_board = short_path[k + 1];
-        std::pair<int, int> board_pair_idx =
-            std::make_pair(current_board, next_board);
-        cv::Mat current_trans = inter_board_transform_[board_pair_idx];
-        transform = transform * current_trans.inv();
+
+      if (short_path.size() >= 1u) {
+        for (std::size_t k = 0; k < short_path.size() - 1; k++) {
+          int current_board = short_path[k];
+          int next_board = short_path[k + 1];
+          std::pair<int, int> board_pair_idx =
+              std::make_pair(current_board, next_board);
+          cv::Mat current_trans = inter_board_transform_[board_pair_idx];
+          transform = transform * current_trans.inv();
+        }
       }
 
       // Store the relative board transformation in the object
@@ -764,7 +775,7 @@ void Calibration::init3DObjects() {
                          newObject3D->getBoardRotVec(current_board_id),
                          newObject3D->getBoardTransVec(current_board_id));
       // Make a indexing between board to object
-      for (int k = 0; k < trans_pts.size(); k++) {
+      for (std::size_t k = 0; k < trans_pts.size(); k++) {
         int char_id = k;
         std::pair<int, int> boardid_charid =
             std::make_pair(current_board_id, char_id);
@@ -951,7 +962,7 @@ void Calibration::initCameraGroup() {
   LOG_DEBUG << "Number of camera group detected :: " << connect_comp.size();
 
   // Declare a new camera group for each connected component
-  for (int i = 0; i < connect_comp.size(); i++) {
+  for (std::size_t i = 0; i < connect_comp.size(); i++) {
     LOG_DEBUG << "camera group id :: " << i;
     LOG_DEBUG << "Number of cameras in the group :: " << connect_comp.size();
 
@@ -964,7 +975,7 @@ void Calibration::initCameraGroup() {
         std::make_shared<CameraGroup>(id_ref_cam, i);
 
     // Compute the shortest path between the reference and the other cams
-    for (int j = 0; j < connect_comp[i].size(); j++) {
+    for (std::size_t j = 0; j < connect_comp[i].size(); j++) {
       int current_camera_id = connect_comp[i][j];
       new_camera_group->insertCamera(cams_[current_camera_id]);
 
@@ -976,14 +987,17 @@ void Calibration::initCameraGroup() {
       cv::Mat transform =
           (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
            0, 1); // initialize the transformation to identity
-      for (int k = 0; k < short_path.size() - 1; k++) {
-        int current_cam = short_path[k];
-        int next_cam = short_path[k + 1];
-        std::pair<int, int> cam_pair_idx =
-            std::make_pair(current_cam, next_cam);
-        cv::Mat current_trans = inter_camera_transform_[cam_pair_idx];
-        // transform = transform * current_trans.inv();
-        transform = transform * current_trans;
+
+      if (short_path.size() >= 1u) {
+        for (std::size_t k = 0; k < short_path.size() - 1; k++) {
+          int current_cam = short_path[k];
+          int next_cam = short_path[k + 1];
+          std::pair<int, int> cam_pair_idx =
+              std::make_pair(current_cam, next_cam);
+          cv::Mat current_trans = inter_camera_transform_[cam_pair_idx];
+          // transform = transform * current_trans.inv();
+          transform = transform * current_trans;
+        }
       }
       // Store the relative camera transformation in the object
       new_camera_group->setCameraPoseMat(transform, current_camera_id);
@@ -1087,13 +1101,13 @@ void Calibration::findPairObjectForNonOverlap() {
       if (group_idx1 != group_idx2) // if the two groups are different
       {
         // Prepare the list of possible objects pairs
-        std::map<std::pair<int, int>, int> count_pair_obs;
+        std::map<std::pair<int, int>, unsigned int> count_pair_obs;
         for (const auto &it_obj1 : object_3d_) {
           for (const auto &it_obj2 : object_3d_) {
             int obj_id1 = it_obj1.second->obj_id_;
             int obj_id2 = it_obj2.second->obj_id_;
             if (obj_id1 != obj_id2)
-              count_pair_obs[std::make_pair(obj_id1, obj_id2)] = 0;
+              count_pair_obs[std::make_pair(obj_id1, obj_id2)] = 0u;
           }
         }
 
@@ -1164,7 +1178,7 @@ void Calibration::findPairObjectForNonOverlap() {
         }
 
         // find the pair of object with the maximum shared frames
-        unsigned currentMax = 0;
+        unsigned int currentMax = 0u;
         std::pair<int, int> arg_max = std::make_pair(0, 0);
         for (const auto &it : count_pair_obs) {
           if (it.second > currentMax) {
@@ -1204,8 +1218,6 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
   // Prepare the 3D objects
   std::shared_ptr<Object3D> object_3D_1 = object_3d_[object_cam_1];
   std::shared_ptr<Object3D> object_3D_2 = object_3d_[object_cam_2];
-  const std::vector<cv::Point3f> &pts_3d_obj_1 = object_3D_1->pts_3d_;
-  const std::vector<cv::Point3f> &pts_3d_obj_2 = object_3D_2->pts_3d_;
 
   // std::vector to store data for non-overlapping calibration
   std::vector<cv::Mat> pose_abs_1,
@@ -1360,7 +1372,6 @@ void Calibration::initInterCamGroupGraph() {
   // Create the graph
   for (const auto &it : no_overlap_camgroup_pair_pose_) {
     const std::pair<int, int> &camgroup_pair_idx = it.first;
-    const cv::Mat &camgroup_poses_temp = it.second;
     int nb_common_frame =
         no_overlap__camgroup_pair_common_cnt_[camgroup_pair_idx];
     no_overlap_camgroup_graph_.addEdge(camgroup_pair_idx.first,
@@ -1379,7 +1390,7 @@ void Calibration::mergeCameraGroup() {
       no_overlap_camgroup_graph_.connectedComponents();
   std::map<int, std::shared_ptr<CameraGroup>> cam_group; // list of camera group
 
-  for (int i = 0; i < connect_comp.size(); i++) {
+  for (std::size_t i = 0; i < connect_comp.size(); i++) {
     // find the reference camera group reference and the camera reference among
     // all the groups
     int id_ref_cam_group =
@@ -1392,7 +1403,7 @@ void Calibration::mergeCameraGroup() {
 
     // Used the graph to find the transformations of camera groups to the
     // reference group
-    for (int j = 0; j < connect_comp[i].size(); j++) {
+    for (std::size_t j = 0; j < connect_comp[i].size(); j++) {
       int current_cam_group_id = connect_comp[i][j];
       // Compute the transformation between the reference group and the current
       // group
@@ -1403,14 +1414,18 @@ void Calibration::mergeCameraGroup() {
       cv::Mat transform =
           (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
            0, 1); // initialize the transformation to identity
-      for (int k = 0; k < short_path.size() - 1; k++) {
-        int current_group = short_path[k];
-        int next_group = short_path[k + 1];
-        std::pair<int, int> group_pair_idx =
-            std::make_pair(current_group, next_group);
-        cv::Mat current_trans = no_overlap_camgroup_pair_pose_[group_pair_idx];
-        // transform = transform * current_trans.inv();
-        transform = transform * current_trans;
+
+      if (short_path.size() >= 1u) {
+        for (std::size_t k = 0; k < short_path.size() - 1; k++) {
+          int current_group = short_path[k];
+          int next_group = short_path[k + 1];
+          std::pair<int, int> group_pair_idx =
+              std::make_pair(current_group, next_group);
+          cv::Mat current_trans =
+              no_overlap_camgroup_pair_pose_[group_pair_idx];
+          // transform = transform * current_trans.inv();
+          transform = transform * current_trans;
+        }
       }
       // Store the poses
       cam_group_pose_to_ref[current_cam_group_id] = transform;
@@ -1559,7 +1574,7 @@ void Calibration::mergeObjects() {
       covis_objects_graph_.connectedComponents();
   std::map<int, std::shared_ptr<Object3D>> object_3d; // list of object 3D
 
-  for (int i = 0; i < connect_comp.size(); i++) {
+  for (std::size_t i = 0; i < connect_comp.size(); i++) {
     // find the reference camera group reference and the camera reference among
     // all the groups
     int id_ref_object =
@@ -1573,7 +1588,7 @@ void Calibration::mergeObjects() {
 
     // Used the graph to find the transformations of objects to the reference
     // object
-    for (int j = 0; j < connect_comp[i].size(); j++) {
+    for (std::size_t j = 0; j < connect_comp[i].size(); j++) {
       nb_board_in_obj += object_3d_[connect_comp[i][j]]->boards_.size();
       int current_object_id = connect_comp[i][j];
       // Compute the transformation between the reference object and the current
@@ -1584,14 +1599,17 @@ void Calibration::mergeObjects() {
       cv::Mat transform =
           (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
            0, 1); // initialize the transformation to identity
-      for (int k = 0; k < short_path.size() - 1; k++) {
-        int current_object = short_path[k];
-        int next_object = short_path[k + 1];
-        std::pair<int, int> object_pair_idx =
-            std::make_pair(current_object, next_object);
-        cv::Mat current_trans = inter_object_transform_[object_pair_idx];
-        transform = transform * current_trans.inv(); // original
-        // transform = transform * current_trans;
+
+      if (short_path.size() >= 1u) {
+        for (std::size_t k = 0; k < short_path.size() - 1; k++) {
+          int current_object = short_path[k];
+          int next_object = short_path[k + 1];
+          std::pair<int, int> object_pair_idx =
+              std::make_pair(current_object, next_object);
+          cv::Mat current_trans = inter_object_transform_[object_pair_idx];
+          transform = transform * current_trans.inv(); // original
+          // transform = transform * current_trans;
+        }
       }
       // Store the poses
       object_pose_to_ref[current_object_id] = transform;
@@ -1630,7 +1648,7 @@ void Calibration::mergeObjects() {
                 newObject3D->getBoardRotVec(current_board->board_id_),
                 newObject3D->getBoardTransVec(current_board->board_id_));
             // Make a indexing between board to object
-            for (int k = 0; k < trans_pts.size(); k++) {
+            for (std::size_t k = 0; k < trans_pts.size(); k++) {
               int char_id = k;
               std::pair<int, int> boardid_charid =
                   std::make_pair(current_board->board_id_, char_id);
@@ -1692,6 +1710,7 @@ void Calibration::mergeAllObjectObs() {
 
   // Reinitialize all the 3D object
   for (const auto &it_object : object_3d_) {
+    (void)it_object;
     // Reinitialize all object obserations
     for (const auto &it : object_3d_)
       this->init3DObjectObs(it.first);
@@ -1799,7 +1818,7 @@ void Calibration::saveReprojection(const int cam_id) {
             // plot the keypoints on the image (red project // green detected)
             std::vector<double> color_repro{0, 0, 255};
             std::vector<double> color_detect{0, 255, 0};
-            for (int i = 0; i < pts_2d.size(); i++) {
+            for (std::size_t i = 0; i < pts_2d.size(); i++) {
               cv::circle(
                   image, cv::Point(pts_repro[i].x, pts_repro[i].y), 4,
                   cv::Scalar(color_repro[0], color_repro[1], color_repro[2]),
@@ -1990,7 +2009,7 @@ cv::Mat Calibration::computeDistanceBetweenPoints(
     const std::vector<cv::Point2f> obj_pts_2d,
     const std::vector<cv::Point2f> repro_pts) {
   cv::Mat error_list;
-  for (int i = 0; i < repro_pts.size(); i++) {
+  for (std::size_t i = 0; i < repro_pts.size(); i++) {
     float rep_err = std::sqrt(std::pow((obj_pts_2d[i].x - repro_pts[i].x), 2) +
                               std::pow((obj_pts_2d[i].y - repro_pts[i].y), 2));
     error_list.push_back(rep_err);

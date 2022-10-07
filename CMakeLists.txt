@@ -31,6 +31,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")
 ENDIF(SSSE3_FOUND)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
+add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+
 # sanitizers https://www.jetbrains.com/help/clion/google-sanitizers.html#Configuration
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,leak")
 

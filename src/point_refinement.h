@@ -78,7 +78,6 @@ void saddleSubpixelRefinement(const cv::Mat &smooth_input,
                               cv::Mat &valid, std::vector<SaddlePoint> &refined,
                               int window_half_size = 3,
                               int max_iterations = 3) {
-  int window_size = window_half_size * 2 + 1;
   cv::Mat b(A.cols, 1, CV_64FC1);
 
   refined.resize(initial.size());

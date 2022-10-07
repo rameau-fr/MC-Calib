@@ -31,7 +31,7 @@ void Object3D::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
 Object3D::Object3D(const int nb_boards, const int ref_board_id,
                    const int obj_id, const std::array<int, 3> color)
     : nb_boards_(nb_boards), ref_board_id_(ref_board_id), obj_id_(obj_id),
-      nb_pts_(0), color_(color){};
+      nb_pts_(0), color_(color) {}
 
 /**
  * @brief Insert a new board in the object
@@ -188,7 +188,7 @@ void Object3D::refineObject(const int nb_iterations) {
               if (ref_board_id_ == board_obs_ptr->board_id_)
                 refine_board = false;
 
-              for (int i = 0; i < board_pts_idx.size(); i++) {
+              for (std::size_t i = 0; i < board_pts_idx.size(); i++) {
                 const cv::Point3f &current_pts_3d =
                     board_pts_3d[board_pts_idx[i]]; // Current 3D pts
                 const cv::Point2f &current_pts_2d =
@@ -230,7 +230,7 @@ void Object3D::refineObject(const int nb_iterations) {
                          getBoardTransVec(board_idx));
 
       // Replace the keypoints
-      for (int i = 0; i < trans_pts.size(); i++) {
+      for (std::size_t i = 0; i < trans_pts.size(); i++) {
         std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
         pts_3d_[pts_board_2_obj_[board_id_pts_id]] = trans_pts[i];
       }
@@ -255,7 +255,7 @@ void Object3D::updateObjectPts() {
                          getBoardTransVec(board_idx));
 
       // Replace the keypoints
-      for (int i = 0; i < trans_pts.size(); i++) {
+      for (std::size_t i = 0; i < trans_pts.size(); i++) {
         std::pair<int, int> board_id_pts_id = std::make_pair(board_idx, i);
         pts_3d_[pts_board_2_obj_[board_id_pts_id]] = trans_pts[i];
       }

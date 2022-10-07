@@ -9,7 +9,7 @@
 #include "logger.h"
 
 Camera::Camera(const int cam_idx, const int distortion_model)
-    : cam_idx_(cam_idx), distortion_model_(distortion_model){};
+    : cam_idx_(cam_idx), distortion_model_(distortion_model) {}
 
 /**
  * @brief Get camera matrix (K)
@@ -173,10 +173,10 @@ void Camera::initializeCalibration() {
 
   // nb of boards used for the initial estimation of intrinsic parameters
   //(at least 50 boards for perspective)
-  int nb_board_est = 50;
+  std::size_t nb_board_est = 50u;
   if (distortion_model_ == 1) {
-    nb_board_est =
-        500; // fisheye is more sensitive and require more img (but faster)
+    // fisheye is more sensitive and require more img (but faster)
+    nb_board_est = 500u;
   }
   if (indbv.size() < nb_board_est)
     nb_board_est = indbv.size();
@@ -186,7 +186,7 @@ void Camera::initializeCalibration() {
   std::vector<std::vector<cv::Point2f>> img_points;
   obj_points.reserve(nb_board_est);
   img_points.reserve(nb_board_est);
-  for (int i = 0; i < nb_board_est; i++) {
+  for (std::size_t i = 0; i < nb_board_est; i++) {
     std::shared_ptr<BoardObs> board_obs_temp =
         board_observations_[indbv[shuffled_board_ind[i]]].lock();
     if (board_obs_temp) {
@@ -243,7 +243,7 @@ bool Camera::checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs) {
   bool valid_board = true;
   const float thresh_border_x = float(im_cols_) * border_marging;
   const float thresh_border_y = float(im_rows_) * border_marging;
-  for (int i = 0; i < board_obs->pts_2d_.size(); i++) {
+  for (std::size_t i = 0; i < board_obs->pts_2d_.size(); i++) {
     const float &pt_x = board_obs->pts_2d_[i].x;
     const float &pt_y = board_obs->pts_2d_[i].y;
     if (pt_x <= thresh_border_x || pt_x >= (im_cols_ - thresh_border_x) ||
@@ -261,7 +261,6 @@ bool Camera::checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs) {
  */
 void Camera::refineIntrinsicCalibration(const int nb_iterations) {
   ceres::Problem problem;
-  double loss = 1.0;
   LOG_INFO << "Parameters before optimization :: " << this->getCameraMat();
   LOG_INFO << "distortion vector :: " << getDistortionVectorVector();
   for (const auto &it : board_observations_) {
@@ -272,7 +271,7 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
         const std::vector<cv::Point3f> &board_pts_3d = board_3d_ptr->pts_3d_;
         const std::vector<int> &board_pts_idx = board_obs_ptr->charuco_id_;
         const std::vector<cv::Point2f> &board_pts_2d = board_obs_ptr->pts_2d_;
-        for (int i = 0; i < board_pts_idx.size(); i++) {
+        for (std::size_t i = 0; i < board_pts_idx.size(); i++) {
           cv::Point3f current_pts_3d =
               board_pts_3d[board_pts_idx[i]];           // Current 3D pts
           cv::Point2f current_pts_2d = board_pts_2d[i]; // Current 2D pts

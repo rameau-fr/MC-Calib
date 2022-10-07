@@ -25,12 +25,12 @@ class Camera;
 class Object3D final {
 public:
   // Parameters
-  int nb_boards_;            // number of boards constituting the 3D object
-  int nb_pts_;               // Number of points in the 3D object
-  std::array<int, 3> color_; // color of the 3D object
-  int obj_id_;               // id of the 3D object
+  int nb_boards_;    // number of boards constituting the 3D object
   int ref_board_id_; // the id of the reference board (which will take the pose
-                     // I|0)
+                     // // I|0)
+  int obj_id_;       // id of the 3D object
+  unsigned int nb_pts_;      // Number of points in the 3D object
+  std::array<int, 3> color_; // color of the 3D object
 
   // 3D points
   std::vector<cv::Point3f> pts_3d_; // 3D points in the object

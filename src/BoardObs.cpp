@@ -25,8 +25,8 @@ BoardObs::BoardObs(const int camera_id, const int frame_id, const int board_id,
                    const std::vector<int> charuco_id,
                    std::shared_ptr<Camera> cam, std::shared_ptr<Board> board_3d)
     : frame_id_(frame_id), camera_id_(camera_id), board_id_(board_id),
-      pts_2d_(pts_2d), charuco_id_(charuco_id), cam_(cam),
-      board_3d_(board_3d){};
+      pts_2d_(pts_2d), charuco_id_(charuco_id), cam_(cam), board_3d_(board_3d) {
+}
 
 /**
  * @brief Get pose vector of the observed board
@@ -177,7 +177,7 @@ float BoardObs::computeReprojectionError() {
                                 cam_ptr->getCameraMat(),
                                 cam_ptr->getDistortionVectorVector(), repro_pts,
                                 cam_ptr->distortion_model_);
-    for (int j = 0; j < repro_pts.size(); j++) {
+    for (std::size_t j = 0; j < repro_pts.size(); j++) {
       float rep_err = std::sqrt(std::pow((pts_2d_[j].x - repro_pts[j].x), 2) +
                                 std::pow((pts_2d_[j].y - repro_pts[j].y), 2));
       error_board_vec.push_back(rep_err);

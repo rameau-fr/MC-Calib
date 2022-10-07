@@ -26,7 +26,7 @@ void Graph::addEdge(const int v1, const int v2, const double weight) {
   idx_to_vertex_[v2] = vertex2;
 
   boost::add_edge(vertex1, vertex2, EdgeWeightProperty(weight), graph_);
-};
+}
 
 /**
  * @brief Add vertex to the graph
@@ -46,7 +46,7 @@ void Graph::addVertex(const int vertex) {
     Vertex created_vertex = boost::add_vertex(std::to_string(vertex), graph_);
     idx_to_vertex_[vertex] = created_vertex;
   }
-};
+}
 
 /**
  * @brief Clear graph
@@ -91,7 +91,7 @@ std::vector<std::vector<int>> Graph::connectedComponents() {
   }
 
   return all_components;
-};
+}
 
 /**
  * @brief Get a shortest path between two vertices
@@ -130,7 +130,7 @@ std::vector<int> Graph::shortestPathBetween(const int v1, const int v2) {
   vert_in_path = Graph::getPath(p_map, idx_to_vertex_[v1], idx_to_vertex_[v2]);
 
   return vert_in_path;
-};
+}
 
 /**
  * @brief Utility function to build a path after Dijkstra run

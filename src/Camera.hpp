@@ -43,11 +43,9 @@ public:
   // fx,fy,u0,v0,k1,k2,k3,k4 (Kannala)
   std::array<double, 9> intrinsics_;
 
+  int cam_idx_ = 0; // camera index
   int distortion_model_ = 0;
   int im_cols_, im_rows_;
-
-  // camera index
-  int cam_idx_;
 
   // Functions
   Camera() = delete;

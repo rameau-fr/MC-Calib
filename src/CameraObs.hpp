@@ -22,7 +22,7 @@ public:
   // Boards
   std::vector<int> board_idx_; // index of the visible 3D boards
   std::map<int, std::weak_ptr<BoardObs>> board_observations_; // Boards stored
-  int cam_idx_;
+  int cam_idx_ = 0;
   // std::shared_ptr<Camera>cam_;
 
   // Objects

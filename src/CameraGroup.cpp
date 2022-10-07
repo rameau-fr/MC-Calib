@@ -18,7 +18,7 @@
  * @param cam_group_idx index of the camera group
  */
 CameraGroup::CameraGroup(const int id_ref_cam, const int cam_group_idx)
-    : id_ref_cam_(id_ref_cam), cam_group_idx_(cam_group_idx){};
+    : id_ref_cam_(id_ref_cam), cam_group_idx_(cam_group_idx) {}
 
 /**
  * @brief Insert a new camera in the group
@@ -230,7 +230,7 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
                     // We do not refine the camera pose if it is the ref camera
                     if (this->id_ref_cam_ == cam_ptr->cam_idx_)
                       refine_cam = false;
-                    for (int i = 0; i < obj_pts_idx.size(); i++) {
+                    for (std::size_t i = 0; i < obj_pts_idx.size(); i++) {
                       cv::Point3f current_pts_3d =
                           obj_pts_3d[obj_pts_idx[i]]; // Current 3D pts
                       cv::Point2f current_pts_2d =
@@ -250,8 +250,6 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
                           cam_group_obs_ptr
                               ->object_pose_[it_obj3d_ptr->object_3d_id_]
                               .data());
-                      // it_obj3d->second->group_pose_);
-                      // it_cam_group_obs->second->object_pose_[it_obj3d->second->object_3d_id_]
                     }
                   }
                 }
@@ -334,7 +332,7 @@ void CameraGroup::reproErrorCameraGroup() {
                       cam_ptr->distortion_model_);
                   float sum_error = 0;
                   // Compute error
-                  for (int i = 0; i < repro_pts.size(); i++) {
+                  for (std::size_t i = 0; i < repro_pts.size(); i++) {
                     float rep_err = std::sqrt(
                         std::pow((obj_pts_2d[i].x - repro_pts[i].x), 2) +
                         std::pow((obj_pts_2d[i].y - repro_pts[i].y), 2));
@@ -387,8 +385,6 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
               std::shared_ptr<Object3D> object_3d_ptr =
                   it_obj3d_ptr->object_3d_.lock();
               if (object_3d_ptr) {
-                const std::vector<cv::Point3f> &obj_pts_3d =
-                    object_3d_ptr->pts_3d_;
                 const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
                 const std::vector<cv::Point2f> &obj_pts_2d =
                     it_obj3d_ptr->pts_2d_;
@@ -408,9 +404,7 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
                   if (this->id_ref_cam_ == cam_ptr->cam_idx_) {
                     refine_cam = false;
                   }
-                  for (int i = 0; i < obj_pts_idx.size(); i++) {
-                    cv::Point3f current_pts_3d =
-                        obj_pts_3d[obj_pts_idx[i]]; // Current 3D pts
+                  for (std::size_t i = 0; i < obj_pts_idx.size(); i++) {
                     cv::Point2f current_pts_2d =
                         obj_pts_2d[i]; // Current 2D pts
 
@@ -509,8 +503,6 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
               std::shared_ptr<Object3D> object_3d_ptr =
                   it_obj3d_ptr->object_3d_.lock();
               if (object_3d_ptr) {
-                const std::vector<cv::Point3f> &obj_pts_3d =
-                    object_3d_ptr->pts_3d_;
                 const std::vector<int> &obj_pts_idx = it_obj3d_ptr->pts_id_;
                 const std::vector<cv::Point2f> &obj_pts_2d =
                     it_obj3d_ptr->pts_2d_;
@@ -521,9 +513,7 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                   if (this->id_ref_cam_ == cam_ptr->cam_idx_) {
                     refine_cam = false;
                   }
-                  for (int i = 0; i < obj_pts_idx.size(); i++) {
-                    cv::Point3f current_pts_3d =
-                        obj_pts_3d[obj_pts_idx[i]]; // Current 3D pts
+                  for (std::size_t i = 0; i < obj_pts_idx.size(); i++) {
                     cv::Point2f current_pts_2d =
                         obj_pts_2d[i]; // Current 2D pts
 
