@@ -34,7 +34,11 @@ int main(int argc, char *argv[]) {
   fs["length_marker"] >> length_marker;
   fs["resolution_x"] >> res_x;
   fs["resolution_y"] >> res_y;
+
   fs["number_board"] >> NbBoard;
+  assert(NbBoard > 0);
+  unsigned int num_board = static_cast<int>(NbBoard);
+
   fs["square_size_per_board"] >> square_size_per_board;
   fs["number_x_square_per_board"] >> number_x_square_per_board;
   fs["number_y_square_per_board"] >> number_y_square_per_board;
@@ -45,7 +49,7 @@ int main(int argc, char *argv[]) {
 
   // Check if multi-size boards are used or not
   if (square_size_per_board.size() == 0) {
-    for (int i = 0; i < NbBoard; i++) {
+    for (std::size_t i = 0; i < num_board; i++) {
       number_x_square_per_board.push_back(num_x_square);
       number_y_square_per_board.push_back(num_y_square);
       resolution_x_per_board.push_back(res_x);
@@ -58,7 +62,7 @@ int main(int argc, char *argv[]) {
       cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
   std::vector<cv::Ptr<cv::aruco::CharucoBoard>> charucoBoards;
   int offset_count = 0;
-  for (int i = 0; i < NbBoard; i++) {
+  for (std::size_t i = 0; i < num_board; i++) {
     // declare the board
     cv::Ptr<cv::aruco::CharucoBoard> charuco = cv::aruco::CharucoBoard::create(
         number_x_square_per_board[i], number_y_square_per_board[i],

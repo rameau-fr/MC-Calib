@@ -32,7 +32,7 @@
 class Calibration final {
 public:
   // Parameters
-  int nb_camera_, nb_board_;
+  unsigned int nb_camera_, nb_board_;
   cv::Ptr<cv::aruco::Dictionary> dict_ = cv::aruco::getPredefinedDictionary(
       cv::aruco::DICT_6X6_1000); // load the dictionary that correspond to the
                                  // charuco board

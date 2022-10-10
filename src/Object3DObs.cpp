@@ -17,7 +17,7 @@
  */
 Object3DObs::Object3DObs(std::shared_ptr<Object3D> obj_obs,
                          const int object_idx)
-    : object_3d_(obj_obs), object_3d_id_(object_idx){};
+    : object_3d_(obj_obs), object_3d_id_(object_idx) {}
 
 /**
  * @brief Insert a new board in the object
@@ -37,7 +37,7 @@ void Object3DObs::insertNewBoardObs(std::shared_ptr<BoardObs> new_board_obs) {
   const size_t num_points = new_board_obs->pts_2d_.size();
   pts_2d_.reserve(num_points);
   pts_id_.reserve(num_points);
-  for (int i = 0; i < num_points; i++) {
+  for (std::size_t i = 0; i < num_points; i++) {
     // Convert the index from the board to the object
     std::pair<int, int> board_id_pts_id =
         std::make_pair(new_board_obs->board_id_, new_board_obs->charuco_id_[i]);
@@ -268,7 +268,7 @@ float Object3DObs::computeReprojectionError() const {
                                 cam_ptr->getCameraMat(),
                                 cam_ptr->getDistortionVectorVector(), repro_pts,
                                 cam_ptr->distortion_model_);
-    for (int j = 0; j < repro_pts.size(); j++) {
+    for (std::size_t j = 0; j < repro_pts.size(); j++) {
       float rep_err = std::sqrt(std::pow((pts_2d_[j].x - repro_pts[j].x), 2) +
                                 std::pow((pts_2d_[j].y - repro_pts[j].y), 2));
       error_object_vec.push_back(rep_err);

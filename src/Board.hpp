@@ -25,7 +25,7 @@ public:
   int nb_x_square_, nb_y_square_, res_x_, res_y_;
   float length_square_, length_marker_;
   float square_size_;        // size of the squares in the calibration board
-  int nb_pts_;               // Number of points on the board
+  unsigned int nb_pts_;      // Number of points on the board
   std::array<int, 3> color_; // color to display the board
 
   // 3D points

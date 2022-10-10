@@ -33,7 +33,6 @@ public:
   int frame_id_;
   int camera_id_;
   std::vector<int> board_id_;
-  int object_3d_id_;
 
   // Pose
   std::array<double, 6> pose_;
@@ -56,6 +55,8 @@ public:
 
   // Object3DObs corresponding to this Observation
   std::weak_ptr<Object3D> object_3d_;
+
+  int object_3d_id_;
 
   // Validity : An observation is judged not valid when the RANSAC pose
   // estimation return too few pts

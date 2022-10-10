@@ -96,7 +96,7 @@ triangulateNViewLinearEigen(const std::vector<cv::Point2f> Pts2D,
                             const std::vector<cv::Mat> TranslationVec,
                             cv::Mat Intrinsic) {
   cv::Mat A; // Projection matrix
-  for (int i = 0; i < RotationVec.size(); i++) {
+  for (std::size_t i = 0; i < RotationVec.size(); i++) {
     cv::Mat cam_temp =
         RVecT2ProjInt(RotationVec[i], TranslationVec[i], Intrinsic);
     float px = Pts2D[i].x;
@@ -154,7 +154,7 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
   int trialcount = 0;
   cv::Mat InliersR;
   int countit = 0;
-  int BestInNb = 0;
+  unsigned int BestInNb = 0;
   double myepsilon = 0.00001; // small value for numerical problem
 
   // Vector of index to shuffle
@@ -181,8 +181,8 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
 
     // compute inliers
     cv::Mat Index;
-    int NbInliers = 0;
-    for (int k = 0; k < rotation_vec.size(); k++) {
+    unsigned int num_inliers = 0u;
+    for (std::size_t k = 0; k < rotation_vec.size(); k++) {
       // Reproject points
       std::vector<cv::Point2f> reprojected_pts;
       std::vector<cv::Point3f> point3d_tmp = {PtsTrip};
@@ -191,16 +191,16 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
       if (std::sqrt(std::pow((point2d[k].x - reprojected_pts[0].x), 2) +
                     std::pow((point2d[k].y - reprojected_pts[0].y), 2)) <
           thresh) {
-        Index.push_back(k);
-        NbInliers++;
+        Index.push_back(static_cast<int>(k));
+        num_inliers++;
       }
     }
     trialcount++;
 
     // keep the best one
-    if (NbInliers > BestInNb) {
+    if (num_inliers > BestInNb) {
       Index.copyTo(InliersR);
-      BestInNb = NbInliers;
+      BestInNb = num_inliers;
       best_points3d = PtsTrip;
 
       // with probability p, a data set with no outliers.

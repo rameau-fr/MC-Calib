@@ -47,8 +47,8 @@ void CameraGroupObs::computeObjectsPose() {
   std::map<int, std::vector<int>>
       obj_obs_group; // key: object index // value: index in
                      // the vector of observation
-  for (int i = 0; i < object_unique_ind.size(); i++) {
-    for (int j = 0; j < object_idx_.size(); j++) {
+  for (std::size_t i = 0; i < object_unique_ind.size(); i++) {
+    for (std::size_t j = 0; j < object_idx_.size(); j++) {
       if (object_idx_[j] == object_unique_ind[i]) {
         obj_obs_group[object_unique_ind[i]].push_back(j);
       }
@@ -61,7 +61,7 @@ void CameraGroupObs::computeObjectsPose() {
     // value
     bool flag_ref_cam = false;
     cv::Mat group_pose_r, group_pose_t;
-    for (int i = 0; i < it_obj_obs.second.size(); i++) {
+    for (std::size_t i = 0; i < it_obj_obs.second.size(); i++) {
       auto cam_group_ptr = cam_group_.lock();
       auto obj_obs_ptr = object_observations_[it_obj_obs.second[i]].lock();
       if (cam_group_ptr && obj_obs_ptr &&
@@ -92,7 +92,7 @@ void CameraGroupObs::computeObjectsPose() {
     // set the pose and update the observation
     setObjectPoseVec(group_pose_r, group_pose_t, it_obj_obs.first);
     // update the object observations
-    for (int i = 0; i < it_obj_obs.second.size(); i++) {
+    for (std::size_t i = 0; i < it_obj_obs.second.size(); i++) {
       auto obj_obs_ptr = object_observations_[it_obj_obs.second[i]].lock();
       if (obj_obs_ptr)
         obj_obs_ptr->setPoseInGroupVec(group_pose_r, group_pose_t);
