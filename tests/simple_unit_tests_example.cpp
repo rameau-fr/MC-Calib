@@ -1,10 +1,9 @@
 #define BOOST_TEST_DYN_LINK
 
+#include "opencv2/opencv.hpp"
 #include <boost/test/unit_test.hpp>
 
-#include "opencv2/opencv.hpp"
-
-#include <../src/geometrytools.hpp>
+#include <geometrytools.hpp>
 
 BOOST_AUTO_TEST_SUITE(CheckGeometryTools)
 

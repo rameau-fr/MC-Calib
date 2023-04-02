@@ -1,17 +1,12 @@
-#include <boost/test/unit_test.hpp>
-
 #include <iomanip>
 #include <math.h>
-#include <opencv2/aruco/charuco.hpp>
-#include <opencv2/opencv.hpp>
 #include <stdio.h>
 
-#include <../src/Board.hpp>
-#include <../src/BoardObs.hpp>
-#include <../src/Calibration.hpp>
-#include <../src/Camera.hpp>
-#include <../src/CameraObs.hpp>
-#include <../src/Frame.hpp>
+#include <boost/test/unit_test.hpp>
+#include <opencv2/aruco/charuco.hpp>
+#include <opencv2/opencv.hpp>
+
+#include <McCalib.hpp>
 
 #define PI 3.14159265
 
@@ -32,7 +27,7 @@ double getRotationError(cv::Mat a, cv::Mat b) {
   return rot_error;
 }
 
-void calibrate(Calibration &Calib) {
+void calibrate(McCalib::Calibration &Calib) {
   // calibrate
   Calib.boardExtraction();
   Calib.initIntrinsic();
@@ -57,7 +52,7 @@ void calibrate(Calibration &Calib) {
 }
 
 void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
-  Calibration Calib(config_path);
+  McCalib::Calibration Calib(config_path);
   calibrate(Calib);
 
   // read ground truth

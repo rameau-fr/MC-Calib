@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include <../src/Graph.hpp>
+#include <Graph.hpp>
 
 BOOST_AUTO_TEST_SUITE(CheckGraph)
 

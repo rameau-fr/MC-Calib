@@ -22,6 +22,8 @@
 #include "Object3DObs.hpp"
 #include "geometrytools.hpp"
 
+namespace McCalib {
+
 /**
  * @class Calibration
  *
@@ -229,3 +231,5 @@ private:
 
   std::mutex insert_new_board_lock_;
 };
+
+} // namespace McCalib
