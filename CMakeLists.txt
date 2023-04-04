@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 2.8.3)
-project(MC-Calib)
+cmake_minimum_required(VERSION 3.0)
+project(MC-Calib VERSION 1.2.0 DESCRIPTION "MC-Calib: A generic and robust calibration toolbox for multi-camera systems")
 
 add_definitions(-std=c++17)
 set(CMAKE_CXX_FLAGS "-std=c++17") # required for Ceres https://github.com/colmap/colmap/issues/905#issuecomment-731138700
@@ -69,23 +69,8 @@ endif (DOXYGEN_FOUND)
 
 
 ##########################################################################
-
-file(GLOB MC_CALIB_SRC CONFIGURE_DEPENDS src/*.cpp src/*.hpp src/*.h)
-list(REMOVE_ITEM MC_CALIB_SRC ${PROJECT_SOURCE_DIR}/src/main_calibrate.cpp ${PROJECT_SOURCE_DIR}/src/main_create_charuco.cpp)
-
-## Single calibration camera + cube
-add_executable(calibrate src/main_calibrate.cpp ${MC_CALIB_SRC})
-
-target_link_libraries(calibrate
- -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log Boost::system Boost::filesystem 
- )
-
-##################Generate Charuco######################
-add_executable(generate_charuco src/main_create_charuco.cpp)
-
-target_link_libraries(generate_charuco
- -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log Boost::system Boost::filesystem
- )
-
-# unit tests related
+add_subdirectory(apps/create_charuco_boards)
+add_subdirectory(McCalib)
+find_library(McCalib REQUIRED)
+add_subdirectory(apps/calibrate)
 add_subdirectory(tests)

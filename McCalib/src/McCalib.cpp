@@ -5,13 +5,15 @@
 #include <random>
 #include <stdio.h>
 
-#include "Calibration.hpp"
+#include "McCalib.hpp"
 #include "logger.h"
 #include "point_refinement.h"
 
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <thread>
+
+namespace McCalib {
 
 /**
  * @brief Initialize the number of cameras and the 3D Boards
@@ -2215,3 +2217,5 @@ void Calibration::refineAllCameraGroupAndObjectsAndIntrinsic() {
   for (const auto &it : cams_group_obs_)
     it.second->updateObjObsPose();
 }
+
+} // namespace McCalib

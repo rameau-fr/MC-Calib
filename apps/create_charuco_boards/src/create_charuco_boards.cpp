@@ -1,8 +1,9 @@
-#include "boost/filesystem.hpp"
 #include <iomanip>
+#include <stdio.h>
+
+#include "boost/filesystem.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
 
 int main(int argc, char *argv[]) {
 

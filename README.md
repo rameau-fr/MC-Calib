@@ -108,11 +108,11 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
 
 1. **Generate your own Charuco boards**
 
-      If all your boards are similar (same number of squares in the x and y directions), you only need to specify the `number_x_square`, `number_y_square` and `number_board`. Then you can run the Charuco board generator:
+      If all your boards are similar (same number of squares in the x and y directions), you only need to specify the `number_x_square`, `number_y_square`, and `number_board`. Then you can run the Charuco board generator:
       ```bash
-      ./generate_charuco ../configs/calib_param.yml
+      ./apps/create_charuco_boards/generate_charuco ../configs/calib_param.yml
       ```
-      If each board have a specific format (different number of squares), then you need to specify it in the fields 		`number_x_square_per_board` and `number_y_square_per_board`. For instance, if you want to use two boards of size [10x3] and [5x4] respectively, you have to set:
+      If each board has a specific format (different number of squares), then you need to specify it in the fields 		`number_x_square_per_board` and `number_y_square_per_board`. For instance, if you want to use two boards of size [10x3] and [5x4] respectively, you have to set:
       ```
       number_board: 2 
       number_x_square_per_board: [10,5]
@@ -125,7 +125,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
 
 3. **Measure the size of the squares on your boards**
 
-      If the boards have all the same square size, you just need to specify it in `square_size` and leave `square_size_per_board` empty. If each board has a different size, specify it in `square_size_per_board`. For instance `square_size_per_board: [1, 25]` means that the first and second boards are composed of square of size `0.1cm` and `0.25cm` respectively. Note that the square size can be in any unit you prefer (m, cm, inch, etc.) and the resulting calibration will also be expressed in this unit.
+      If the boards have all the same square size, you just need to specify it in `square_size` and leave `square_size_per_board` empty. If each board has a different size, specify it in `square_size_per_board`. For instance, `square_size_per_board: [1, 25]` means that the first and second boards are composed of square of size `0.1cm` and `0.25cm` respectively. Note that the square size can be in any unit you prefer (m, cm, inch, etc.) and the resulting calibration will also be expressed in this unit.
 
 4. **Acquire your images**
 
@@ -133,7 +133,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
 
 5. **Prepare your video sequences**
 
-      The images extracted from each cameras have to be stored in a different folders with a common prefix followed by a 3 digits index (starting from 001), for instance if two cameras are used the folder can be called: 'Cam_001' and 'Cam_002'. 
+      The images extracted from each camera have to be stored in different folders with a common prefix followed by a three digits index (starting from 001). For instance, if two cameras are used, the folder can be called: 'Cam_001' and 'Cam_002'. 
 
 6. **Setup the configuration file for your system**
 
@@ -149,7 +149,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
 
 	* *Set the outputs:*
 
-      By default, MC-Calib will generate the camera calibration results, the reprojection error log, the 3D object structure and the pose of the object for each frames where it has been detected. Additionally, you can save the detection and reprojection images by setting `save_detection` and `save_reprojection` to `1`.
+      By default, MC-Calib will generate the camera calibration results, the reprojection error log, the 3D object structure, and the pose of the object for each frame where it has been detected. Additionally, you can save the detection and reprojection images by setting `save_detection` and `save_reprojection` to `1`.
 
 	* *Using only certain boards:*
 
@@ -163,7 +163,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
 7. **Run the calibration**
 
 	```bash
-	./calibrate_stereo ../configs/calib_param.yml
+	./apps/calibrate/calibrate ../configs/calib_param.yml
 	```
 
 ## Calibration file
@@ -194,7 +194,7 @@ number_camera: 2            # number of cameras in the rig to calibrate
 refine_corner: 1            # activate or deactivate the corner refinement
 min_perc_pts: 0.5           # min percentage of points visible to assume a good detection
 
-cam_params_path: "None"    # file with cameras intrinsics to initialize the intrinsic, write "None" if no initialization available 
+cam_params_path: "None"     # file with cameras intrinsics to initialize the intrinsic, write "None" if no initialization available 
 
 ######################################## Images Parameters ###################################################
 root_path: "../data/Synthetic_calibration_image/Scenario_1/Images/"
@@ -205,7 +205,7 @@ ransac_threshold: 10        # RANSAC threshold in pixel (keep it high just to re
 number_iterations: 1000     # Max number of iterations for the non linear refinement
 
 ######################################## Hand-eye method #############################################
-he_approach: 0 #0: bootstrapped he technique, 1: traditional he
+he_approach: 0              #0: bootstrapped he technique, 1: traditional he
 
 ######################################## Output Parameters ###################################################
 save_path: "experiments/Synthetic_calibration_image/Scenario_1/"
@@ -216,7 +216,7 @@ camera_params_file_name: "" # "name.yml"
 
 ## Output explanation
 
-The calibration toolbox automatically output four ```*.yml``` files. To illustrate them, we propose to display the results obtained from the calibration of a hybrid stereo-vision system.
+The calibration toolbox automatically outputs four ```*.yml``` files. To illustrate them, we propose to display the results obtained from the calibration of a hybrid stereo-vision system.
 
 * **Camera parameters:** `calibrated_cameras_data.yml`
 

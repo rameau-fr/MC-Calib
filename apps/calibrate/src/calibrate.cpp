@@ -1,21 +1,13 @@
 #include <chrono>
 #include <iomanip>
-#include <opencv2/aruco/charuco.hpp>
-#include <opencv2/opencv.hpp>
 #include <stdio.h>
 
-#include "Board.hpp"
-#include "BoardObs.hpp"
-#include "Calibration.hpp"
-#include "Camera.hpp"
-#include "CameraObs.hpp"
-#include "Frame.hpp"
-
+#include "McCalib.hpp"
 #include "logger.h"
 
 void runCalibrationWorkflow(std::string config_path) {
   // Instantiate the calibration and initialize the parameters
-  Calibration Calib(config_path);
+  McCalib::Calibration Calib(config_path);
   Calib.boardExtraction();
   LOG_INFO << "Board extraction done!";
 
