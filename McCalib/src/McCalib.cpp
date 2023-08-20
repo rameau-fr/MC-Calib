@@ -14,127 +14,6 @@
 #include <thread>
 
 
-namespace
-{
-
-cv::Mat convertRotationMatrixToQuaternion(cv::Mat R)
-{
-  // code is adapted from https://gist.github.com/shubh-agrawal/76754b9bfb0f4143819dbd146d15d4c8
-
-  cv::Mat Q(1, 4, CV_64F);;
-
-  double trace = R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2);
-
-  if (trace > 0.0) 
-  {
-      double s = std::sqrt(trace + 1.0);
-      Q.at<double>(0, 3) = (s * 0.5);
-      s = 0.5 / s;
-      Q.at<double>(0, 0) = ((R.at<double>(2,1) - R.at<double>(1,2)) * s);
-      Q.at<double>(0, 1) = ((R.at<double>(0,2) - R.at<double>(2,0)) * s);
-      Q.at<double>(0, 2) = ((R.at<double>(1,0) - R.at<double>(0,1)) * s);
-  } 
-  
-  else 
-  {
-      int i = R.at<double>(0,0) < R.at<double>(1,1) ? (R.at<double>(1,1) < R.at<double>(2,2) ? 2 : 1) : (R.at<double>(0,0) < R.at<double>(2,2) ? 2 : 0); 
-      int j = (i + 1) % 3;  
-      int k = (i + 2) % 3;
-
-      double s = std::sqrt(R.at<double>(i, i) - R.at<double>(j,j) - R.at<double>(k,k) + 1.0);
-      Q.at<double>(0, i) = s * 0.5;
-      s = 0.5 / s;
-
-      Q.at<double>(0, 3) = (R.at<double>(k,j) - R.at<double>(j,k)) * s;
-      Q.at<double>(0, j) = (R.at<double>(j,i) + R.at<double>(i,j)) * s;
-      Q.at<double>(0, k) = (R.at<double>(k,i) + R.at<double>(i,k)) * s;
-  }
-
-  return Q;
-}
-
-cv::Mat convertQuaternionToRotationMatrix(const std::array<double, 4>& q)
-{
-    // code adapted from https://automaticaddison.com/how-to-convert-a-quaternion-to-a-rotation-matrix/
-
-    const double q0 = q[0];
-    const double q1 = q[1];
-    const double q2 = q[2];
-    const double q3 = q[3];
-     
-    cv::Mat rot_matrix(3, 3, CV_64F);
-    rot_matrix.at<double>(0, 0) = 2 * (q0 * q0 + q1 * q1) - 1;
-    rot_matrix.at<double>(0, 1) = 2 * (q1 * q2 - q0 * q3);
-    rot_matrix.at<double>(0, 2) = 2 * (q1 * q3 + q0 * q2);
-     
-    rot_matrix.at<double>(1, 0) = 2 * (q1 * q2 + q0 * q3);
-    rot_matrix.at<double>(1, 1) = 2 * (q0 * q0 + q2 * q2) - 1;
-    rot_matrix.at<double>(1, 2) = 2 * (q2 * q3 - q0 * q1);
-     
-    rot_matrix.at<double>(2, 0) = 2 * (q1 * q3 - q0 * q2);
-    rot_matrix.at<double>(2, 1) = 2 * (q2 * q3 + q0 * q1);
-    rot_matrix.at<double>(2, 2) = 2 * (q0 * q0 + q3 * q3) - 1;
-                            
-    return rot_matrix;
-}
-
-
-
-cv::Mat getAverageRotation(std::vector<double>& r1, std::vector<double>& r2, std::vector<double>& r3, const bool use_quaternion_averaging = true)
-{
-  cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
-  if (use_quaternion_averaging)
-  {
-    // The Quaternion Averaging algorithm is described in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20070017872.pdf
-    // implementaion references:
-    //  - https://gist.github.com/PeteBlackerThe3rd/f73e9d569e29f23e8bd828d7886636a0
-    //  - https://github.com/tolgabirdal/averaging_quaternions/blob/master/avg_quaternion_markley.m
-
-    assert(r1.size() == r2.size() && r2.size() == r3.size());
-
-    std::vector<cv::Mat> quaternions;
-    // convert rotation vector to quaternion through rotation matrix
-    for (unsigned int angle_idx = 0u; angle_idx < r1.size(); ++angle_idx)
-    {
-      std::array<double, 3> angles = { r1[angle_idx], r2[angle_idx], r3[angle_idx] };
-      const cv::Mat rot_vec = cv::Mat(1, 3, CV_64F, angles.data());
-      cv::Mat rot_matrix;
-      cv::Rodrigues(rot_vec, rot_matrix);
-      const cv::Mat quaternion = convertRotationMatrixToQuaternion(rot_matrix);
-      quaternions.push_back(quaternion);
-    }
-
-    cv::Mat A = cv::Mat::zeros(4, 4, CV_64F);
-    for (const cv::Mat& q: quaternions)
-    {
-      A += q.t() * q;
-    }
-    A /= quaternions.size();
-
-    cv::SVD svd(A, cv::SVD::FULL_UV);
-    cv::Mat U = svd.u;
-    cv::Mat singularValues = svd.w;
-
-    // TODO: need to verify whether it's a row or a column vector; below treated as column vector
-    const unsigned int largestEigenValueIndex = 0u;
-    std::array<double, 4> average_quaternion = {svd.u.at<double>(0, largestEigenValueIndex), svd.u.at<double>(1, largestEigenValueIndex), 
-                                          svd.u.at<double>(2, largestEigenValueIndex), svd.u.at<double>(3, largestEigenValueIndex)};
-    cv::Mat rot_matrix = convertQuaternionToRotationMatrix(average_quaternion);
-    cv::Rodrigues(rot_matrix, average_rotation);
-  }
-  else
-  {
-    // mean reprojection error :: 0.021487
-    average_rotation.at<double>(0) = median(r1);
-    average_rotation.at<double>(1) = median(r2);
-    average_rotation.at<double>(2) = median(r3);
-  }
-
-  return average_rotation;
-}
- 
-} // namespace
-
 namespace McCalib {
 
 /**
@@ -769,7 +648,8 @@ void Calibration::computeBoardsPairPose() {
  */
 void Calibration::initInterTransform(
     const std::map<std::pair<int, int>, std::vector<cv::Mat>> &pose_pairs,
-    std::map<std::pair<int, int>, cv::Mat> &inter_transform) {
+    std::map<std::pair<int, int>, cv::Mat> &inter_transform) 
+{
   inter_transform.clear();
   for (const auto &it : pose_pairs) {
     const std::pair<int, int> &pair_idx = it.first;
@@ -786,7 +666,8 @@ void Calibration::initInterTransform(
     t1.reserve(num_poses);
     t2.reserve(num_poses);
     t3.reserve(num_poses);
-    for (const auto &pose_temp : poses_temp) {
+    for (const auto &pose_temp : poses_temp) 
+    {
       cv::Mat R, T;
       Proj2RT(pose_temp, R, T);
       r1.push_back(R.at<double>(0));
@@ -797,7 +678,7 @@ void Calibration::initInterTransform(
       t3.push_back(T.at<double>(2));
     }
     
-    cv::Mat average_rotation = getAverageRotation(r1, r2, r3, true);
+    cv::Mat average_rotation = getAverageRotation(r1, r2, r3);
     average_translation.at<double>(0) = median(t1);
     average_translation.at<double>(1) = median(t2);
     average_translation.at<double>(2) = median(t3);
