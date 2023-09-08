@@ -47,6 +47,7 @@ public:
 
   // intput/output path
   std::string cam_params_path_; // path to precalibrated cameras intrinsics
+  std::string keypoints_path_;  // path to predetected keypoints
   std::string save_path_;       // path to save calibrated cameras parameter
   std::string camera_params_file_name_; // file name with cameras params
   int save_repro_, save_detect_;        // flag to save or not the images
@@ -145,11 +146,16 @@ public:
   Calibration &operator=(const Calibration &) = delete;
 
   void boardExtraction();
-  void detectBoards(const std::vector<cv::String> &fn,
-                    const int cam); // detect the boards in all images
-  void saveCamerasParams();         // Save all cameras params
-  void save3DObj();                 // Save 3D objects
-  void save3DObjPose();             // Save 3D objects pose
+  void loadDetectedKeypoints();
+  void detectBoards(); // detect the boards in all images with all cameras
+  void detectBoardsWithCamera(
+      const std::vector<cv::String> &fn,
+      const int cam);       // detect the boards in all images with a camera
+  void saveCamerasParams(); // Save all cameras params
+  void save3DObj();         // Save 3D objects
+  void save3DObjPose();     // Save 3D objects pose
+  void saveDetectedKeypoints() const; // save detection keypoints, can be
+                                      // re-used to save time in detection stage
   void displayBoards(const cv::Mat image, const int cam_idx,
                      const int frame_idx);
   void
@@ -218,14 +224,14 @@ public:
   void reproErrorAllCamGroup();
   void refineAllCameraGroupAndObjects();
   void refineAllCameraGroupAndObjectsAndIntrinsic();
-  void saveReprojection(const int cam_id);
-  void saveReprojectionAllCam();
-  void saveDetection(const int cam_id);
-  void saveDetectionAllCam();
+  void saveReprojectionImages(const int cam_id);
+  void saveReprojectionImagesAllCam();
+  void saveDetectionImages(const int cam_id);
+  void saveDetectionImagesAllCam();
   void saveReprojectionErrorToFile();
 
 private:
-  void detectBoardsInImage(
+  void detectBoardsInImageWithCamera(
       const std::string frame_path, const int cam_idx,
       const int frame_idx); // detect the boards in the input frame
 
