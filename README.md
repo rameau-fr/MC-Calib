@@ -149,7 +149,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
 
 	* *Set the outputs:*
 
-      By default, MC-Calib will generate the camera calibration results, the reprojection error log, the 3D object structure, and the pose of the object for each frame where it has been detected. Additionally, you can save the detection and reprojection images by setting `save_detection` and `save_reprojection` to `1`.
+      By default, MC-Calib will generate the camera calibration results, the reprojection error log, the 3D object structure, detected keypoints, and the pose of the object for each frame where it has been detected. Additionally, you can save the detection and reprojection images by setting `save_detection` and `save_reprojection` to `1`.
 
 	* *Using only certain boards:*
 
@@ -199,6 +199,7 @@ cam_params_path: "None"     # file with cameras intrinsics to initialize the int
 ######################################## Images Parameters ###################################################
 root_path: "../data/Synthetic_calibration_image/Scenario_1/Images/"
 cam_prefix: "Cam_"
+keypoints_path: "None"      # "path_to/detected_keypoints_data.yml" to save time on keypoint detection
 
 ######################################## Optimization Parameters #############################################
 ransac_threshold: 10        # RANSAC threshold in pixel (keep it high just to remove strong outliers)
