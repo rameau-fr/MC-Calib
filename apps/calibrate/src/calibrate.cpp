@@ -67,9 +67,9 @@ void runCalibrationWorkflow(std::string config_path) {
 
   // Save images reprojection
   if (Calib.save_detect_ == 1)
-    Calib.saveDetectionAllCam();
+    Calib.saveDetectionImagesAllCam();
   if (Calib.save_repro_ == 1)
-    Calib.saveReprojectionAllCam();
+    Calib.saveReprojectionImagesAllCam();
 
   // Save camera parameters
   LOG_INFO << "Save parameters";
@@ -79,6 +79,8 @@ void runCalibrationWorkflow(std::string config_path) {
   Calib.saveReprojectionErrorToFile();
   LOG_INFO << "mean reprojection error :: "
            << Calib.computeAvgReprojectionError() << std::endl;
+
+  Calib.saveDetectedKeypoints();
 }
 
 int main(int argc, char *argv[]) {
