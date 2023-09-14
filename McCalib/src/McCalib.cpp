@@ -62,6 +62,7 @@ Calibration::Calibration(const std::string config_path) {
   fs["save_path"] >> save_path_;
   fs["camera_params_file_name"] >> camera_params_file_name_;
   fs["cam_params_path"] >> cam_params_path_;
+  fs["keypoints_path"] >> keypoints_path_;
   fs["save_reprojection"] >> save_repro_;
   fs["save_detection"] >> save_detect_;
   fs["square_size_per_board"] >> square_size_per_board_;
@@ -149,10 +150,9 @@ Calibration::Calibration(const std::string config_path) {
 }
 
 /**
- * @brief Extract necessary boards info from initialized paths
- *
+ * @brief Detect boards on images with all cameras
  */
-void Calibration::boardExtraction() {
+void Calibration::detectBoards() {
   const std::unordered_set<cv::String> allowed_exts = {"jpg",  "png", "bmp",
                                                        "jpeg", "jp2", "tiff"};
 
@@ -180,18 +180,70 @@ void Calibration::boardExtraction() {
     }
     fn = fn_filtered;
 
-    detectBoards(fn, cam);
+    detectBoardsWithCamera(fn, cam);
+  }
+}
+
+void Calibration::loadDetectedKeypoints() {
+  cv::FileStorage fs;
+  fs.open(keypoints_path_, cv::FileStorage::READ);
+  LOG_INFO << "Loading keypoints from " << keypoints_path_;
+  for (unsigned int cam_idx = 0u; cam_idx < nb_camera_; ++cam_idx) {
+    // extract camera matrix and distortion coefficients from the file
+    cv::FileNode data_per_camera = fs["camera_" + std::to_string(cam_idx)];
+
+    int img_cols;
+    int img_rows;
+    std::vector<int> frame_idxs;
+    std::vector<std::string> frame_paths;
+    std::vector<int> board_idxs;
+    std::vector<std::vector<cv::Point2f>> points;
+    std::vector<std::vector<int>> charuco_idxs;
+
+    data_per_camera["img_width"] >> img_cols;
+    data_per_camera["img_height"] >> img_rows;
+    data_per_camera["frame_idxs"] >> frame_idxs;
+    data_per_camera["frame_paths"] >> frame_paths;
+    data_per_camera["board_idxs"] >> board_idxs;
+    data_per_camera["pts_2d"] >> points;
+    data_per_camera["charuco_idxs"] >> charuco_idxs;
+
+    cams_[cam_idx]->im_cols_ = img_cols;
+    cams_[cam_idx]->im_rows_ = img_rows;
+    assert(frame_idxs.size() != 0 && frame_idxs.size() == frame_paths.size() &&
+           frame_paths.size() == board_idxs.size() &&
+           board_idxs.size() == points.size() &&
+           points.size() == charuco_idxs.size());
+
+    for (unsigned int i = 0u; i < frame_idxs.size(); ++i) {
+      insertNewBoard(cam_idx, frame_idxs[i], board_idxs[i], points[i],
+                     charuco_idxs[i], frame_paths[i]);
+    }
+  }
+  fs.release();
+}
+
+/**
+ * @brief Extract necessary boards info from initialized paths
+ *
+ */
+void Calibration::boardExtraction() {
+  if (!keypoints_path_.empty() && keypoints_path_ != "None" &&
+      boost::filesystem::exists(keypoints_path_)) {
+    loadDetectedKeypoints();
+  } else {
+    detectBoards();
   }
 }
 
 /**
- * @brief Detect boards on images
+ * @brief Detect boards in images with a camera
  *
  * @param fn images paths
  * @param cam_idx camera index which acquire the frame
  */
-void Calibration::detectBoards(const std::vector<cv::String> &fn,
-                               const int cam_idx) {
+void Calibration::detectBoardsWithCamera(const std::vector<cv::String> &fn,
+                                         const int cam_idx) {
   const unsigned int num_threads = std::thread::hardware_concurrency();
   boost::asio::thread_pool pool(num_threads);
   LOG_INFO << "Number of threads for board detection :: " << num_threads;
@@ -207,8 +259,9 @@ void Calibration::detectBoards(const std::vector<cv::String> &fn,
 
     // detect the checkerboard on this image
     const std::string frame_path = fn[frame_idx];
-    boost::asio::post(pool, std::bind(&Calibration::detectBoardsInImage, this,
-                                      frame_path, cam_idx, frame_idx));
+    boost::asio::post(pool,
+                      std::bind(&Calibration::detectBoardsInImageWithCamera,
+                                this, frame_path, cam_idx, frame_idx));
     // displayBoards(currentIm, cam, frameind); // Display frame
   }
   pool.join();
@@ -221,30 +274,30 @@ void Calibration::detectBoards(const std::vector<cv::String> &fn,
  * @param cam_idx camera index which acquire the frame
  * @param frame_idx frame index
  */
-void Calibration::detectBoardsInImage(const std::string frame_path,
-                                      const int cam_idx, const int frame_idx) {
+void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
+                                                const int cam_idx,
+                                                const int frame_idx) {
   cv::Mat image = cv::imread(frame_path);
   // Greyscale image for subpixel refinement
   cv::Mat graymat;
   cv::cvtColor(image, graymat, cv::COLOR_BGR2GRAY);
 
   // Datastructure to save the checkerboard corners
-  std::map<int, std::vector<int>>
-      marker_idx; // key == board id, value == markersIDs on MARKERS markerIds
-  std::map<int, std::vector<std::vector<cv::Point2f>>>
-      marker_corners; // key == board id, value == 2d points visualized on
-                      // MARKERS
-  std::map<int, std::vector<cv::Point2f>>
-      charuco_corners; // key == board id, value == 2d points on checkerboard
-  std::map<int, std::vector<int>>
-      charuco_idx; // key == board id, value == ID corners on checkerboard
+
+  // key == board id, value == markersIDs on MARKERS markerIds
+  std::map<int, std::vector<int>> marker_idx;
+  // key == board id, value == 2d points visualized on MARKERS
+  std::map<int, std::vector<std::vector<cv::Point2f>>> marker_corners;
+  // key == board id, value == 2d points on checkerboard
+  std::map<int, std::vector<cv::Point2f>> charuco_corners;
+  // key == board id, value == ID corners on checkerboard
+  std::map<int, std::vector<int>> charuco_idx;
 
   charuco_params_->adaptiveThreshConstant = 1;
 
   for (std::size_t i = 0; i < nb_board_; i++) {
     cv::aruco::detectMarkers(image, boards_3d_[i]->charuco_board_->dictionary,
-                             marker_corners[i], marker_idx[i],
-                             charuco_params_); // detect markers
+                             marker_corners[i], marker_idx[i], charuco_params_);
 
     if (marker_corners[i].size() > 0) {
       cv::aruco::interpolateCornersCharuco(marker_corners[i], marker_idx[i],
@@ -278,12 +331,13 @@ void Calibration::detectBoardsInImage(const std::string frame_path,
             boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].x,
             boards_3d_[i]->pts_3d_[charuco_idx_at_board_id].y);
       }
-      double dum_a, dum_b, dum_c;
-      double residual;
+      double dum_a = 0.0;
+      double dum_b = 0.0;
+      double dum_c = 0.0;
+      double residual = 0.0;
       calcLinePara(pts_on_board_2d, dum_a, dum_b, dum_c, residual);
 
-      // Add the board to the datastructures (if it passes the collinearity
-      // check)
+      // Add the board if it passes the collinearity check
       if ((residual > boards_3d_[i]->square_size_ * 0.1) &&
           (charuco_corners[i].size() > 4)) {
         int board_idx = i;
@@ -412,6 +466,71 @@ void Calibration::save3DObjPose() {
     fs << "poses" << pose_mat;
     fs << "}";
   }
+  fs.release();
+}
+
+/**
+ * @brief Save detected keypoints
+ *
+ * The saved keypoints could be re-used during to save the detection time.
+ * This could be useful when several calibration experiments are to be done
+ * with different parameters with the same detected keypoints.
+ *
+ */
+void Calibration::saveDetectedKeypoints() const {
+  const std::string save_keypoint_path =
+      save_path_ + "detected_keypoints_data.yml";
+  cv::FileStorage fs(save_keypoint_path, cv::FileStorage::WRITE);
+
+  fs << "nb_camera" << static_cast<int>(cams_.size());
+  for (const auto &it_cam : cams_) {
+    const int cam_idx = it_cam.second->cam_idx_;
+    fs << "camera_" + std::to_string(cam_idx) << "{";
+
+    const int image_cols = it_cam.second->im_cols_;
+    const int image_rows = it_cam.second->im_rows_;
+    fs << "img_width" << image_cols;
+    fs << "img_height" << image_rows;
+
+    std::vector<int> frame_idxs;
+    std::vector<std::string> frame_paths;
+    std::vector<int> board_idxs;
+    std::vector<std::vector<cv::Point2f>> points;
+    std::vector<std::vector<int>> charuco_idxs;
+
+    for (const auto &it_frame : frames_) {
+      const int frame_idx = it_frame.second->frame_idx_;
+      const std::string &frame_path = it_frame.second->frame_path_[cam_idx];
+      for (const auto &it_board : boards_3d_) {
+        const int board_idx = it_board.first;
+
+        for (const auto &it_board_obs : board_observations_) {
+          if ((cam_idx == it_board_obs.second->camera_id_) &&
+              (frame_idx == it_board_obs.second->frame_id_) &&
+              (board_idx == it_board_obs.second->board_id_)) {
+            const std::vector<cv::Point2f> &pts_2d =
+                it_board_obs.second->pts_2d_;
+            const std::vector<int> &charuco_idx =
+                it_board_obs.second->charuco_id_;
+
+            frame_idxs.push_back(frame_idx);
+            frame_paths.push_back(frame_path);
+            board_idxs.push_back(board_idx);
+            points.push_back(pts_2d);
+            charuco_idxs.push_back(charuco_idx);
+          }
+        }
+      }
+    }
+
+    fs << "frame_idxs" << frame_idxs;
+    fs << "frame_paths" << frame_paths;
+    fs << "board_idxs" << board_idxs;
+    fs << "pts_2d" << points;
+    fs << "charuco_idxs" << charuco_idxs;
+    fs << "}";
+  }
+
   fs.release();
 }
 
@@ -1751,7 +1870,7 @@ void Calibration::refineAllCameraGroupAndObjects() {
  * @brief Save reprojection results images for a given camera.
  *
  */
-void Calibration::saveReprojection(const int cam_id) {
+void Calibration::saveReprojectionImages(const int cam_id) {
   // Prepare the path to save the images
   std::string path_root = save_path_ + "Reprojection/";
   std::stringstream ss;
@@ -1854,16 +1973,16 @@ void Calibration::saveReprojection(const int cam_id) {
  * @brief Save reprojection images for all camera
  *
  */
-void Calibration::saveReprojectionAllCam() {
+void Calibration::saveReprojectionImagesAllCam() {
   for (const auto &it : cams_)
-    saveReprojection(it.second->cam_idx_);
+    saveReprojectionImages(it.second->cam_idx_);
 }
 
 /**
  * @brief Save detection results images for a given camera
  *
  */
-void Calibration::saveDetection(const int cam_id) {
+void Calibration::saveDetectionImages(const int cam_id) {
   // Prepare the path to save the images
   std::string path_root = save_path_ + "Detection/";
   std::stringstream ss;
@@ -1933,9 +2052,9 @@ void Calibration::saveDetection(const int cam_id) {
  * @brief Save detection images for all camera
  *
  */
-void Calibration::saveDetectionAllCam() {
+void Calibration::saveDetectionImagesAllCam() {
   for (const auto &it : cams_)
-    saveDetection(it.second->cam_idx_);
+    saveDetectionImages(it.second->cam_idx_);
 }
 
 /**

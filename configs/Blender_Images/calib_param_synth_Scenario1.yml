@@ -23,12 +23,13 @@ number_camera: 2           # number of cameras in the rig to calibrate
 refine_corner: 1           # activate or deactivate the corner refinement
 min_perc_pts: 0.5           # min percentage of points visible to assume a good detection
 
-cam_params_path: "../../Data/Blender_Images/Scenario_1/initial_values.yml"   # file with cameras intrinsics to initialize the intrinsic, write "None" if no initialization available 
+cam_params_path: "../data/Blender_Images/Scenario_1/initial_values.yml"   # file with cameras intrinsics to initialize the intrinsic, write "None" if no initialization available 
 fix_intrinsic: 0 #if 1 then the intrinsic parameters will not be estimated nor refined (initial value needed)
 
 ######################################## Images Parameters ###################################################
-root_path: "../../Data/Blender_Images/Scenario_1/Images/"
+root_path: "../data/Blender_Images/Scenario_1/Images/"
 cam_prefix: "Cam_"
+keypoints_path: "None" #"../data/Blender_Images/Scenario_1/Results/detected_keypoints_data.yml"
 
 ######################################## Optimization Parameters #############################################
 ransac_threshold: 10       # RANSAC threshold in pixel (keep it high just to remove strong outliers)
@@ -38,7 +39,7 @@ number_iterations: 1000    # Max number of iterations for the non linear refinem
 he_approach: 0 #0: bootstrapped he technique, 1: traditional he
 
 ######################################## Output Parameters ###################################################
-save_path: "../../Data/Blender_Images/Scenario_1/Results/"
+save_path: "../data/Blender_Images/Scenario_1/Results/"
 save_detection: 0
 save_reprojection: 0
 camera_params_file_name: "" # "name.yml"
