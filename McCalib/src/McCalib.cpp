@@ -13,7 +13,6 @@
 #include <boost/asio/thread_pool.hpp>
 #include <thread>
 
-
 namespace McCalib {
 
 /**
@@ -767,8 +766,7 @@ void Calibration::computeBoardsPairPose() {
  */
 void Calibration::initInterTransform(
     const std::map<std::pair<int, int>, std::vector<cv::Mat>> &pose_pairs,
-    std::map<std::pair<int, int>, cv::Mat> &inter_transform) 
-{
+    std::map<std::pair<int, int>, cv::Mat> &inter_transform) {
   inter_transform.clear();
   for (const auto &it : pose_pairs) {
     const std::pair<int, int> &pair_idx = it.first;
@@ -785,8 +783,7 @@ void Calibration::initInterTransform(
     t1.reserve(num_poses);
     t2.reserve(num_poses);
     t3.reserve(num_poses);
-    for (const auto &pose_temp : poses_temp) 
-    {
+    for (const auto &pose_temp : poses_temp) {
       cv::Mat R, T;
       Proj2RT(pose_temp, R, T);
       r1.push_back(R.at<double>(0));
@@ -796,7 +793,7 @@ void Calibration::initInterTransform(
       t2.push_back(T.at<double>(1));
       t3.push_back(T.at<double>(2));
     }
-    
+
     cv::Mat average_rotation = getAverageRotation(r1, r2, r3);
     average_translation.at<double>(0) = median(t1);
     average_translation.at<double>(1) = median(t2);
