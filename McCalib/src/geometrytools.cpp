@@ -630,7 +630,7 @@ cv::Mat convertRotationMatrixToQuaternion(cv::Mat R)
 {
   // code is adapted from https://gist.github.com/shubh-agrawal/76754b9bfb0f4143819dbd146d15d4c8
 
-  cv::Mat Q(1, 4, CV_64F);;
+  cv::Mat Q(1, 4, CV_64F); // x y z w
 
   double trace = R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2);
 
@@ -666,10 +666,10 @@ cv::Mat convertQuaternionToRotationMatrix(const std::array<double, 4>& q)
 {
     // code adapted from https://automaticaddison.com/how-to-convert-a-quaternion-to-a-rotation-matrix/
 
-    const double q0 = q[0];
-    const double q1 = q[1];
-    const double q2 = q[2];
-    const double q3 = q[3];
+    const double q0 = q[3];
+    const double q1 = q[0];
+    const double q2 = q[1];
+    const double q3 = q[2];
      
     cv::Mat rot_matrix(3, 3, CV_64F);
     rot_matrix.at<double>(0, 0) = 2 * (q0 * q0 + q1 * q1) - 1;
@@ -714,6 +714,7 @@ cv::Mat getAverageRotation(std::vector<double>& r1, std::vector<double>& r2, std
     cv::Mat A = cv::Mat::zeros(4, 4, CV_64F);
     for (cv::Mat& q: quaternions)
     {
+      // TODO check order of quaternion here!
       if (q.at<double>(0, 1) < 0)
       {
         // handle the antipodal configurations

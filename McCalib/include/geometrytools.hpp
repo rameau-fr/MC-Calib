@@ -52,4 +52,6 @@ void projectPointsWithDistortion(std::vector<cv::Point3f> object_pts,
                                  cv::Mat distortion_vector,
                                  std::vector<cv::Point2f> &repro_pts,
                                  int distortion_type);
+cv::Mat convertRotationMatrixToQuaternion(cv::Mat R);
+cv::Mat convertQuaternionToRotationMatrix(const std::array<double, 4>& q);
 cv::Mat getAverageRotation(std::vector<double>& r1, std::vector<double>& r2, std::vector<double>& r3, const bool use_quaternion_averaging = true);
