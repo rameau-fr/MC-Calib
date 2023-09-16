@@ -716,8 +716,7 @@ cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
 
     cv::Mat A = cv::Mat::zeros(4, 4, CV_64F);
     for (cv::Mat &q : quaternions) {
-      // TODO check order of quaternion here!
-      if (q.at<double>(0, 1) < 0) {
+      if (q.at<double>(0, 3) < 0) {
         // handle the antipodal configurations
         q = -q;
       }
@@ -729,22 +728,12 @@ cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
     cv::Mat U = svd.u;
     cv::Mat singularValues = svd.w;
 
-    // TODO: need to verify whether it's a row or a column vector; below treated
-    // as column vector
     const unsigned int largestEigenValueIndex = 0u;
     std::array<double, 4> average_quaternion = {
         svd.u.at<double>(0, largestEigenValueIndex),
         svd.u.at<double>(1, largestEigenValueIndex),
         svd.u.at<double>(2, largestEigenValueIndex),
         svd.u.at<double>(3, largestEigenValueIndex)};
-
-    // std::array<double, 4> average_quaternion =
-    // {svd.u.at<double>(largestEigenValueIndex, 0),
-    // svd.u.at<double>(largestEigenValueIndex, 1),
-    //                                             svd.u.at<double>(largestEigenValueIndex,
-    //                                             2),
-    //                                             svd.u.at<double>(largestEigenValueIndex,
-    //                                             3)};
 
     cv::Mat rot_matrix = convertQuaternionToRotationMatrix(average_quaternion);
     cv::Rodrigues(rot_matrix, average_rotation);
