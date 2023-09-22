@@ -13,9 +13,11 @@
  *
  * @param new_cam_group camera group to be added
  */
-CameraGroupObs::CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group) {
+CameraGroupObs::CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group,
+                               const bool quaternion_averaging) {
   cam_group_ = new_cam_group;
   cam_group_idx_ = new_cam_group->cam_group_idx_;
+  quaternion_averaging_ = quaternion_averaging;
 }
 
 /**
@@ -89,7 +91,7 @@ void CameraGroupObs::computeObjectsPose() {
       }
       // Average version
       group_pose_t = average_translation / it_obj_obs.second.size();
-      group_pose_r = getAverageRotation(r1, r2, r3);
+      group_pose_r = getAverageRotation(r1, r2, r3, quaternion_averaging_);
     }
 
     // set the pose and update the observation

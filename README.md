@@ -202,6 +202,7 @@ cam_prefix: "Cam_"
 keypoints_path: "None"      # "path_to/detected_keypoints_data.yml" to save time on keypoint detection
 
 ######################################## Optimization Parameters #############################################
+quaternion_averaging: 1     # use Quaternion Averaging or median for average rotation
 ransac_threshold: 10        # RANSAC threshold in pixel (keep it high just to remove strong outliers)
 number_iterations: 1000     # Max number of iterations for the non linear refinement
 

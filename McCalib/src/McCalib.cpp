@@ -51,6 +51,7 @@ Calibration::Calibration(const std::string config_path) {
   fs["number_y_square"] >> nb_y_square;
   fs["root_path"] >> root_dir_;
   fs["cam_prefix"] >> cam_prefix_;
+  fs["quaternion_averaging:"] >> quaternion_averaging_;
   fs["ransac_threshold"] >> ransac_thresh_;
   fs["number_iterations"] >> nb_iterations_;
   fs["distortion_model"] >> distortion_model;
@@ -794,7 +795,8 @@ void Calibration::initInterTransform(
       t3.push_back(T.at<double>(2));
     }
 
-    cv::Mat average_rotation = getAverageRotation(r1, r2, r3);
+    cv::Mat average_rotation =
+        getAverageRotation(r1, r2, r3, quaternion_averaging_);
     average_translation.at<double>(0) = median(t1);
     average_translation.at<double>(1) = median(t2);
     average_translation.at<double>(2) = median(t3);
@@ -1140,7 +1142,8 @@ void Calibration::initCameraGroupObs(const int camera_group_idx) {
     int current_frame_id = it_frame.second->frame_idx_;
     std::shared_ptr<CameraGroupObs> new_cam_group_obs =
         std::make_shared<CameraGroupObs>(
-            cam_group_[camera_group_idx]); // declare a new observation
+            cam_group_[camera_group_idx],
+            quaternion_averaging_); // declare a new observation
 
     std::map<int, std::weak_ptr<Object3DObs>> current_object_obs =
         it_frame.second->object_observations_;

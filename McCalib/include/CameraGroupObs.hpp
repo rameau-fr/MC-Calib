@@ -31,10 +31,14 @@ public:
   int cam_group_idx_;
   std::weak_ptr<CameraGroup> cam_group_;
 
+  bool quaternion_averaging_ =
+      true; // use Quaternion Averaging or median for average rotation
+
   // Functions
   CameraGroupObs() = delete;
   ~CameraGroupObs();
-  CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group);
+  CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group,
+                 const bool quaternion_averaging);
   void
   insertObjectObservation(std::shared_ptr<Object3DObs> new_object_observation);
   void computeObjectsPose();

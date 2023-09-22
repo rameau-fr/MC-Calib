@@ -63,6 +63,8 @@ public:
   int corner_ref_max_iter_ = 20; // max iterations for corner ref
 
   // Optimization parameters
+  bool quaternion_averaging_ =
+      true; // use Quaternion Averaging or median for average rotation
   float ransac_thresh_ = 10; // threshold in pixel
   int nb_iterations_ = 1000; // max number of iteration for refinements
 
