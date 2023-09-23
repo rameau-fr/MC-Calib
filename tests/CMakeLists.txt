@@ -1,7 +1,7 @@
 find_package (Boost REQUIRED COMPONENTS unit_test_framework log_setup log filesystem REQUIRED)
 
 set(SOURCES
-    main.cpp test_graph.cpp test_calibration.cpp simple_unit_tests_example.cpp
+    main.cpp test_graph.cpp test_calibration.cpp test_geometrytools.cpp simple_unit_tests_example.cpp
 )
 
 add_executable(boost_tests_run ${SOURCES})

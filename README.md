@@ -202,6 +202,7 @@ cam_prefix: "Cam_"
 keypoints_path: "None"      # "path_to/detected_keypoints_data.yml" to save time on keypoint detection
 
 ######################################## Optimization Parameters #############################################
+quaternion_averaging: 1     # use Quaternion Averaging or median for average rotation
 ransac_threshold: 10        # RANSAC threshold in pixel (keep it high just to remove strong outliers)
 number_iterations: 1000     # Max number of iterations for the non linear refinement
 
@@ -310,8 +311,8 @@ The calibration toolbox automatically outputs four ```*.yml``` files. To illustr
 
 # Datasets
 The synthetic and real datasets acquired for this paper are freely available via the following links:
-- [Real Data](https://bosch.frameau.xyz/index.php/s/fqtFij4PNc9mp2a)
-- [Synthetic Data](https://bosch.frameau.xyz/index.php/s/pLc2T9bApbeLmSz)
+- [Real Data](https://drive.google.com/file/d/143jdSi5fxUGj1iEGbTIQPfSqcOyuW-MR/view?usp=sharing)
+- [Synthetic Data](https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing)
 
 
 # Contribution

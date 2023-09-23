@@ -13,9 +13,11 @@
  *
  * @param new_cam_group camera group to be added
  */
-CameraGroupObs::CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group) {
+CameraGroupObs::CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group,
+                               const bool quaternion_averaging) {
   cam_group_ = new_cam_group;
   cam_group_idx_ = new_cam_group->cam_group_idx_;
+  quaternion_averaging_ = quaternion_averaging;
 }
 
 /**
@@ -75,18 +77,21 @@ void CameraGroupObs::computeObjectsPose() {
     // if the reference camera has no visible observation, then take
     // the average of other observations
     if (flag_ref_cam == false) {
-      cv::Mat average_rotation = cv::Mat::zeros(3, 1, CV_64F);
+      std::vector<double> r1, r2, r3;
       cv::Mat average_translation = cv::Mat::zeros(3, 1, CV_64F);
       for (const auto &obj_obs_idx : it_obj_obs.second) {
         auto obj_obs_ptr = object_observations_[obj_obs_idx].lock();
         if (obj_obs_ptr) {
-          average_rotation += obj_obs_ptr->getRotInGroupVec();
+          const cv::Mat &R = obj_obs_ptr->getRotInGroupVec();
+          r1.push_back(R.at<double>(0));
+          r2.push_back(R.at<double>(1));
+          r3.push_back(R.at<double>(2));
           average_translation += obj_obs_ptr->getTransInGroupVec();
         }
       }
       // Average version
       group_pose_t = average_translation / it_obj_obs.second.size();
-      group_pose_r = average_rotation / it_obj_obs.second.size();
+      group_pose_r = getAverageRotation(r1, r2, r3, quaternion_averaging_);
     }
 
     // set the pose and update the observation
