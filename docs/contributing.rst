@@ -27,14 +27,15 @@ To create a pull request:
 
     docker run -it --rm --workdir /src -v $(pwd):/src clang-format-lint --clang-format-executable /clang-format/clang-format11 -r --inplace True --exclude '.git ./libs' .
 
-5. Make sure new changes pass the tests. The end-to-end tests rely on `Synthetic Data <https://bosch.frameau.xyz/index.php/s/pLc2T9bApbeLmSz>`_. 
+5. Make sure new changes pass the tests. The end-to-end tests rely on `Synthetic Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_. 
 Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
 .. code-block:: bash
-
+                                         
     mkdir build
     cd build
     cmake -DCMAKE_BUILD_TYPE=Debug ..
+    make -j10
     ./tests/boost_tests_run
 
 6. Run static analysis tools and fix introduced dangerous code constructs:
