@@ -63,13 +63,16 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
     cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
     run-clang-tidy
 
-7. Perform ASanitizer test in the build directory. In order to run the test properly, the synthetic image data or the blender image data must be downloaded and placed in the data folder. The synthetic image data can be downloaded from `Synthetic Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_. The blender image data can be downloaded from `Blender Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_. Extract the data and place (or symlink) Blender_Images folder under MC-Calib/data/. 
+7. Perform ASanitizer test in the build directory. In order to run the test properly, the synthetic image data or the blender image data must be downloaded and placed in the data folder. 
+The synthetic image data can be downloaded from `Synthetic Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_.
 
 .. code-block:: bash
 
     ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
 
 8. Perform valgrind test and fix introduced memory leaks:
+
+In order to use Valgrind, ASanitizer must first be disabled. This can be done by recompiling the /home/MC-Calib/build 
 
 .. code-block:: bash
 
