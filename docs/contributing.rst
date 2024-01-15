@@ -72,7 +72,15 @@ The synthetic image data can be downloaded from `Synthetic Data <https://drive.g
 
 8. Perform valgrind test and fix introduced memory leaks:
 
-In order to use Valgrind, ASanitizer must first be disabled. This can be done by recompiling the /home/MC-Calib/build 
+In order to use Valgrind, ASanitizer must first be disabled. This can be done by recompiling with the ASanitizer disabled.
+
+.. code-block:: bash
+
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
+    make -j10
+
+Then, run the valgrind test:
 
 .. code-block:: bash
 
