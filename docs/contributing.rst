@@ -36,7 +36,7 @@ for Windows:
     docker run -it --rm --workdir /src -v ${pwd}:/src clang-format-lint --clang-format-executable /clang-format/clang-format11 -r --inplace True --exclude '.git ./libs' .
 
 
-5. Make sure new changes pass the tests. Make sure to use 'bailool/mc-calib-prod' as our docker image when running docker with commands using ps1/sh.The end-to-end tests rely on `Synthetic Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_. 
+5. Now we have to make sure our new changes pass the tests. In order to test them, we must first open docker image 'bailool/mc-calib-prod'. Make sure to change the starter command in your *.sh/*.ps1 file accordingly. The end-to-end tests rely on `Synthetic Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_. 
 Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
 .. code-block:: bash
@@ -64,7 +64,7 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
     run-clang-tidy
 
 7. Perform ASanitizer test in the build directory. In order to run the test properly, the synthetic image data or the blender image data must be downloaded and placed in the data folder. 
-The synthetic image data can be downloaded from `Synthetic Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_.
+Refer back to Step 5 for more information. By running calibrate, we will be able to see if the ASanitizer finds any errors or leaks on the way. 
 
 .. code-block:: bash
 
@@ -72,7 +72,7 @@ The synthetic image data can be downloaded from `Synthetic Data <https://drive.g
 
 8. Perform valgrind test and fix introduced memory leaks:
 
-In order to use Valgrind, ASanitizer must first be disabled. This can be done by recompiling with the ASanitizer disabled.
+In order to use Valgrind, ASanitizer must first be disabled. This can be done by recompiling with the ASanitizer option turned off.
 
 .. code-block:: bash
 
