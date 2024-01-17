@@ -1,8 +1,7 @@
 # MC-Calib Installation for Windows Users
-**By Jungha Cho**  
-*Jan 9, 2024*
+**By @Harvendois**  
 
-This documentation is meant to guide the installation of the MC-Calib toolbox, especially for Windows OS users. Therefore, it is recommended to the readers to first read through the original MC-Calib toolbox github README before going through any of the steps recorded in this documentation. Furthermore, this documentation is meant to guide users who are not familiar to C++ application installation through a step-by-step guideline.
+This documentation is meant to guide the installation of the MC-Calib toolbox, specifically for Windows OS users. Therefore, it is recommended to the readers to first read through the original MC-Calib toolbox github README before going through any of the steps recorded in this documentation. Furthermore, this documentation is meant to guide users who are not familiar to C++ application installation through a step-by-step guideline.
 
 ## Setting up development environment in Visual Studio Code:
 - Install Docker extension 
@@ -17,14 +16,14 @@ This documentation is meant to guide the installation of the MC-Calib toolbox, e
 
 
 2. **Download the MC-Calib repository from GitHub**  
-   The repository can then be placed in a separate folder/directory that the user will later mount on docker to set as /home for the docker container run. Copy the absolute address of this Windows directory where the repository is located because it will be our `$(PWD)`.
+   The repository can then be placed in a separate folder/directory that the user will later mount in docker to set as '/home' for the docker container run. Copy the absolute address of this Windows directory where the repository is located because it will be our `$(PWD)`.
 
 3. **Pulling Docker Image**  
    Using Windows Powershell or CMD, we pull the docker images using the commands given in the README.  
    
    First, we move to the directory where our downloaded repository is located.  
    The command for this is:  
-   `Cd (copied absolute path)`  
+   `cd (copied absolute path)`  
 
    Then pull the docker image using either one of the commands given below.
 
@@ -61,7 +60,7 @@ For example, if we choose to save our images in `D:\project\calibration\test\ima
 D:\project\calibration\test\images\Cam_001
 D:\project\calibration\test\images\Cam_002
 ```
-After personalization, user can run the *.ps1 file in the Powershell/CMD/etc.
+After personalization, user can run the '*.ps1' file in the Powershell/CMD/etc.
 
 ```bash
 .\calib.ps1
@@ -69,7 +68,7 @@ After personalization, user can run the *.ps1 file in the Powershell/CMD/etc.
 
 ## Compiling the MC-Calib repository
 
-Once we are in the docker container successfully, we are ready to compile the MC-Calib repository. We will utilize CMake to link our files together and make a compile-ready object file for us.
+Once we are in the docker container, we are ready to compile the MC-Calib repository. We will utilize CMake to link our files together and make a compile-ready object file for us.
 
 First, head to `/home/MC-Calib` directory, where the user should already have placed the downloaded github repository of our toolbox.
 
