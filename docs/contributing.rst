@@ -23,18 +23,28 @@ To create a pull request:
 
 4. Apply clang-format-lint to new changes:
 
+for Linux/Unix:
+
 .. code-block:: bash
 
     docker run -it --rm --workdir /src -v $(pwd):/src clang-format-lint --clang-format-executable /clang-format/clang-format11 -r --inplace True --exclude '.git ./libs' .
 
-5. Make sure new changes pass the tests. The end-to-end tests rely on `Synthetic Data <https://bosch.frameau.xyz/index.php/s/pLc2T9bApbeLmSz>`_. 
-Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
+for Windows:
 
 .. code-block:: bash
 
+    docker run -it --rm --workdir /src -v ${pwd}:/src clang-format-lint --clang-format-executable /clang-format/clang-format11 -r --inplace True --exclude '.git ./libs' .
+
+
+5. Now we have to make sure our new changes pass the tests. In order to test them, we must first open docker image 'bailool/mc-calib-prod'. Make sure to change the starter command in your *.sh/*.ps1 file accordingly. The end-to-end tests rely on `Synthetic Data <https://drive.google.com/file/d/1CxaXUbO4E9WmaVrYy5aMeRLKmrFB_ARl/view?usp=sharing>`_. 
+Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
+
+.. code-block:: bash
+                                         
     mkdir build
     cd build
-    cmake -DCMAKE_BUILD_TYPE=Debug ..
+    cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+    make -j10
     ./tests/boost_tests_run
 
 6. Run static analysis tools and fix introduced dangerous code constructs:
@@ -43,7 +53,7 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
 
     cd build
     apt install cppcheck
-    cppcheck ../src
+    cppcheck ../McCalib/src
 
     # known errors:
     logger.h:19:1: error: There is an unknown macro here somewhere. Configuration is required. If BOOST_LOG_GLOBAL_LOGGER is a macro then please configure it. [unknownMacro] BOOST_LOG_GLOBAL_LOGGER(logger, boost::log::sources::severity_logger_mt<boost::log::trivial::severity_level>)
@@ -53,9 +63,24 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
     cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
     run-clang-tidy
 
+7. Perform ASanitizer test in the build directory. In order to run the test properly, the synthetic image data or the blender image data must be downloaded and placed in the data folder. 
+Refer back to Step 5 for more information. By running calibrate, we will be able to see if the ASanitizer finds any errors or leaks on the way. 
 
+.. code-block:: bash
 
-7. Perform valgrind test and fix introduced memory leaks:
+    ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
+
+8. Perform valgrind test and fix introduced memory leaks:
+
+In order to use Valgrind, ASanitizer must first be disabled. This can be done by recompiling with the ASanitizer option turned off.
+
+.. code-block:: bash
+
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
+    make -j10
+
+Then, run the valgrind test:
 
 .. code-block:: bash
 
@@ -72,7 +97,7 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
       --suppressions=../tests/valgrind_suppress/opencv_valgrind.supp \
       --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
       --suppressions=../tests/valgrind_suppress/boost_valgrind.supp \
-      ./calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
+      ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
 
     # current state of this repository:
     ==6274== LEAK SUMMARY:
@@ -82,7 +107,7 @@ Extract that and place (or symlink) Blender_Images folder under MC-Calib/data/.
     ==6274==    still reachable: 0 bytes in 0 blocks
     ==6274==         suppressed: 420,593 bytes in 3,714 blocks
 
-8. Create pull request.
+9. Create pull request.
 
 
 Naming convention:

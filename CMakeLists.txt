@@ -3,6 +3,13 @@ project(MC-Calib VERSION 1.2.0 DESCRIPTION "MC-Calib: A generic and robust calib
 
 add_definitions(-std=c++17)
 set(CMAKE_CXX_FLAGS "-std=c++17") # required for Ceres https://github.com/colmap/colmap/issues/905#issuecomment-731138700
+
+option(USE_SANITIZERS "Enable AddressSanitizer and LeakSanitizer" OFF)
+
+if(USE_SANITIZERS)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak")
+endif()
+
 set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 
 find_package(OpenCV REQUIRED)

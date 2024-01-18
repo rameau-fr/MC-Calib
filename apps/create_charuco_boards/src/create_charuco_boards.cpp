@@ -83,8 +83,8 @@ int main(int argc, char *argv[]) {
         cv::Size(resolution_x_per_board[i], resolution_y_per_board[i]),
         boardImage, 10, 1);
     // Display marker
-    cv::imshow("My Charuco", boardImage);
-    cv::waitKey(1);
+    // cv::imshow("My Charuco", boardImage);
+    // cv::waitKey(1);
     // Save the marker
     std::ostringstream ss;
     ss << std::setw(3) << std::setfill('0') << i;

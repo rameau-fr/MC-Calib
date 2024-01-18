@@ -9,6 +9,8 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 Requirements: Ceres, Boost, OpenCV 4.5.x, c++17 
 
+For Windows users, follow [this installation guide](/Windows.md)
+
 There are several ways to get the environment ready. Choose any of them:
 
 1. The easiest way to get the environment is to pull it from the Docker Hub:
@@ -25,16 +27,8 @@ There are several ways to get the environment ready. Choose any of them:
    - Run pulled image:
    
       ```bash
-      xhost +si:localuser:root
       docker run \
-                  --runtime=nvidia \
                   -ti --rm \
-                  --network host \
-                  --gpus all \
-                  --env="DISPLAY" \
-                  --env="QT_X11_NO_MITSHM=1" \
-                  --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-                  --volume="$HOME/.Xauthority:/home/.Xauthority:rw" \
                   --volume="${PWD}:/home/MC-Calib" \
                   --volume="PATH_TO_DATA:/home/MC-Calib/data" \
                   bailool/mc-calib-prod
