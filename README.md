@@ -9,7 +9,7 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 Requirements: Ceres, Boost, OpenCV 4.5.x, c++17 
 
-For Windows users, follow [this installation guide](/Windows.md)
+For Windows users, follow [this installation guide](/docs/Windows.md)
 
 There are several ways to get the environment ready. Choose any of them:
 
