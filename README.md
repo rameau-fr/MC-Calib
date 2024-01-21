@@ -58,7 +58,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
    make -j10  
    ```
 
-Documentation is available [online](https://codedocs.xyz/rameau-fr/MC-Calib/). Ti generate local documentation, follow [the instructions](/docs/Documentation.md).
+Documentation is available [online](https://codedocs.xyz/rameau-fr/MC-Calib/). To generate local documentation, follow [the instructions](/docs/Documentation.md).
       
 # Usage
 
