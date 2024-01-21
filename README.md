@@ -7,7 +7,7 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 # Installation
 
-Requirements: Ceres, Boost, OpenCV 4.5.x, c++17 
+Requirements: Ceres, Boost, OpenCV {4.2.x, 4.5.x}, c++17 
 
 For Windows users, follow [this installation guide](/docs/Windows.md)
 
@@ -58,34 +58,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
    make -j10  
    ```
 
-## Generate documentation
-
-- Doxygen documentation is [available online](https://codedocs.xyz/rameau-fr/MC-Calib/).
-
-- It is also possible to generate Doxygen documentation locally:
-
-   - Install [Doxygen](https://www.doxygen.nl/download.html) or use `mc-calib-dev` docker image:
-
-      ```bash
-      sudo apt install flex
-      sudo apt install bison
-      git clone https://github.com/doxygen/doxygen.git
-      cd doxygen
-      mkdir build
-      cd build
-      cmake -G "Unix Makefiles" ..
-      make
-      make install # optional
-      ```
-   - Doxygen is already added to the `CmakeLists.txt` and is auto-generated if dependencies are satisfied. However, it is also possible to set it up manually:
-
-      ```bash
-      mkdir docs
-      cd docs
-      doxygen -g
-      #set INPUT = ../src in Doxyfile
-      doxygen
-      ```
+Documentation is available [online](https://codedocs.xyz/rameau-fr/MC-Calib/). Ti generate local documentation, follow [the instructions](/docs/Documentation.md).
       
 # Usage
 
