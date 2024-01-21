@@ -35,16 +35,7 @@ There are several ways to get the environment ready. Choose any of them:
       #xhost -local:root  # resetting permissions
       ```
       
-2. It is also possible to build the docker environment manually:
-   
-   - [Install](https://docs.docker.com/engine/install/) docker
-
-   - Create the image:
-   
-      ```bash
-      docker build --target prod -t mc-calib-prod . # production environment
-      docker build --target dev -t mc-calib-dev .   # development environment
-      ```
+2. It is also possible to build the docker environment manually (see [instructions](/docs/Docker.md))
 
 3. Alternatively, every dependency can be installed independently without docker:
 
