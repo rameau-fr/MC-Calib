@@ -7,7 +7,7 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 # Installation
 
-Requirements: Ceres, Boost, OpenCV 4.5.x, c++17 
+Requirements: Ceres, Boost, OpenCV {4.2.x, 4.5.x}, c++17 
 
 For Windows users, follow [this installation guide](/docs/Windows.md)
 
@@ -35,16 +35,7 @@ There are several ways to get the environment ready. Choose any of them:
       #xhost -local:root  # resetting permissions
       ```
       
-2. It is also possible to build the docker environment manually:
-   
-   - [Install](https://docs.docker.com/engine/install/) docker
-
-   - Create the image:
-   
-      ```bash
-      docker build --target prod -t mc-calib-prod . # production environment
-      docker build --target dev -t mc-calib-dev .   # development environment
-      ```
+2. It is also possible to build the docker environment manually (see [instructions](/docs/Docker.md))
 
 3. Alternatively, every dependency can be installed independently without docker:
 
@@ -67,34 +58,7 @@ Then the following should do the job of compiling the code inside the `MC-Calib`
    make -j10  
    ```
 
-## Generate documentation
-
-- Doxygen documentation is [available online](https://codedocs.xyz/rameau-fr/MC-Calib/).
-
-- It is also possible to generate Doxygen documentation locally:
-
-   - Install [Doxygen](https://www.doxygen.nl/download.html) or use `mc-calib-dev` docker image:
-
-      ```bash
-      sudo apt install flex
-      sudo apt install bison
-      git clone https://github.com/doxygen/doxygen.git
-      cd doxygen
-      mkdir build
-      cd build
-      cmake -G "Unix Makefiles" ..
-      make
-      make install # optional
-      ```
-   - Doxygen is already added to the `CmakeLists.txt` and is auto-generated if dependencies are satisfied. However, it is also possible to set it up manually:
-
-      ```bash
-      mkdir docs
-      cd docs
-      doxygen -g
-      #set INPUT = ../src in Doxyfile
-      doxygen
-      ```
+Documentation is available [online](https://codedocs.xyz/rameau-fr/MC-Calib/). To generate local documentation, follow [the instructions](/docs/Documentation.md).
       
 # Usage
 

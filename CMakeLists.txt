@@ -6,10 +6,6 @@ set(CMAKE_CXX_FLAGS "-std=c++17") # required for Ceres https://github.com/colmap
 
 option(USE_SANITIZERS "Enable AddressSanitizer and LeakSanitizer" OFF)
 
-if(USE_SANITIZERS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,leak")
-endif()
-
 set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 
 find_package(OpenCV REQUIRED)
@@ -40,8 +36,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
-# sanitizers https://www.jetbrains.com/help/clion/google-sanitizers.html#Configuration
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,leak")
+if(USE_SANITIZERS)
+    # sanitizers https://www.jetbrains.com/help/clion/google-sanitizers.html#Configuration
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,leak")
+endif()
 
 include_directories(
 	include
