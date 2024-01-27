@@ -23,11 +23,12 @@ jobs:
           exclude: './third_party ./external .git'
           extensions: 'h,cpp'
           clangFormatVersion: 11
+  
   cppcheck:
     runs-on: ubuntu-latest
     steps:
-       - uses: actions/checkout@v2
-       - uses: addnab/docker-run-action@v3
+      - uses: actions/checkout@v2
+      - uses: addnab/docker-run-action@v3
         with:
           image: bailool/mc-calib-dev:latest
           options: -v ${{ github.workspace }}:/home/MC-Calib"
