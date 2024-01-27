@@ -33,4 +33,6 @@ jobs:
           image: bailool/mc-calib-dev:latest
           options: -v ${{ github.workspace }}:/home/MC-Calib"
           run: |
+            ls
+            ls /home/MC-Calib/src
             cppcheck /home/MC-Calib/src
