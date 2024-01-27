@@ -31,7 +31,7 @@ jobs:
       - uses: addnab/docker-run-action@v3
         with:
           image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib"
+          options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             pwd
             ls
