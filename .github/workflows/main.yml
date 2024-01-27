@@ -16,8 +16,10 @@ jobs:
   clang-format-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: DoozyX/clang-format-lint-action@v0.11
+      - name: Checkout
+        uses: actions/checkout@v2  # required to mount the Github Workspace to a volume
+      - name: Run clang-format-lint
+        uses: DoozyX/clang-format-lint-action@v0.11
         with:
           source: '.'
           exclude: './third_party ./external .git'
@@ -27,8 +29,10 @@ jobs:
   cppcheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: addnab/docker-run-action@v3
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run cppcheck
+        uses: addnab/docker-run-action@v3
         with:
           image: bailool/mc-calib-dev:latest
           options: -v ${{ github.workspace }}:/home/MC-Calib
