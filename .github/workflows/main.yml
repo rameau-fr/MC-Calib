@@ -37,6 +37,7 @@ jobs:
           image: bailool/mc-calib-dev:latest
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
+            cppcheck MC-Calib/McCalib/include
             cppcheck MC-Calib/McCalib/src
 
   clang-tidy:
