@@ -34,5 +34,5 @@ jobs:
           options: -v ${{ github.workspace }}:/home/MC-Calib"
           run: |
             ls
-            ls /home/MC-Calib/src
+            ls MC-Calib
             cppcheck /home/MC-Calib/src
