@@ -77,9 +77,7 @@ jobs:
           image: bailool/mc-calib-dev:latest
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
-            ls /home/MC-Calib/data
-            ls /home/MC-Calib/data/Blender_Images
-            # mkdir MC-Calib/build && cd MC-Calib/build
-            # cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
-            # make -j8
-            # ./tests/boost_tests_run
+            mkdir MC-Calib/build && cd MC-Calib/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+            make -j8
+            ./tests/boost_tests_run
