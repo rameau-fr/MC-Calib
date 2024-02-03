@@ -253,7 +253,7 @@ void Calibration::detectBoardsWithCamera(const std::vector<cv::String> &fn,
     cv::Mat image = cv::imread(fn[0]);
     if (image.empty())
     {
-        LOG_ERROR << "Could not read the image :: " << fn[0]);
+        LOG_ERROR << "Could not read the image :: " << fn[0];
         assert((!image.empty()) && "Calibration cannot be done");
     }
     cams_[cam_idx]->im_cols_ = image.cols;
