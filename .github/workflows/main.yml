@@ -65,9 +65,9 @@ jobs:
         with:
           repository: BAILOOL/MC-Calib-data
           path: ${{ github.workspace }}/data
-          run: | 
-            ls
-            ls ${{ github.workspace }}/data
+      - name: Unzip MC-Calib-data
+        run: ls ${{ github.workspace }}/data
+            
       # - name: Run tests
       #   uses: addnab/docker-run-action@v3
       #   with:
