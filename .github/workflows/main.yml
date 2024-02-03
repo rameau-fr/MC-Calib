@@ -60,7 +60,34 @@ jobs:
   #           cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
   #           run-clang-tidy
 
-  unit-tests-with-sanitizers:
+  # unit-tests-with-sanitizers:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+
+  #     - name: Checkout MC-Calib-data
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: BAILOOL/MC-Calib-data
+  #         path: ${{ github.workspace }}/data
+  #         lfs: 'true'
+
+  #     - name: Unzip MC-Calib-data
+  #       run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
+        
+  #     - name: Run tests
+  #       uses: addnab/docker-run-action@v3
+  #       with:
+  #         image: bailool/mc-calib-dev:latest
+  #         options: -v ${{ github.workspace }}:/home/MC-Calib
+  #         run: |
+  #           mkdir MC-Calib/build && cd MC-Calib/build
+  #           cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+  #           make -j4
+  #           ./tests/boost_tests_run
+
+  unit-tests-with-valgrind:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -83,6 +110,17 @@ jobs:
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
             make -j4
-            ./tests/boost_tests_run
+            valgrind --leak-check=full \
+              --leak-check=full \
+              --track-origins=yes \
+              --show-reachable=yes \
+              --error-limit=no \
+              --gen-suppressions=all \
+              --verbose \
+              --log-file=valgrind-out.txt \
+              --suppressions=../tests/valgrind_suppress/opencv_valgrind.supp \
+              --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
+              --suppressions=../tests/valgrind_suppress/boost_valgrind.supp \
+              ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
