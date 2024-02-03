@@ -282,7 +282,7 @@ void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
   if(image.empty())
   {
       std::cout << "Could not read the image: " << frame_path << std::endl;
-      return 1;
+      return;
   }
 
   LOG_INFO << "Got here1-2 ";
