@@ -69,7 +69,7 @@ jobs:
           lfs: 'true'
 
       - name: Unzip MC-Calib-data
-        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data/Blender_Images
+        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
         
       - name: Run tests
         uses: addnab/docker-run-action@v3
