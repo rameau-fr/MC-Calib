@@ -78,7 +78,6 @@ jobs:
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
-            # cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
-            make -j8
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+            make -j4
             ./tests/boost_tests_run
