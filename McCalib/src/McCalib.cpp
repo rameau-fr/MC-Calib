@@ -279,6 +279,7 @@ void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
                                                 const int frame_idx) {
   LOG_INFO << "Got here1 ";
   cv::Mat image = cv::imread(frame_path);
+  LOG_INFO << "Got here1-2 ";
   // Greyscale image for subpixel refinement
   cv::Mat graymat;
   cv::cvtColor(image, graymat, cv::COLOR_BGR2GRAY);
