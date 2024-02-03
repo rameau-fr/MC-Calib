@@ -60,22 +60,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
         with:
           repository: BAILOOL/MC-Calib-data
           path: ${{ github.workspace }}/data
           lfs: 'true'
+
       - name: Unzip MC-Calib-data
-        run: tar xzf ${{ github.workspace }}/data/Blender_Images.tar.gz
-            
-      # - name: Run tests
-      #   uses: addnab/docker-run-action@v3
-      #   with:
-      #     image: bailool/mc-calib-dev:latest
-      #     options: -v ${{ github.workspace }}:/home/MC-Calib
-      #     run: |
-      #       mkdir MC-Calib/build && cd MC-Calib/build
-      #       cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
-      #       make -j8
-      #       ./tests/boost_tests_run
+        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz
+        
+      - name: Run tests
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-dev:latest
+          options: -v ${{ github.workspace }}:/home/MC-Calib
+          run: |
+            mkdir MC-Calib/build && cd MC-Calib/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+            make -j8
+            ./tests/boost_tests_run
