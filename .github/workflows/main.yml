@@ -69,7 +69,7 @@ jobs:
           lfs: 'true'
 
       - name: Unzip MC-Calib-data
-        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz
+        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data/Blender_Images
         
       - name: Run tests
         uses: addnab/docker-run-action@v3
@@ -78,6 +78,7 @@ jobs:
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             ls /home/MC-Calib/data
+            ls /home/MC-Calib/data/Blender_Images
             # mkdir MC-Calib/build && cd MC-Calib/build
             # cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
             # make -j8
