@@ -79,6 +79,6 @@ jobs:
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
             # cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
-            make -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
             make -j8
             ./tests/boost_tests_run
