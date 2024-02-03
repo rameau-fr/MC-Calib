@@ -60,6 +60,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Checkout MC-Calib-data
+        uses: actions/checkout@v4
+        with:
+          repository: https://github.com/BAILOOL/MC-Calib-data
+          path: ${{ github.workspace }}/data
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
