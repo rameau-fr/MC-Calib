@@ -65,8 +65,9 @@ jobs:
         with:
           repository: BAILOOL/MC-Calib-data
           path: ${{ github.workspace }}/data
+          lfs: 'true'
       - name: Unzip MC-Calib-data
-        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz
+        run: tar xzf ${{ github.workspace }}/data/Blender_Images.tar.gz
             
       # - name: Run tests
       #   uses: addnab/docker-run-action@v3
