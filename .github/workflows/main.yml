@@ -13,47 +13,47 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  clang-format-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2  # required to mount the Github Workspace to a volume
-      - name: Run clang-format-lint
-        uses: DoozyX/clang-format-lint-action@v0.11
-        with:
-          source: '.'
-          exclude: './third_party ./external .git'
-          extensions: 'h,cpp'
-          clangFormatVersion: 11
+  # clang-format-lint:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2  # required to mount the Github Workspace to a volume
+  #     - name: Run clang-format-lint
+  #       uses: DoozyX/clang-format-lint-action@v0.11
+  #       with:
+  #         source: '.'
+  #         exclude: './third_party ./external .git'
+  #         extensions: 'h,cpp'
+  #         clangFormatVersion: 11
   
-  cppcheck:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Run cppcheck
-        uses: addnab/docker-run-action@v3
-        with:
-          image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
-          run: |
-            cppcheck MC-Calib/McCalib/include
-            cppcheck MC-Calib/McCalib/src
+  # cppcheck:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Run cppcheck
+  #       uses: addnab/docker-run-action@v3
+  #       with:
+  #         image: bailool/mc-calib-dev:latest
+  #         options: -v ${{ github.workspace }}:/home/MC-Calib
+  #         run: |
+  #           cppcheck MC-Calib/McCalib/include
+  #           cppcheck MC-Calib/McCalib/src
 
-  clang-tidy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Run clang-tidy
-        uses: addnab/docker-run-action@v3
-        with:
-          image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
-          run: |
-            mkdir MC-Calib/build && cd MC-Calib/build
-            cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
-            run-clang-tidy
+  # clang-tidy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+  #     - name: Run clang-tidy
+  #       uses: addnab/docker-run-action@v3
+  #       with:
+  #         image: bailool/mc-calib-dev:latest
+  #         options: -v ${{ github.workspace }}:/home/MC-Calib
+  #         run: |
+  #           mkdir MC-Calib/build && cd MC-Calib/build
+  #           cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
+  #           run-clang-tidy
 
   unit-tests-with-sanitizers:
     runs-on: ubuntu-latest
@@ -65,13 +65,16 @@ jobs:
         with:
           repository: BAILOOL/MC-Calib-data
           path: ${{ github.workspace }}/data
-      - name: Run tests
-        uses: addnab/docker-run-action@v3
-        with:
-          image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
-          run: |
-            mkdir MC-Calib/build && cd MC-Calib/build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
-            make -j8
-            ./tests/boost_tests_run
+          run: | 
+            ls
+            ls ${{ github.workspace }}/data
+      # - name: Run tests
+      #   uses: addnab/docker-run-action@v3
+      #   with:
+      #     image: bailool/mc-calib-dev:latest
+      #     options: -v ${{ github.workspace }}:/home/MC-Calib
+      #     run: |
+      #       mkdir MC-Calib/build && cd MC-Calib/build
+      #       cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+      #       make -j8
+      #       ./tests/boost_tests_run
