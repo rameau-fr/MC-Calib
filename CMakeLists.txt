@@ -38,7 +38,7 @@ add_compile_options(-Wall -Wextra -Wpedantic -Werror)
 
 if(USE_SANITIZERS)
     # sanitizers https://www.jetbrains.com/help/clion/google-sanitizers.html#Configuration
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address,leak")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 endif()
 
 include_directories(

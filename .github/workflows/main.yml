@@ -65,8 +65,9 @@ jobs:
             cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
             run-clang-tidy
 
-
+  
   unit-tests-with-sanitizers:
+    if: ${{ false }}  # TODO: disable for now until understand how to suppress leaks from external libraries like OpenCV
     runs-on: ubuntu-latest
     needs:
       - clang-format-lint
@@ -139,3 +140,35 @@ jobs:
               --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
               --suppressions=../tests/valgrind_suppress/boost_valgrind.supp \
               ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
+
+
+  unit-tests-in-release-mode:
+    runs-on: ubuntu-latest
+    needs:
+      - clang-format-lint
+      - cppcheck
+      - clang-tidy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout MC-Calib-data
+        uses: actions/checkout@v4
+        with:
+          repository: BAILOOL/MC-Calib-data
+          path: ${{ github.workspace }}/data
+          lfs: 'true'
+
+      - name: Unzip MC-Calib-data
+        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
+        
+      - name: Run tests
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-prod:latest
+          options: -v ${{ github.workspace }}:/home/MC-Calib
+          run: |
+            mkdir MC-Calib/build && cd MC-Calib/build
+            cmake -DCMAKE_BUILD_TYPE=Release ..
+            make -j4
+            ./tests/boost_tests_run
