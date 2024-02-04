@@ -32,6 +32,7 @@ jobs:
           extensions: 'h,cpp'
           clangFormatVersion: 11
   
+
   cppcheck:
     runs-on: ubuntu-latest
     steps:
@@ -46,6 +47,7 @@ jobs:
           run: |
             cppcheck MC-Calib/McCalib/include
             cppcheck MC-Calib/McCalib/src
+
 
   clang-tidy:
     runs-on: ubuntu-latest
@@ -63,8 +65,13 @@ jobs:
             cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
             run-clang-tidy
 
+
   unit-tests-with-sanitizers:
     runs-on: ubuntu-latest
+    needs:
+      - clang-format-lint
+      - cppcheck
+      - clang-tidy
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -90,8 +97,13 @@ jobs:
             make -j4
             ./tests/boost_tests_run
 
+
   unit-tests-with-valgrind:
     runs-on: ubuntu-latest
+    needs:
+      - clang-format-lint
+      - cppcheck
+      - clang-tidy
     steps:
       - name: Checkout
         uses: actions/checkout@v2
