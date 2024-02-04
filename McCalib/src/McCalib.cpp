@@ -290,7 +290,7 @@ void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
   // Greyscale image for subpixel refinement
   cv::Mat graymat;
   cv::cvtColor(image, graymat, cv::COLOR_BGR2GRAY);
-  
+
   // Datastructure to save the checkerboard corners
   // key == board id, value == markersIDs on MARKERS markerIds
   std::map<int, std::vector<int>> marker_idx;
