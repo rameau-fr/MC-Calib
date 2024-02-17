@@ -176,10 +176,10 @@ jobs:
 
   code-coverage-testing:
     runs-on: ubuntu-latest
-    needs:
-      - clang-format-lint
-      - cppcheck
-      - clang-tidy
+    # needs:
+    #   - clang-format-lint
+    #   - cppcheck
+    #   - clang-tidy
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -198,9 +198,9 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
+          options: -v ${{ github.workspace }}:${{ github.workspace }}
           run: |
-            mkdir MC-Calib/build && cd MC-Calib/build
+            mkdir ${{ github.workspace }}/build && cd ${{ github.workspace }}/build
             cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=true ..
             make -j4
             ./tests/boost_tests_run && make coverage
