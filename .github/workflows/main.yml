@@ -66,8 +66,115 @@ jobs:
             run-clang-tidy
 
   
-  unit-tests-with-sanitizers:
-    if: ${{ false }}  # TODO: disable for now until understand how to suppress leaks from external libraries like OpenCV
+  # unit-tests-with-sanitizers:
+  #   if: ${{ false }}  # TODO: disable for now until understand how to suppress leaks from external libraries like OpenCV
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - clang-format-lint
+  #     - cppcheck
+  #     - clang-tidy
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+
+  #     - name: Checkout MC-Calib-data
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: BAILOOL/MC-Calib-data
+  #         path: ${{ github.workspace }}/data
+  #         lfs: 'true'
+
+  #     - name: Unzip MC-Calib-data
+  #       run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
+        
+  #     - name: Run tests
+  #       uses: addnab/docker-run-action@v3
+  #       with:
+  #         image: bailool/mc-calib-dev:latest
+  #         options: -v ${{ github.workspace }}:/home/MC-Calib
+  #         run: |
+  #           mkdir MC-Calib/build && cd MC-Calib/build
+  #           cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+  #           make -j4
+  #           ./tests/boost_tests_run
+
+
+  # unit-tests-with-valgrind:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - clang-format-lint
+  #     - cppcheck
+  #     - clang-tidy
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+
+  #     - name: Checkout MC-Calib-data
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: BAILOOL/MC-Calib-data
+  #         path: ${{ github.workspace }}/data
+  #         lfs: 'true'
+
+  #     - name: Unzip MC-Calib-data
+  #       run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
+        
+  #     - name: Run tests
+  #       uses: addnab/docker-run-action@v3
+  #       with:
+  #         image: bailool/mc-calib-dev:latest
+  #         options: -v ${{ github.workspace }}:/home/MC-Calib
+  #         run: |
+  #           mkdir MC-Calib/build && cd MC-Calib/build
+  #           cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
+  #           make -j4
+  #           valgrind --leak-check=full \
+  #             --leak-check=full \
+  #             --track-origins=yes \
+  #             --show-reachable=yes \
+  #             --error-limit=no \
+  #             --gen-suppressions=all \
+  #             --verbose \
+  #             --log-file=valgrind-out.txt \
+  #             --suppressions=../tests/valgrind_suppress/opencv_valgrind.supp \
+  #             --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
+  #             --suppressions=../tests/valgrind_suppress/boost_valgrind.supp \
+  #             ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
+
+
+  # unit-tests-in-release-mode:
+  #   runs-on: ubuntu-latest
+  #   needs:
+  #     - clang-format-lint
+  #     - cppcheck
+  #     - clang-tidy
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
+
+  #     - name: Checkout MC-Calib-data
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: BAILOOL/MC-Calib-data
+  #         path: ${{ github.workspace }}/data
+  #         lfs: 'true'
+
+  #     - name: Unzip MC-Calib-data
+  #       run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
+        
+  #     - name: Run tests
+  #       uses: addnab/docker-run-action@v3
+  #       with:
+  #         image: bailool/mc-calib-prod:latest
+  #         options: -v ${{ github.workspace }}:/home/MC-Calib
+  #         run: |
+  #           mkdir MC-Calib/build && cd MC-Calib/build
+  #           cmake -DCMAKE_BUILD_TYPE=Release ..
+  #           make -j4
+  #           ./tests/boost_tests_run
+
+
+  code-coverage-testing:
     runs-on: ubuntu-latest
     needs:
       - clang-format-lint
@@ -94,81 +201,24 @@ jobs:
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=ON ..
+            cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=true ..
             make -j4
-            ./tests/boost_tests_run
+            ./tests/boost_tests_run && make coverage
 
-
-  unit-tests-with-valgrind:
-    runs-on: ubuntu-latest
-    needs:
-      - clang-format-lint
-      - cppcheck
-      - clang-tidy
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Checkout MC-Calib-data
-        uses: actions/checkout@v4
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v4
         with:
-          repository: BAILOOL/MC-Calib-data
-          path: ${{ github.workspace }}/data
-          lfs: 'true'
+          name: code-coverage-report
+          path: ${{ github.workspace }}/build/coverage
 
-      - name: Unzip MC-Calib-data
-        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
-        
-      - name: Run tests
-        uses: addnab/docker-run-action@v3
+      - name: Setup LCOV for report to PR
+        uses: hrishikesh-kadam/setup-lcov@v1
+      
+      - name: Report code coverage to PR
+        uses: zgosalvez/github-actions-report-lcov@v3
         with:
-          image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
-          run: |
-            mkdir MC-Calib/build && cd MC-Calib/build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
-            make -j4
-            valgrind --leak-check=full \
-              --leak-check=full \
-              --track-origins=yes \
-              --show-reachable=yes \
-              --error-limit=no \
-              --gen-suppressions=all \
-              --verbose \
-              --log-file=valgrind-out.txt \
-              --suppressions=../tests/valgrind_suppress/opencv_valgrind.supp \
-              --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
-              --suppressions=../tests/valgrind_suppress/boost_valgrind.supp \
-              ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
-
-
-  unit-tests-in-release-mode:
-    runs-on: ubuntu-latest
-    needs:
-      - clang-format-lint
-      - cppcheck
-      - clang-tidy
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Checkout MC-Calib-data
-        uses: actions/checkout@v4
-        with:
-          repository: BAILOOL/MC-Calib-data
-          path: ${{ github.workspace }}/data
-          lfs: 'true'
-
-      - name: Unzip MC-Calib-data
-        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
-        
-      - name: Run tests
-        uses: addnab/docker-run-action@v3
-        with:
-          image: bailool/mc-calib-prod:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
-          run: |
-            mkdir MC-Calib/build && cd MC-Calib/build
-            cmake -DCMAKE_BUILD_TYPE=Release ..
-            make -j4
-            ./tests/boost_tests_run
+          coverage-files: build/coverage.info
+          minimum-coverage: 90
+          artifact-name: code-coverage-report-with-github-actions
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          update-comment: true
