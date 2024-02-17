@@ -107,7 +107,17 @@ Then, run the valgrind test:
     ==6274==    still reachable: 0 bytes in 0 blocks
     ==6274==         suppressed: 420,593 bytes in 3,714 blocks
 
-9. Create pull request.
+9. Code coverage testing
+
+.. code-block:: bash
+
+    cd build
+    cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=true ..
+    make -j10
+    ./tests/boost_tests_run && make coverage
+
+
+10. Create pull request.
 
 
 Naming convention:

@@ -56,5 +56,5 @@ RUN apt update && apt install -y flex bison && \
 #------------------------------	#
 #     For development		    #
 #------------------------------	#
-RUN apt update && apt install -y cppcheck clang-tidy valgrind && \
+RUN apt update && apt install -y cppcheck clang-tidy valgrind lcov && \
 	rm -rf /var/lib/apt/lists/*
