@@ -172,3 +172,53 @@ jobs:
             cmake -DCMAKE_BUILD_TYPE=Release ..
             make -j4
             ./tests/boost_tests_run
+
+
+  code-coverage-testing:
+    runs-on: ubuntu-latest
+    needs:
+      - clang-format-lint
+      - cppcheck
+      - clang-tidy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Checkout MC-Calib-data
+        uses: actions/checkout@v4
+        with:
+          repository: BAILOOL/MC-Calib-data
+          path: ${{ github.workspace }}/data
+          lfs: 'true'
+
+      - name: Unzip MC-Calib-data
+        run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
+        
+      - name: Run tests
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-dev:latest
+          options: -v ${{ github.workspace }}:${{ github.workspace }}
+          run: |
+            mkdir ${{ github.workspace }}/build && cd ${{ github.workspace }}/build
+            cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=true ..
+            make -j4
+            ./tests/boost_tests_run && make coverage
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: ${{ github.workspace }}/build/coverage
+
+      - name: Setup LCOV for report to PR
+        uses: hrishikesh-kadam/setup-lcov@v1
+      
+      - name: Report code coverage to PR
+        uses: zgosalvez/github-actions-report-lcov@v3
+        with:
+          coverage-files: build/coverage.info
+          minimum-coverage: 77
+          artifact-name: code-coverage-report-with-github-actions
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          update-comment: true
