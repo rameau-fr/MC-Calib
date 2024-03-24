@@ -50,17 +50,16 @@ void Camera::setCameraMat(const cv::Mat camera_matrix) {
  */
 void Camera::setDistortionVector(const cv::Mat distortion_vector) {
   if (distortion_model_ == 0) {
-    intrinsics_[4] = distortion_vector.at<double>(0);
-    intrinsics_[5] = distortion_vector.at<double>(1);
-    intrinsics_[8] = distortion_vector.at<double>(4); // radial
-    intrinsics_[6] = distortion_vector.at<double>(2);
-    intrinsics_[7] = distortion_vector.at<double>(3); // tangential
+    for (std::size_t intrinIdx = 4u; intrinIdx <= 8u; ++intrinIdx) {
+      std::size_t distIdx = intrinIdx - 4u;
+      intrinsics_[intrinIdx] = distortion_vector.at<double>(distIdx);
+    }
   }
   if (distortion_model_ == 1) {
-    intrinsics_[4] = distortion_vector.at<double>(0);
-    intrinsics_[5] = distortion_vector.at<double>(1);
-    intrinsics_[8] = distortion_vector.at<double>(2);
-    intrinsics_[6] = distortion_vector.at<double>(3);
+    for (std::size_t intrinIdx = 4u; intrinIdx <= 7u; ++intrinIdx) {
+      std::size_t distIdx = intrinIdx - 4u;
+      intrinsics_[intrinIdx] = distortion_vector.at<double>(distIdx);
+    }
   }
 }
 
@@ -74,20 +73,19 @@ void Camera::setDistortionVector(const cv::Mat distortion_vector) {
 cv::Mat Camera::getDistortionVectorVector() const {
   if (distortion_model_ == 0) {
     cv::Mat distortion_vector = cv::Mat(1, 5, CV_64F, cv::Scalar(0));
-    distortion_vector.at<double>(0) = intrinsics_[4];
-    distortion_vector.at<double>(1) = intrinsics_[5];
-    distortion_vector.at<double>(4) = intrinsics_[8];
-    distortion_vector.at<double>(2) = intrinsics_[6];
-    distortion_vector.at<double>(3) = intrinsics_[7];
+    for (std::size_t intrinIdx = 4u; intrinIdx <= 8u; ++intrinIdx) {
+      std::size_t distIdx = intrinIdx - 4u;
+      distortion_vector.at<double>(distIdx) = intrinsics_[intrinIdx];
+    }
     return distortion_vector;
   }
 
   else if (distortion_model_ == 1) {
     cv::Mat distortion_vector = cv::Mat(1, 4, CV_64F, cv::Scalar(0));
-    distortion_vector.at<double>(0) = intrinsics_[4];
-    distortion_vector.at<double>(1) = intrinsics_[5];
-    distortion_vector.at<double>(4) = intrinsics_[8];
-    distortion_vector.at<double>(2) = intrinsics_[6];
+    for (std::size_t intrinIdx = 4u; intrinIdx <= 7u; ++intrinIdx) {
+      std::size_t distIdx = intrinIdx - 4u;
+      distortion_vector.at<double>(distIdx) = intrinsics_[intrinIdx];
+    }
     return distortion_vector;
   }
 
