@@ -1446,6 +1446,9 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
     }
   }
 
+  // Check if enough common poses are available:
+  if (pose_abs_1.size()<=3 || pose_abs_2.size()<=3) {return;}  
+
   // HANDEYE CALIBRATION
   cv::Mat pose_g1_g2;
   if (he_approach_ == 0) {
