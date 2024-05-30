@@ -1,5 +1,6 @@
-import pdb
 import random
+from pathlib import Path
+from typing import List
 
 import cv2
 import matplotlib.pyplot as plt
@@ -7,7 +8,9 @@ import numpy as np
 
 #!!!! This display code assumes a single camera group remain at the end the calibration process
 # 1. path to object calibration results
-path_reprojection_error = "/home/francois/Documents/CppProject/Stereo_Calibration/Images_NonOver6Cam/reprojection_error_data.yml"
+path_reprojection_error = Path(
+    "/home/MC-Calib/data/Blender_Images/Scenario_1/Results/reprojection_error_data.yml"
+)
 Nb_Camera = 1000
 
 # Generate one color randomly per camera
@@ -18,12 +21,12 @@ for i in range(0, Nb_Camera):
 
 
 # 2. Open the file
-fs = cv2.FileStorage(path_reprojection_error, cv2.FILE_STORAGE_READ)
+fs = cv2.FileStorage(str(path_reprojection_error), cv2.FILE_STORAGE_READ)
 Nb_cameragroup = fs.getNode("nb_camera_group").real()
 Nb_cameragroup = int(Nb_cameragroup)
 camera_group_id = "camera_group_" + str(0)
 frame_list = fs.getNode(camera_group_id).getNode("frame_list").mat()
-list_mean_error = []
+list_mean_error: List[float] = []
 list_color = []
 list_mean_error_frame = []
 for i in range(0, frame_list.shape[0]):
@@ -42,26 +45,22 @@ for i in range(0, frame_list.shape[0]):
             .getNode("error_list")
             .mat()
         )
-        mean_err = np.mean(error_pts)
+        mean_err = float(np.mean(np.squeeze(error_pts)))
         list_mean_error.append(mean_err)
         list_color.append(camera_color[camera_list[j][0]])
         errors_current_frame.append(mean_err)
 
     list_mean_error_frame.append(np.mean(errors_current_frame))
-    # after each frame include enpty value for display
+    # after each frame include empty value for display
     for k in range(0, 5):
-        list_mean_error.append(0)
+        list_mean_error.append(0.0)
         list_color.append(camera_color[camera_list[0][0]])
 
 
-barlist = plt.bar(range(0, len(list_mean_error_frame)), list_mean_error_frame)
+plt.bar(range(0, len(list_mean_error_frame)), list_mean_error_frame)
 plt.xlabel("frame")
 plt.ylabel("Mean reprojection error")
 plt.title("Mean error per frame")
 plt.show()
-"""
-barlist = plt.bar(range(0,len(list_mean_error)),list_mean_error); 
-for i in range(0,len(list_mean_error)):
-    barlist[i].set_color(list_color[i])
-plt.show()
-"""
+
+plt.savefig(path_reprojection_error.parent / "mean_reprojection_error_per_frame.png")
