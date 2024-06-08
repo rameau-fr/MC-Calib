@@ -236,7 +236,9 @@ def Func_cameraDisplay(rot_cam, trans_cam, cam_size, cam_edge, cam_color, ax):
 
 # path_root = "/home/francois/Documents/CppProject/Stereo_Calibration/Images_NonOver6Cam/"
 path_root = "/home/francois/Documents/CppProject/Stereo_Calibration/Images_Synth_4cam_8boards_4groups_NonOverlap/"
-path_root = "/home/francois/Documents/CppProject/Stereo_Calibration/Simulation/Scenario_5/Images/"  #
+path_root = (
+    "/home/francois/Documents/CppProject/Stereo_Calibration/Simulation/Scenario_5/Images/"  #
+)
 #!!!! This display code assumes a single camera group remain at the end the calibration process
 # I . Open and display the calibrated camera system
 path_calib_results = path_root + "calibrated_cameras_data.yml"

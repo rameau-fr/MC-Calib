@@ -84,7 +84,12 @@ if __name__ == "__main__":
         "This display code assumes a single camera group remains"
         "at the end the calibration process",
     )
-    parser.add_argument("--reprojection_error_data_path", "-d", type=Path)
+    parser.add_argument(
+        "--reprojection_error_data_path",
+        "-d",
+        type=Path,
+        help="Path to reprojection_error_data.yml",
+    )
 
     args = parser.parse_args()
     compute_error_statistic(reprojection_error_data_path=args.reprojection_error_data_path)

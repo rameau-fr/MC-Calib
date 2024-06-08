@@ -283,9 +283,7 @@ def eul2rot(theta):
 # 1. Open the parameters obtain by the calibration toolbox
 # path to calibration results
 # path_root = "/home/francois/Documents/CppProject/Stereo_Calibration/Simulation/Scenario_5/Images/"
-path_root = (
-    "/disk/francois/Projets/Calibration_toolbox/Data/Blender_Images/Scenario_5/Results/"
-)
+path_root = "/disk/francois/Projets/Calibration_toolbox/Data/Blender_Images/Scenario_5/Results/"
 # path_root = "/disk/francois/Projets/Calibration_toolbox/Data/Real_Images/2021-06-18-15-00-16/"
 path_calib_results = path_root + "calibrated_cameras_data.yml"
 cam_size = 0.5
@@ -321,9 +319,7 @@ for i in range(0, Nb_Camera):
     print(cam_pose)
 
 # 2. Open the ground truth
-path_root_gt = (
-    "/home/francois/Documents/CppProject/Stereo_Calibration/Simulation/Scenario_5/"
-)
+path_root_gt = "/home/francois/Documents/CppProject/Stereo_Calibration/Simulation/Scenario_5/"
 path_calib_gt = path_root_gt + "GroundTruth.yml"
 fs_gt = cv2.FileStorage(path_calib_gt, cv2.FILE_STORAGE_READ)
 Nb_Camera = fs_gt.getNode("nb_camera").real()
@@ -381,17 +377,12 @@ for i in range(0, Nb_Camera):
     List_err_u0.append(K_err[0][2])
     List_err_v0.append(K_err[1][2])
     T_error = np.sqrt(np.sum((T_GT - T_est) ** 2))
-    R_error = np.degrees(
-        np.arccos(0.5 * (np.trace(np.matmul(np.linalg.inv(R_est), R_GT)) - 1))
-    )
+    R_error = np.degrees(np.arccos(0.5 * (np.trace(np.matmul(np.linalg.inv(R_est), R_GT)) - 1)))
     if np.isnan(R_error):
         pdb.set_trace()
         R_error = np.degrees(
             np.arccos(
-                1
-                - np.abs(
-                    (1 - (0.5 * (np.trace(np.matmul(np.linalg.inv(R_est), R_GT)) - 1)))
-                )
+                1 - np.abs((1 - (0.5 * (np.trace(np.matmul(np.linalg.inv(R_est), R_GT)) - 1))))
             )
         )
     List_err_T.append(T_error)
