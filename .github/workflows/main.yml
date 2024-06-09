@@ -79,8 +79,8 @@ jobs:
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             cd MC-Calib/python_utils
-            ./format
-            ./test
+            ./format.sh
+            ./test.sh
   
 
   unit-tests-with-sanitizers:
