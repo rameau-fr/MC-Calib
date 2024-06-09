@@ -69,7 +69,7 @@ if __name__ == "__main__":
         "-d",
         type=Path,
         help="Path to folder containing calibrated_cameras_data.yml,"
-        "calibrated_objects_data, and calibrated_objects_pose_data",
+        "calibrated_objects_data.yml, and calibrated_objects_pose_data.yml",
     )
 
     args = parser.parse_args()
