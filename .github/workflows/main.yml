@@ -188,7 +188,7 @@ jobs:
         with:
           name: results_blender_sequences
           path: |
-            MC-Calib/data/Blender_Images/Results_Blender_Sequences
+            data/Blender_Images/Results_Blender_Sequences
 
 
   code-coverage-testing:
