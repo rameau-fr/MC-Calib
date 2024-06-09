@@ -184,15 +184,15 @@ jobs:
           mkdir Results_Blender_Sequences/Scenario_5 && cp -r Scenario_5/Results Results_Blender_Sequences/Scenario_5
           echo "ls Results_Blender_Sequences"
           ls Results_Blender_Sequences
-          echo "pwd"
-          pwd
+          echo "ls Results_Blender_Sequences/Scenario_1"
+          ls Results_Blender_Sequences/Scenario_1
 
       - name: Archive results artifacts
         uses: actions/upload-artifact@v4
         with:
           name: results_blender_sequences
           path: |
-            data/Blender_Images/Results_Blender_Sequences
+            ${{ github.workspace }}/data/Blender_Images/Results_Blender_Sequences
 
 
   # code-coverage-testing:
