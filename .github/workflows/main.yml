@@ -64,23 +64,6 @@ jobs:
             mkdir MC-Calib/build && cd MC-Calib/build
             cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
             run-clang-tidy
-
-
-  python_utils_linters:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Run python linters
-        uses: addnab/docker-run-action@v3
-        with:
-          image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
-          run: |
-            cd MC-Calib/python_utils
-            ./format.sh
-            ./test.sh
   
 
   unit-tests-with-sanitizers:
@@ -239,3 +222,41 @@ jobs:
           artifact-name: code-coverage-report-with-github-actions
           github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true
+
+
+  python-utils-linters:
+    runs-on: ubuntu-latest
+    needs:
+      - unit-tests-in-release-mode
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run python linters
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-dev:latest
+          options: -v ${{ github.workspace }}:/home/MC-Calib
+          run: |
+            cd MC-Calib/python_utils
+            ./format.sh
+            ./test.sh
+
+
+  python-utils:
+    runs-on: ubuntu-latest
+    needs:
+      - python-utils-linters
+      - unit-tests-in-release-mode
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run python linters
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-dev:latest
+          options: -v ${{ github.workspace }}:/home/MC-Calib
+          run: |
+            cd MC-Calib/python_utils
+            echo "Running python utils"
