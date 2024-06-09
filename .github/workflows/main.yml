@@ -186,13 +186,14 @@ jobs:
           ls Results_Blender_Sequences
           echo "ls Results_Blender_Sequences/Scenario_1"
           ls Results_Blender_Sequences/Scenario_1
+          echo "ls Results_Blender_Sequences/Scenario_1/Results"
+          ls Results_Blender_Sequences/Scenario_1/Results
 
       - name: Archive results artifacts
         uses: actions/upload-artifact@v4
         with:
           name: results_blender_sequences
-          path: |
-            ${{ github.workspace }}/data/Blender_Images/Results_Blender_Sequences
+          path: ${{ github.workspace }}/data/Blender_Images/Results_Blender_Sequences
 
 
   # code-coverage-testing:
