@@ -144,10 +144,10 @@ jobs:
 
   unit-tests-in-release-mode:
     runs-on: ubuntu-latest
-    needs:
-      - clang-format-lint
-      - cppcheck
-      - clang-tidy
+    # needs:
+    #   - clang-format-lint
+    #   - cppcheck
+    #   - clang-tidy
     steps:
       - name: Checkout
         uses: actions/checkout@v2
