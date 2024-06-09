@@ -124,6 +124,12 @@ Documentation is available [online](https://codedocs.xyz/rameau-fr/MC-Calib/). T
 	./apps/calibrate/calibrate ../configs/calib_param.yml
 	```
 
+8. **Run post-calibration analysis**
+
+	```bash
+	python3 python_utils/post_calibration_analysis.py -d save_path_from_calib_param.yml
+	```
+
 ## Calibration file
 
 For multiple camera calibration configuration examples see `configs/*.yml`.  For easier start, just duplicate the most relevant setup and fill with details.
