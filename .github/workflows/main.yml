@@ -65,7 +65,24 @@ jobs:
             cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
             run-clang-tidy
 
+
+  python_utils_linters:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run python linters
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-dev:latest
+          options: -v ${{ github.workspace }}:/home/MC-Calib
+          run: |
+            cd MC-Calib/python_utils
+            ./format
+            ./test
   
+
   unit-tests-with-sanitizers:
     if: ${{ false }}  # TODO: disable for now until understand how to suppress leaks from external libraries like OpenCV
     runs-on: ubuntu-latest
