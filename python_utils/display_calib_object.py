@@ -5,7 +5,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-from utils import axis_equal_3d
+from utils import prepare_figure
 
 
 def display_calib_object(calib_object_data_path: Path) -> None:
@@ -24,13 +24,7 @@ def display_calib_object(calib_object_data_path: Path) -> None:
         color = np.random.rand(3)  # random color
         ax.scatter(pts_3d[0, :], pts_3d[1, :], pts_3d[2, :], c=color.reshape(1, -1))
 
-    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-    ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-    axis_equal_3d(ax)
-    ax.set_xlabel("x (cm)", fontsize=20)
-    ax.set_ylabel("y (cm)", fontsize=20)
-    ax.set_zlabel("z (cm)", fontsize=20)
+    prepare_figure(ax)
     plt.show()
 
     plt.savefig(calib_object_data_path.parent / "calibrated_object.png")

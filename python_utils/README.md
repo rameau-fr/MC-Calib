@@ -10,11 +10,19 @@ RUN pip install -r requirements_prod.txt
 ```
 
 ```bash
-python3 compute_pose_error_vs_gt.py
+python3 compute_pose_error_vs_gt.py -d /home/MC-Calib/data/Blender_Images/Scenario_1/Results/calibrated_cameras_data.yml -g /home/MC-Calib/data/Blender_Images/Scenario_1/GroundTruth.yml
+python3 compute_pose_error_vs_gt.py -d /home/MC-Calib/data/Blender_Images/Scenario_2/Results/calibrated_cameras_data.yml -g /home/MC-Calib/data/Blender_Images/Scenario_2/GroundTruth.yml
+python3 compute_pose_error_vs_gt.py -d /home/MC-Calib/data/Blender_Images/Scenario_3/Results/calibrated_cameras_data.yml -g /home/MC-Calib/data/Blender_Images/Scenario_3/GroundTruth.yml
+python3 compute_pose_error_vs_gt.py -d /home/MC-Calib/data/Blender_Images/Scenario_4/Results/calibrated_cameras_data.yml -g /home/MC-Calib/data/Blender_Images/Scenario_4/GroundTruth.yml
+python3 compute_pose_error_vs_gt.py -d /home/MC-Calib/data/Blender_Images/Scenario_5/Results/calibrated_cameras_data.yml -g /home/MC-Calib/data/Blender_Images/Scenario_5/GroundTruth.yml
 ```
 
 ```bash
-python3 display_cam_obj_pose.py
+python3 display_cam_obj_pose.py -d /home/MC-Calib/data/Blender_Images/Scenario_1/Results
+python3 display_cam_obj_pose.py -d /home/MC-Calib/data/Blender_Images/Scenario_2/Results
+python3 display_cam_obj_pose.py -d /home/MC-Calib/data/Blender_Images/Scenario_3/Results
+python3 display_cam_obj_pose.py -d /home/MC-Calib/data/Blender_Images/Scenario_4/Results
+python3 display_cam_obj_pose.py -d /home/MC-Calib/data/Blender_Images/Scenario_5/Results
 ```
 
 ```bash

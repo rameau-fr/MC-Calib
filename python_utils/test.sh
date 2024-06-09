@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILES_TO_FORMAT="display_calib_cameras.py" #"*.py"
+FILES_TO_FORMAT="*.py"
 
 isort $FILES_TO_FORMAT --check-only
 black $FILES_TO_FORMAT --check

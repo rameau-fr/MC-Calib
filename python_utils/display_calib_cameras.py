@@ -7,10 +7,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.axes import Axes
 
-from utils import axis_equal_3d
+from utils import prepare_figure
 
 
-def plot_camera(ax: Axes, coords: List[np.ndarray], cam_color: List[float], cam_edge: int) -> None:
+def plot_camera(
+    ax: Axes, coords: List[np.ndarray], cam_color: List[float], cam_edge: float
+) -> None:
     assert len(coords) == 16
 
     x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16 = coords
@@ -187,8 +189,8 @@ def add_camera_to_subplot(
     ax: Axes,
     cam_rot: np.ndarray,
     cam_trans: np.ndarray,
-    cam_size: int = 3,
-    cam_edge: int = 2,
+    cam_size: float,
+    cam_edge: float,
     cam_color: Optional[List[float]] = None,
 ) -> None:
     # CameraSize: half of the camera body length
@@ -258,16 +260,10 @@ def display_calib_cameras(calib_cameras_data_path: Path) -> None:
         cam_pose: np.ndarray = fs.getNode(cam_name).getNode("camera_pose_matrix").mat()
         cam_trans: np.ndarray = np.asarray([cam_pose[0:3, 3]]).T
         cam_rot: np.ndarray = cam_pose[0:3, 0:3]
-        add_camera_to_subplot(ax, cam_rot, cam_trans)
+        add_camera_to_subplot(ax, cam_rot, cam_trans, cam_size=0.5, cam_edge=2)
         print(cam_pose)
 
-    ax.xaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-    ax.yaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-    ax.zaxis.set_pane_color((1.0, 1.0, 1.0, 1.0))
-    axis_equal_3d(ax)
-    ax.set_xlabel("x (cm)", fontsize=20)
-    ax.set_ylabel("y (cm)", fontsize=20)
-    ax.set_zlabel("z (cm)", fontsize=20)
+    prepare_figure(ax)
     plt.show()
 
     plt.savefig(calib_cameras_data_path.parent / "cameras_calib.png")
