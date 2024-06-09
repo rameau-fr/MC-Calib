@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt update && apt install -y --no-install-recommends apt-utils && \
 	apt upgrade -y && apt autoremove -y && \
 	apt install -y build-essential cmake && \
+	apt install -y python-is-python3 python3-pip && \
 	rm -rf /var/lib/apt/lists/*
 
 # suppress GTK warnings about accessibility because there's no dbus
@@ -36,6 +37,11 @@ RUN apt update && apt install -y git && \
 	cd /home && rm -rf ceres-solver" && \
 	rm -rf /var/lib/apt/lists/*
 
+# Install python requirements for python_utils scripts
+RUN --mount=type=bind,source=python_utils/requirements_prod.txt,target=/tmp/requirements.txt \
+    pip install --requirement /tmp/requirements.txt && \
+	rm -rf /var/lib/apt/lists/*
+
 FROM prod as dev
 
 RUN apt update && apt install -y python3-opencv && \
@@ -57,4 +63,9 @@ RUN apt update && apt install -y flex bison && \
 #     For development		    #
 #------------------------------	#
 RUN apt update && apt install -y cppcheck clang-tidy valgrind lcov && \
+	rm -rf /var/lib/apt/lists/*
+
+# Install python requirements for python_utils scripts
+RUN --mount=type=bind,source=python_utils/requirements_dev.txt,target=/tmp/requirements.txt \
+    pip install --requirement /tmp/requirements.txt && \
 	rm -rf /var/lib/apt/lists/*
