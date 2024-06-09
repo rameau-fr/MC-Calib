@@ -173,6 +173,23 @@ jobs:
             make -j4
             ./tests/boost_tests_run
 
+      - name: Collect results
+        run: |
+          cd MC-Calib/data/Blender_Images
+          mkdir Results_Blender_Sequences
+          mkdir Results_Blender_Sequences/Scenario_1 && mv Scenario_1/Results Results_Blender_Sequences/Scenario_1
+          mkdir Results_Blender_Sequences/Scenario_2 && mv Scenario_2/Results Results_Blender_Sequences/Scenario_2
+          mkdir Results_Blender_Sequences/Scenario_3 && mv Scenario_3/Results Results_Blender_Sequences/Scenario_3
+          mkdir Results_Blender_Sequences/Scenario_4 && mv Scenario_4/Results Results_Blender_Sequences/Scenario_4
+          mkdir Results_Blender_Sequences/Scenario_5 && mv Scenario_5/Results Results_Blender_Sequences/Scenario_5
+
+      - name: Archive results artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: results_blender_sequences
+          path: |
+            MC-Calib/data/Blender_Images/Results_Blender_Sequences
+
 
   code-coverage-testing:
     runs-on: ubuntu-latest

@@ -32,7 +32,6 @@ There are several ways to get the environment ready. Choose any of them:
                   --volume="${PWD}:/home/MC-Calib" \
                   --volume="PATH_TO_DATA:/home/MC-Calib/data" \
                   bailool/mc-calib-prod
-      #xhost -local:root  # resetting permissions
       ```
       
 2. It is also possible to build the docker environment manually (see [instructions](/docs/Docker.md))
