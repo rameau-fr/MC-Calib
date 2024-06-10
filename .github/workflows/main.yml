@@ -166,7 +166,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: bailool/mc-calib-prod:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
+          options: -v ${{ github.workspace }}:/home/MC-Calib:rw
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
             cmake -DCMAKE_BUILD_TYPE=Release ..
