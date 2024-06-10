@@ -175,7 +175,7 @@ jobs:
 
       - name: Collect results
         run: |
-          cd data/Blender_Images
+          cd ${{ github.workspace }}/data/Blender_Images
           mkdir Results_Blender_Sequences
           mkdir Results_Blender_Sequences/Scenario_1 && cp -r Scenario_1/Results Results_Blender_Sequences/Scenario_1
           mkdir Results_Blender_Sequences/Scenario_2 && cp -r Scenario_2/Results Results_Blender_Sequences/Scenario_2
