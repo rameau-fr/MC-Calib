@@ -311,5 +311,7 @@ jobs:
           run: |
             echo "ls MC-Calib: artifact should be inside this"
             ls MC-Calib
+            echo "ls MC-Calib/data"
+            ls MC-Calib/data
             cd MC-Calib/python_utils
-            echo "Running python utils"
+            python3 post_calibration_analysis.py -d /home/MC-Calib/data/Blender_Images/Scenario_1/Results/ /home/MC-Calib/data/Blender_Images/Scenario_2/Results/ /home/MC-Calib/data/Blender_Images/Scenario_3/Results/ /home/MC-Calib/data/Blender_Images/Scenario_4/Results/ /home/MC-Calib/data/Blender_Images/Scenario_5/Results/
