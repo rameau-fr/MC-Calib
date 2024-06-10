@@ -313,5 +313,8 @@ jobs:
             ls MC-Calib
             echo "ls MC-Calib/data"
             ls MC-Calib/data
+            echo "ls MC-Calib/data/Scenario_1"
+            MC-Calib/data/Scenario_1
+
             cd MC-Calib/python_utils
-            python3 post_calibration_analysis.py -d /home/MC-Calib/data/Blender_Images/Scenario_1/Results/ /home/MC-Calib/data/Blender_Images/Scenario_2/Results/ /home/MC-Calib/data/Blender_Images/Scenario_3/Results/ /home/MC-Calib/data/Blender_Images/Scenario_4/Results/ /home/MC-Calib/data/Blender_Images/Scenario_5/Results/
+            python3 post_calibration_analysis.py -d /home/MC-Calib/data/Scenario_1/Results/ /home/MC-Calib/data/Scenario_2/Results/ /home/MC-Calib/data/Scenario_3/Results/ /home/MC-Calib/data/Scenario_4/Results/ /home/MC-Calib/data/Scenario_5/Results/
