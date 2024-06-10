@@ -49,6 +49,13 @@ void calibrate(McCalib::Calibration &Calib) {
   if (Calib.fix_intrinsic_ == 0)
     Calib.refineAllCameraGroupAndObjectsAndIntrinsic();
   Calib.reproErrorAllCamGroup();
+
+  // save calibration results (needed for Gitlab's CI jobs)
+  Calib.saveCamerasParams();
+  Calib.save3DObj();
+  Calib.save3DObjPose();
+  Calib.saveReprojectionErrorToFile();
+  Calib.saveDetectedKeypoints();
 }
 
 void calibrateAndCheckGt(std::string config_path, std::string gt_path) {

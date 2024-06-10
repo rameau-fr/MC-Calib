@@ -297,11 +297,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Download calibration results
+        uses: actions/download-artifact@v4
+        with:
+          name: results_blender_sequences
+          path: ${{ github.workspace }}/data
+
       - name: Run python linters
         uses: addnab/docker-run-action@v3
         with:
           image: bailool/mc-calib-dev:latest
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
+            echo "ls MC-Calib: artifact should be inside this"
+            ls MC-Calib
             cd MC-Calib/python_utils
             echo "Running python utils"
