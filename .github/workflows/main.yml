@@ -306,15 +306,21 @@ jobs:
       - name: Run python linters
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-dev:latest
-          options: -v ${{ github.workspace }}:/home/MC-Calib
+          image: bailool/mc-calib-prod:latest
+          options: -v ${{ github.workspace }}:/home/MC-Calib:rw
           run: |
             echo "ls MC-Calib: artifact should be inside this"
             ls MC-Calib
             echo "ls MC-Calib/data"
             ls MC-Calib/data
             echo "ls MC-Calib/data/Scenario_1"
-            MC-Calib/data/Scenario_1
+            ls MC-Calib/data/Scenario_1
 
             cd MC-Calib/python_utils
             python3 post_calibration_analysis.py -d /home/MC-Calib/data/Scenario_1/Results/ /home/MC-Calib/data/Scenario_2/Results/ /home/MC-Calib/data/Scenario_3/Results/ /home/MC-Calib/data/Scenario_4/Results/ /home/MC-Calib/data/Scenario_5/Results/
+
+      - name: Archive results artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: results_blender_sequences_with_python_utils
+          path: ${{ github.workspace }}/data
