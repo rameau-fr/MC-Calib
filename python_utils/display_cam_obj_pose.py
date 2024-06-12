@@ -54,8 +54,8 @@ def display_cam_obj_pose(calib_data: Path) -> None:
 
     axis_equal_3d(ax)
     plt.show()
-
     plt.savefig(calib_data / "cam_obj_pose.png")
+    plt.close()
 
 
 if __name__ == "__main__":

@@ -191,8 +191,9 @@ def compute_pose_error_vs_gt(
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
-    plt.savefig(calibrated_cameras_data.parent / "pose_error_vs_gt.png")
     plt.show()
+    plt.savefig(calibrated_cameras_data.parent / "pose_error_vs_gt.png")
+    plt.close()
 
 
 if __name__ == "__main__":

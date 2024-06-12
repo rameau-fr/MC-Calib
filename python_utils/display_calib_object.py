@@ -26,8 +26,8 @@ def display_calib_object(calib_object_data_path: Path) -> None:
 
     prepare_figure(ax)
     plt.show()
-
     plt.savefig(calib_object_data_path.parent / "calibrated_object.png")
+    plt.close()
 
 
 if __name__ == "__main__":

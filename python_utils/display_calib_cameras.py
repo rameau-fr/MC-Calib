@@ -265,8 +265,8 @@ def display_calib_cameras(calib_cameras_data_path: Path) -> None:
 
     prepare_figure(ax)
     plt.show()
-
     plt.savefig(calib_cameras_data_path.parent / "cameras_calib.png")
+    plt.close()
 
 
 if __name__ == "__main__":

@@ -34,8 +34,8 @@ def visualize_and_save_results(
     plt.ylabel("Mean reprojection error")
     plt.title("Mean error per frame")
     plt.show()
-
     plt.savefig(reprojection_error_data_path / "mean_reprojection_error_per_frame.png")
+    plt.close()
 
 
 def compute_error_statistic(reprojection_error_data_path: Path) -> None:
