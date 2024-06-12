@@ -117,7 +117,16 @@ Then, run the valgrind test:
     ./tests/boost_tests_run && make coverage
 
 
-10. Create pull request.
+10. Test python_utils scripts (if applicable)
+
+.. code-block:: bash
+
+    cd python_utils
+    ./format.sh
+    ./test.sh
+
+
+11. Create pull request.
 
 
 Naming convention:
