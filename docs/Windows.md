@@ -33,14 +33,14 @@ docker pull bailool/mc-calib-dev # development environment
 ```
 
 4. **Running Pulled Image using Docker**  
-In order to avoid running the image manually every time, we can create a `*.ps1` file containing the necessary docker run commands (or enter the commands manually in Windows Powershell or CMD). Below are the commands necessary.  
+In order to avoid running the image manually every time, we can create a `*.ps1` file containing the necessary docker run commands (or enter the commands manually in Windows Powershell or CMD). Below are the commands necessary. Set `PATH_TO_REPO_ROOT` and `PATH_TO_DATA` appropriately.
 
 
 ```bash
 Docker run `
     -ti --rm `
-    --volume=”$(PWD):/home/MC-Calib” `
-    --volume=”PATH_TO_DATA:/home/MC-Calib/data” `
+    --volume=”$PATH_TO_REPO_ROOT:/home/MC-Calib” `
+    --volume=”$PATH_TO_DATA:/home/MC-Calib/data” `
     bailool/mc-calib-prod
 ```
 

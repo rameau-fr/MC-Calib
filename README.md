@@ -24,13 +24,13 @@ There are several ways to get the environment ready. Choose any of them:
      docker pull bailool/mc-calib-dev  # development environment
      ```
 
-   - Run pulled image:
+   - Run pulled image (set `PATH_TO_REPO_ROOT` and `PATH_TO_DATA` appropriately):
    
       ```bash
       docker run \
                   -ti --rm \
-                  --volume="${PWD}:/home/MC-Calib" \
-                  --volume="PATH_TO_DATA:/home/MC-Calib/data" \
+                  --volume="$PATH_TO_REPO_ROOT:/home/MC-Calib" \
+                  --volume="$PATH_TO_DATA:/home/MC-Calib/data" \
                   bailool/mc-calib-prod
       ```
       
