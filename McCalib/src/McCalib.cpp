@@ -1885,11 +1885,11 @@ void Calibration::refineAllCameraGroupAndObjects() {
  */
 void Calibration::saveReprojectionImages(const int cam_id) {
   // Prepare the path to save the images
-  std::string path_root = save_path_ + "Reprojection/";
+  const std::string path_root = save_path_ + "Reprojection/";
   std::stringstream ss;
   ss << std::setw(3) << std::setfill('0') << cam_id;
-  std::string cam_folder = ss.str();
-  std::string path_save = path_root + cam_folder + "/";
+  const std::string cam_folder = ss.str();
+  const std::string path_save = path_root + cam_folder + "/";
 
   // check if the file exist and create it if it does not
   if (!boost::filesystem::exists(path_root) && path_root.length() > 0) {
@@ -1904,7 +1904,7 @@ void Calibration::saveReprojectionImages(const int cam_id) {
   // Iterate through the frames where this camera has visibility
   for (const auto &it_frame : frames_) {
     // Open the image
-    std::string im_path = it_frame.second->frame_path_[cam_id];
+    const std::string im_path = it_frame.second->frame_path_[cam_id];
     cv::Mat image = cv::imread(im_path);
 
     // Iterate through the camera group observations
@@ -1974,10 +1974,9 @@ void Calibration::saveReprojectionImages(const int cam_id) {
       // cv::waitKey(1);
 
       // Save image
-      std::stringstream ss1;
-      ss1 << std::setw(6) << std::setfill('0') << it_frame.second->frame_idx_;
-      std::string image_name = ss1.str() + ".jpg";
-      cv::imwrite(path_save + image_name, image);
+      const boost::filesystem::path im_path_boost(im_path);
+      const std::string filename = im_path_boost.filename().string();
+      cv::imwrite(path_save + filename, image);
     }
   }
 }
@@ -1997,11 +1996,11 @@ void Calibration::saveReprojectionImagesAllCam() {
  */
 void Calibration::saveDetectionImages(const int cam_id) {
   // Prepare the path to save the images
-  std::string path_root = save_path_ + "Detection/";
+  const std::string path_root = save_path_ + "Detection/";
   std::stringstream ss;
   ss << std::setw(3) << std::setfill('0') << cam_id;
-  std::string cam_folder = ss.str();
-  std::string path_save = path_root + cam_folder + "/";
+  const std::string cam_folder = ss.str();
+  const std::string path_save = path_root + cam_folder + "/";
 
   // check if the file exist and create it if it does not
   if (!boost::filesystem::exists(path_root) && path_root.length() > 0) {
@@ -2053,10 +2052,9 @@ void Calibration::saveDetectionImages(const int cam_id) {
       // cv::waitKey(1);
 
       // Save image
-      std::stringstream ss1;
-      ss1 << std::setw(6) << std::setfill('0') << it_frame.second->frame_idx_;
-      std::string image_name = ss1.str() + ".jpg";
-      cv::imwrite(path_save + image_name, image);
+      const boost::filesystem::path im_path_boost(im_path);
+      const std::string filename = im_path_boost.filename().string();
+      cv::imwrite(path_save + filename, image);
     }
   }
 }
