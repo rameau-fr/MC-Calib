@@ -2015,7 +2015,7 @@ void Calibration::saveDetectionImages(const int cam_id) {
   // Iterate through the frames where this camera has visibility
   for (const auto &it_frame : frames_) {
     // Open the image
-    std::string im_path = it_frame.second->frame_path_[cam_id];
+    const std::string im_path = it_frame.second->frame_path_[cam_id];
     cv::Mat image = cv::imread(im_path);
 
     // Iterate through the camera group observations
@@ -2243,7 +2243,8 @@ void Calibration::saveReprojectionErrorToFile() {
   std::string save_reprojection_error =
       save_path_ + "reprojection_error_data.yml";
   cv::FileStorage fs(save_reprojection_error, cv::FileStorage::WRITE);
-  cv::Mat frame_list;
+  // cv::Mat frame_list;
+  std::vector<std::string> frame_list;
   int nb_cam_group = cam_group_.size();
   fs << "nb_camera_group" << nb_cam_group;
 
@@ -2257,9 +2258,26 @@ void Calibration::saveReprojectionErrorToFile() {
       std::shared_ptr<Frame> it_frame_ptr = it_frame.second.lock();
       if (it_frame_ptr) {
         cv::Mat camera_list;
-        fs << "frame_" + std::to_string(it_frame_ptr->frame_idx_);
+        // std::cout << "frame_path_.size() == " << it_frame_ptr->frame_path_.size() << std::endl;
+        // for (const auto frame_path_it : it_frame_ptr->frame_path_)
+        // {
+        //   std::cout << "frame_path: " << frame_path_it.second << std::endl;
+        //   const boost::filesystem::path im_path_boost(frame_path_it.second);
+        //   const std::string filename = im_path_boost.stem().string();
+        //   std::cout << "filename: " << filename << std::endl;
+        // }
+        // assert(it_frame_ptr->frame_path_.size() == 1u);
+        
+        const std::string frame_path = it_frame_ptr->frame_path_.begin()->second;
+        const boost::filesystem::path frame_path_boost(frame_path);
+        const std::string frame_name = frame_path_boost.stem().string();
+        fs << "frame_" + frame_name;
+
+        // fs << "frame_" + std::to_string(it_frame_ptr->frame_idx_);
         fs << "{";
-        frame_list.push_back(it_frame_ptr->frame_idx_);
+        frame_list.push_back(frame_name);
+
+        // frame_list.push_back(it_frame_ptr->frame_idx_);
 
         // iterate through cameraGroupObs
         std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
