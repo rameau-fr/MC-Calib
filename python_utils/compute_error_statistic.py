@@ -47,6 +47,15 @@ def compute_error_statistic(reprojection_error_data_path: Path) -> None:
     camera_group_id = "camera_group_" + str(0)
     # frame_list = fs.getNode(camera_group_id).getNode("frame_list").mat()
     # frame_list = fs.getNode(camera_group_id).getNode("frame_list")
+
+    # frame_list[np.argmax(list_mean_error_frame)]
+    # frame_list[np.argmax(list_mean_error_frame.remove(np.max(list_mean_error_frame)))]
+
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-1])]
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-2])]
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-3])]
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-4])]
+
     frame_list_node = fs.getNode(camera_group_id).getNode("frame_list")
     frame_list: List[str] = []
     for frame_idx in range(frame_list_node.size()):
