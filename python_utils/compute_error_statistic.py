@@ -45,12 +45,26 @@ def compute_error_statistic(reprojection_error_data_path: Path) -> None:
     verify_num_camera_groups(fs)
 
     camera_group_id = "camera_group_" + str(0)
-    frame_list = fs.getNode(camera_group_id).getNode("frame_list").mat()
+    # frame_list = fs.getNode(camera_group_id).getNode("frame_list").mat()
+    # frame_list = fs.getNode(camera_group_id).getNode("frame_list")
+
+    # frame_list[np.argmax(list_mean_error_frame)]
+    # frame_list[np.argmax(list_mean_error_frame.remove(np.max(list_mean_error_frame)))]
+
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-1])]
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-2])]
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-3])]
+    # frame_list[list_mean_error_frame.index(sorted(list_mean_error_frame)[-4])]
+
+    frame_list_node = fs.getNode(camera_group_id).getNode("frame_list")
+    frame_list: List[str] = []
+    for frame_idx in range(frame_list_node.size()):
+        frame_list.append(frame_list_node.at(frame_idx).string())
     list_mean_error: List[float] = []
     list_color = []
     list_mean_error_frame: List[float] = []
-    for i in range(frame_list.shape[0]):
-        frame_id = "frame_" + str(frame_list[i][0])
+    for frame_name in frame_list:
+        frame_id = f"frame_{frame_name}"
         camera_list = fs.getNode(camera_group_id).getNode(frame_id).getNode("camera_list").mat()
         errors_current_frame = []
 
@@ -73,7 +87,8 @@ def compute_error_statistic(reprojection_error_data_path: Path) -> None:
         for _ in range(5):
             list_mean_error.append(0.0)
             list_color.append(camera_color[camera_list[0][0]])
-
+    import pdb
+    pdb.set_trace()
     visualize_and_save_results(list_mean_error_frame, reprojection_error_data_path.parent)
 
 
