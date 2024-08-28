@@ -80,7 +80,7 @@ void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
     camera_pose_matrix_gt = transform * camera_pose_matrix_gt * transform;
 
     double fx_gt = camera_matrix_gt.at<double>(0, 0);
-    double fy_gt = camera_matrix_gt.at<double>(1, 0);
+    double fy_gt = camera_matrix_gt.at<double>(1, 1);
     double cx_gt = camera_matrix_gt.at<double>(0, 2);
     double cy_gt = camera_matrix_gt.at<double>(1, 2);
     cv::Mat rot_gt(3, 3, CV_64F);
@@ -96,7 +96,7 @@ void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
         Calib.cam_group_[camera_group_idx]->getCameraPoseMat(camera_idx - 1);
 
     double fx_pred = camera_matrix_pred.at<double>(0, 0);
-    double fy_pred = camera_matrix_pred.at<double>(1, 0);
+    double fy_pred = camera_matrix_pred.at<double>(1, 1);
     double cx_pred = camera_matrix_pred.at<double>(0, 2);
     double cy_pred = camera_matrix_pred.at<double>(1, 2);
     cv::Mat rot_pred(3, 3, CV_64F);
