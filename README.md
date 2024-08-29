@@ -36,11 +36,11 @@ There are several ways to get the environment ready. Choose any of them:
       
 2. It is also possible to build the docker environment manually (see [instructions](/docs/Docker.md))
 
-3. Alternatively, every dependency can be installed independently without docker:
+3. Alternatively, every dependency can be installed manually without docker:
 
-   - [Install](https://docs.opencv.org/4.5.2/d7/d9f/tutorial_linux_install.html) OpenCV 4.5.x. Either instal system-wide with `sudo make install` or link to your `build` in `CmakeLists.txt`.
+   - [Install](https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html) OpenCV
 
-   - Follow [installation guidelines](http://ceres-solver.org/installation.html#linux) to install Ceres.
+   - Follow [installation guidelines](http://ceres-solver.org/installation.html#linux) to install Ceres
 
    - Install boost:
 
