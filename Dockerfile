@@ -21,7 +21,8 @@ RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.10.0.zip && \
 	mkdir -p build && cd build && \
 	cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.10.0/modules ../opencv-4.10.0 && \
 	cmake --build . --target install && \
-	cd .. && rm opencv.zip && rm opencv_contrib.zip && rm -rf opencv-4.10.0 && rm -rf opencv_contrib-4.10.0 && rm -rf build && \
+	cd /home && rm opencv.zip && rm opencv_contrib.zip && \ 
+	rm -rf opencv-4.10.0 && rm -rf opencv_contrib-4.10.0 && rm -rf build && \
 	rm -rf /var/lib/apt/lists/*
 
 #------------------------------	#
@@ -38,7 +39,7 @@ RUN apt update && apt install -y libgoogle-glog-dev libgflags-dev libatlas-base-
 RUN git clone --branch 20240722.0 --single-branch https://github.com/abseil/abseil-cpp.git && \
 	cd abseil-cpp && mkdir build && cd build && \
 	cmake .. && cmake --build . --target install && \
-	cd .. && rm -rf abseil-cpp && \
+	cd /home && rm -rf abseil-cpp && \
 	rm -rf /var/lib/apt/lists/*
 RUN git clone --branch 2.2.0 --single-branch https://github.com/ceres-solver/ceres-solver.git && \
 	cd ceres-solver && mkdir build && cd build && cmake .. && \
@@ -53,19 +54,16 @@ RUN --mount=type=bind,source=python_utils/requirements_prod.txt,target=/tmp/requ
 
 FROM prod as dev
 
-# RUN apt update && apt install -y python3-opencv && \
-# 	rm -rf /var/lib/apt/lists/*
-
 #------------------------------	#
 #     Doxygen				    #
 #------------------------------	#
 RUN apt update && apt install -y flex bison && \ 
-	/bin/bash -c "git clone https://github.com/doxygen/doxygen.git && \
+	git clone https://github.com/doxygen/doxygen.git && \
 	cd doxygen && mkdir build && cd build &&\
 	cmake -G 'Unix Makefiles' .. && \
 	make && \ 
 	make install && \
-	cd /home && rm -rf doxygen" && \
+	cd /home && rm -rf doxygen && \
 	rm -rf /var/lib/apt/lists/*
 
 #------------------------------	#
