@@ -40,7 +40,7 @@ public:
   std::map<int, std::weak_ptr<Frame>> frames_;
 
   // Charuco board
-  cv::Ptr<cv::aruco::CharucoBoard> charuco_board_; // vector of charuco boards
+  cv::aruco::CharucoBoard charuco_board_;
 
   // Functions
   Board() = delete;

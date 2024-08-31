@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
   }
 
   // Create the charuco
-  const cv::aruco::Dictionary dict = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+  const cv::aruco::Dictionary dict = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
   std::vector<cv::aruco::CharucoBoard> charucoBoards;
   int offset_count = 0;
   for (std::size_t i = 0; i < num_board; i++) {
