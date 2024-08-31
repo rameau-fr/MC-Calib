@@ -117,18 +117,30 @@ Calibration::Calibration(const std::string config_path) {
   std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
   int offset_count = 0;
   for (int i = 0; i <= max_board_idx; i++) {
-    cv::Ptr<cv::aruco::CharucoBoard> charuco = new cv::aruco::CharucoBoard(
-        cv::Size(number_x_square_per_board_[i], number_y_square_per_board_[i]),
-        length_square, length_marker, dict_);
+    if (i == 0)
+    {
+      // If it is the first board then just use the standard idx
+      cv::Ptr<cv::aruco::CharucoBoard> charuco = new cv::aruco::CharucoBoard(
+          cv::Size(number_x_square_per_board_[i], number_y_square_per_board_[i]),
+          length_square, length_marker, dict_);
 
-    if (i != 0) // If it is the first board then just use the standard idx
+      charuco_boards[i] = charuco;
+    }
+    else
     {
       int id_offset = charuco_boards[i - 1]->getIds().size() + offset_count;
       offset_count = id_offset;
-      // for (int &id : charuco.getIds())
-      //   id += id_offset;
+      const std::size_t num_idxs = charuco_boards[i - 1]->getIds().size();
+      std::vector<int> cur_ids(num_idxs);
+      std::iota(cur_ids.begin(), cur_ids.end(), id_offset);
+
+      cv::Ptr<cv::aruco::CharucoBoard> charuco = new cv::aruco::CharucoBoard(
+          cv::Size(number_x_square_per_board_[i], number_y_square_per_board_[i]),
+          length_square, length_marker, dict_, cur_ids);
+
+      charuco_boards[i] = charuco;
     }
-    charuco_boards[i] = charuco;
+    
   }
 
   // Initialize the 3D boards
