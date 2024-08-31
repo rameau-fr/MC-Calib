@@ -12,6 +12,8 @@
 #include "Frame.hpp"
 #include "Object3DObs.hpp"
 
+namespace McCalib {
+
 /**
  * @class CameraGroup
  *
@@ -63,3 +65,5 @@ public:
   void refineCameraGroupAndObjects(const int nb_iterations);
   void refineCameraGroupAndObjectsAndIntrinsics(const int nb_iterations);
 };
+
+} // namespace McCalib

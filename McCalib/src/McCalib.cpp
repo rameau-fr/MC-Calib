@@ -1,17 +1,17 @@
-#include "opencv2/core/core.hpp"
 #include <iostream>
-#include <opencv2/aruco/charuco.hpp>
-#include <opencv2/opencv.hpp>
 #include <random>
 #include <stdio.h>
+#include <thread>
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/aruco/charuco.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
 
 #include "McCalib.hpp"
 #include "logger.h"
 #include "point_refinement.h"
-
-#include <boost/asio/post.hpp>
-#include <boost/asio/thread_pool.hpp>
-#include <thread>
 
 namespace McCalib {
 
@@ -114,15 +114,16 @@ Calibration::Calibration(const std::string config_path) {
     boards_index.resize(nb_board_);
     std::iota(boards_index.begin(), boards_index.end(), 0);
   }
-  std::map<int, cv::aruco::CharucoBoard> charuco_boards;
+  std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
   int offset_count = 0;
   for (int i = 0; i <= max_board_idx; i++) {
-    const cv::aruco::CharucoBoard charuco = cv::aruco::CharucoBoard(
+    cv::Ptr<cv::aruco::CharucoBoard> charuco = new cv::aruco::CharucoBoard(
         cv::Size(number_x_square_per_board_[i], number_y_square_per_board_[i]),
         length_square, length_marker, dict_);
+
     if (i != 0) // If it is the first board then just use the standard idx
     {
-      int id_offset = charuco_boards[i - 1].getIds().size() + offset_count;
+      int id_offset = charuco_boards[i - 1]->getIds().size() + offset_count;
       offset_count = id_offset;
       // for (int &id : charuco.getIds())
       //   id += id_offset;
@@ -304,14 +305,12 @@ void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
   charuco_params_.adaptiveThreshConstant = 1;
 
   for (std::size_t i = 0; i < nb_board_; i++) {    
-    cv::aruco::ArucoDetector detector(boards_3d_[i]->charuco_board_.getDictionary(), charuco_params_);
+    cv::aruco::ArucoDetector detector(boards_3d_[i]->charuco_board_->getDictionary(), charuco_params_);
     detector.detectMarkers(image, marker_corners[i], marker_idx[i]);
-    
-    // cv::aruco::detectMarkers(image, dict, marker_corners[i], marker_idx[i], &charuco_params_);
 
     if (marker_corners[i].size() > 0) {
       cv::aruco::interpolateCornersCharuco(marker_corners[i], marker_idx[i],
-                                           image, &boards_3d_[i]->charuco_board_,
+                                           image, boards_3d_[i]->charuco_board_,
                                            charuco_corners[i], charuco_idx[i]);
     }
 

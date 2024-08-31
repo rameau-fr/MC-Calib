@@ -6,6 +6,8 @@
 
 #include "CameraObs.hpp"
 
+namespace McCalib {
+
 CameraObs::CameraObs(std::shared_ptr<BoardObs> new_board) {
   insertNewBoard(new_board);
 }
@@ -30,3 +32,5 @@ void CameraObs::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
   object_observations_[object_observations_.size()] = new_object;
   object_idx_.push_back(new_object->object_3d_id_);
 }
+
+} // namespace McCalib

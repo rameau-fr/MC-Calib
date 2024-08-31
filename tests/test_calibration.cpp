@@ -80,7 +80,7 @@ void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
     camera_pose_matrix_gt = transform * camera_pose_matrix_gt * transform;
 
     double fx_gt = camera_matrix_gt.at<double>(0, 0);
-    double fy_gt = camera_matrix_gt.at<double>(1, 0);
+    double fy_gt = camera_matrix_gt.at<double>(1, 1);
     double cx_gt = camera_matrix_gt.at<double>(0, 2);
     double cy_gt = camera_matrix_gt.at<double>(1, 2);
     cv::Mat rot_gt(3, 3, CV_64F);
@@ -89,14 +89,14 @@ void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
     tran_gt = camera_pose_matrix_gt(cv::Range(0, 3), cv::Range(3, 4));
 
     // get calibrated values
-    std::shared_ptr<Camera> cur_cam = Calib.cams_[camera_idx - 1];
+    std::shared_ptr<McCalib::Camera> cur_cam = Calib.cams_[camera_idx - 1];
     int camera_group_idx = 0; // specific to the setup with single camera group
     cv::Mat camera_matrix_pred = cur_cam->getCameraMat();
     cv::Mat camera_pose_matrix_pred =
         Calib.cam_group_[camera_group_idx]->getCameraPoseMat(camera_idx - 1);
 
     double fx_pred = camera_matrix_pred.at<double>(0, 0);
-    double fy_pred = camera_matrix_pred.at<double>(1, 0);
+    double fy_pred = camera_matrix_pred.at<double>(1, 1);
     double cx_pred = camera_matrix_pred.at<double>(0, 2);
     double cy_pred = camera_matrix_pred.at<double>(1, 2);
     cv::Mat rot_pred(3, 3, CV_64F);
@@ -123,6 +123,11 @@ BOOST_AUTO_TEST_CASE(CheckBlenderDatasetIsPlacedCorrectly) {
   std::string blender_images_path = "../data/Blender_Images";
   bool is_path_existent = boost::filesystem::exists(blender_images_path);
   BOOST_REQUIRE_EQUAL(is_path_existent, true);
+
+  std::cout << cv::getVersionMajor() << std::endl;
+  std::cout << cv::getVersionMinor() << std::endl;
+  std::cout << cv::getVersionRevision() << std::endl;
+
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario1) {

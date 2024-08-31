@@ -6,6 +6,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class BoardObs;
 class Frame;
 
@@ -40,7 +42,7 @@ public:
   std::map<int, std::weak_ptr<Frame>> frames_;
 
   // Charuco board
-  cv::aruco::CharucoBoard charuco_board_;
+  cv::Ptr<cv::aruco::CharucoBoard> charuco_board_;
 
   // Functions
   Board() = delete;
@@ -49,3 +51,5 @@ public:
   void insertNewBoard(std::shared_ptr<BoardObs> new_board);
   void insertNewFrame(std::shared_ptr<Frame> new_frame);
 };
+
+} //namespace McCalib

@@ -10,6 +10,7 @@
 #include "Frame.hpp"
 #include "logger.h"
 
+namespace McCalib {
 
 /**
  * @brief Initialize Board object
@@ -85,3 +86,5 @@ void Board::insertNewBoard(std::shared_ptr<BoardObs> new_board) {
 void Board::insertNewFrame(std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
 }
+
+} // namespace McCalib

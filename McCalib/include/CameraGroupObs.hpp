@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class CameraGroup;
 
 /**
@@ -50,3 +52,5 @@ public:
   cv::Mat getObjectTransVec(int object_id);
   void updateObjObsPose();
 };
+
+} // namespace McCalib

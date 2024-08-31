@@ -8,6 +8,8 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 // Tools for rotation and projection matrix
 cv::Mat RT2Proj(cv::Mat R, cv::Mat T) {
   cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
@@ -750,3 +752,5 @@ cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
 
   return average_rotation;
 }
+
+} // namespace McCalib

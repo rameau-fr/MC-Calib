@@ -35,7 +35,7 @@ class Calibration final {
 public:
   // Parameters
   unsigned int nb_camera_, nb_board_;
-  const cv::aruco::Dictionary dict_ = cv::aruco::getPredefinedDictionary(
+cv::aruco::Dictionary dict_ = cv::aruco::getPredefinedDictionary(
       cv::aruco::DICT_6X6_1000); // load the dictionary that correspond to the
                                  // charuco board
   cv::aruco::DetectorParameters charuco_params_ = cv::aruco::DetectorParameters(); // parameters for detection

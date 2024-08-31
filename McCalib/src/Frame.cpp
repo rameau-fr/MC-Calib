@@ -6,6 +6,8 @@
 
 #include "Frame.hpp"
 
+namespace McCalib {
+
 Frame::Frame(const int frame_idx, const int cam_idx,
              const std::string frame_path) {
   frame_idx_ = frame_idx;
@@ -54,3 +56,5 @@ void Frame::insertNewCameraGroupObs(
   cam_group_idx_.push_back(camera_group_idx);
   cam_group_observations_[cam_group_observations_.size()] = new_cam_group_obs;
 }
+
+} // namespace McCalib

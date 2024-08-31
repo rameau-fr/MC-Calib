@@ -9,6 +9,8 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 /**
  * @brief initialize the object in the observation (what board is observed)
  *
@@ -285,3 +287,5 @@ float Object3DObs::computeReprojectionError() const {
   return error_object_vec.size() > 0 ? sum_err_object / error_object_vec.size()
                                      : sum_err_object;
 }
+
+} // namespace McCalib
