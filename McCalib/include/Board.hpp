@@ -52,4 +52,4 @@ public:
   void insertNewFrame(std::shared_ptr<Frame> new_frame);
 };
 
-} //namespace McCalib
+} // namespace McCalib

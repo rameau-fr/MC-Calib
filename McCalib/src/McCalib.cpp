@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <thread>
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/aruco/charuco.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
+#include <opencv2/aruco/charuco.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "McCalib.hpp"
 #include "logger.h"
@@ -117,17 +117,15 @@ Calibration::Calibration(const std::string config_path) {
   std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
   int offset_count = 0;
   for (int i = 0; i <= max_board_idx; i++) {
-    if (i == 0)
-    {
+    if (i == 0) {
       // If it is the first board then just use the standard idx
-      cv::Ptr<cv::aruco::CharucoBoard> charuco = new cv::aruco::CharucoBoard(
-          cv::Size(number_x_square_per_board_[i], number_y_square_per_board_[i]),
-          length_square, length_marker, dict_);
+      cv::Ptr<cv::aruco::CharucoBoard> charuco =
+          new cv::aruco::CharucoBoard(cv::Size(number_x_square_per_board_[i],
+                                               number_y_square_per_board_[i]),
+                                      length_square, length_marker, dict_);
 
       charuco_boards[i] = charuco;
-    }
-    else
-    {
+    } else {
       int id_offset = charuco_boards[i - 1]->getIds().size() + offset_count;
       offset_count = id_offset;
       const std::size_t num_idxs = charuco_boards[i - 1]->getIds().size();
@@ -135,12 +133,12 @@ Calibration::Calibration(const std::string config_path) {
       std::iota(cur_ids.begin(), cur_ids.end(), id_offset);
 
       cv::Ptr<cv::aruco::CharucoBoard> charuco = new cv::aruco::CharucoBoard(
-          cv::Size(number_x_square_per_board_[i], number_y_square_per_board_[i]),
+          cv::Size(number_x_square_per_board_[i],
+                   number_y_square_per_board_[i]),
           length_square, length_marker, dict_, cur_ids);
 
       charuco_boards[i] = charuco;
     }
-    
   }
 
   // Initialize the 3D boards
@@ -316,8 +314,9 @@ void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
 
   charuco_params_.adaptiveThreshConstant = 1;
 
-  for (std::size_t i = 0; i < nb_board_; i++) {    
-    cv::aruco::ArucoDetector detector(boards_3d_[i]->charuco_board_->getDictionary(), charuco_params_);
+  for (std::size_t i = 0; i < nb_board_; i++) {
+    cv::aruco::ArucoDetector detector(
+        boards_3d_[i]->charuco_board_->getDictionary(), charuco_params_);
     detector.detectMarkers(image, marker_corners[i], marker_idx[i]);
 
     if (marker_corners[i].size() > 0) {

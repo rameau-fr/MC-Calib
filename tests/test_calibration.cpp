@@ -127,7 +127,6 @@ BOOST_AUTO_TEST_CASE(CheckBlenderDatasetIsPlacedCorrectly) {
   std::cout << cv::getVersionMajor() << std::endl;
   std::cout << cv::getVersionMinor() << std::endl;
   std::cout << cv::getVersionRevision() << std::endl;
-
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario1) {

@@ -63,4 +63,4 @@ public:
   cv::Mat getTransVec() const;
 };
 
-} //namespace McCalib
+} // namespace McCalib

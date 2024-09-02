@@ -1,9 +1,9 @@
 #include "opencv2/core/core.hpp"
+#include <algorithm>
 #include <iostream>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
-#include <algorithm>
 #include <random>
+#include <stdio.h>
 
 #include "geometrytools.hpp"
 #include "logger.h"

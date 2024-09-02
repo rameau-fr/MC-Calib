@@ -9,7 +9,8 @@ double INTRINSICS_TOLERANCE = 1.0; // in percentage
 BOOST_AUTO_TEST_CASE(CheckRotationMatrixToQuaternionConversion1) {
   std::array<double, 9> rot_matrix_data = {1, 0, 0, 0, 1, 0, 0, 0, 1};
   const cv::Mat rot_matrix = cv::Mat(3, 3, CV_64F, rot_matrix_data.data());
-  const cv::Mat quaternion_pred = McCalib::convertRotationMatrixToQuaternion(rot_matrix);
+  const cv::Mat quaternion_pred =
+      McCalib::convertRotationMatrixToQuaternion(rot_matrix);
 
   std::array<double, 4> quaternion_gt_data = {0, 0, 0, 1};
   const cv::Mat quaternion_gt =
@@ -28,7 +29,8 @@ BOOST_AUTO_TEST_CASE(CheckRotationMatrixToQuaternionConversion2) {
                                            0.1998,  0.6000,  -0.8000,
                                            0.3996,  -0.8000, -0.5999};
   const cv::Mat rot_matrix = cv::Mat(3, 3, CV_64F, rot_matrix_data.data());
-  const cv::Mat quaternion_pred = McCalib::convertRotationMatrixToQuaternion(rot_matrix);
+  const cv::Mat quaternion_pred =
+      McCalib::convertRotationMatrixToQuaternion(rot_matrix);
 
   std::array<double, 4> quaternion_gt_data = {0, 0.8944, -0.4472,
                                               -0.2234}; // x y z w
@@ -48,7 +50,8 @@ BOOST_AUTO_TEST_CASE(CheckQuaternionToRotationMatrixConversion) {
                                            -0.2092473}; // x y z w
   const cv::Mat quaternion = cv::Mat(1, 4, CV_64F, quaternion_data.data());
 
-  cv::Mat rot_matrix_pred = McCalib::convertQuaternionToRotationMatrix(quaternion);
+  cv::Mat rot_matrix_pred =
+      McCalib::convertQuaternionToRotationMatrix(quaternion);
 
   std::array<double, 9> rot_matrix_gt_data = {
       -0.7545152, 0.2955056, -0.5859892, 0.6460947, 0.4911810,

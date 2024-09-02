@@ -1,11 +1,11 @@
-#include <iostream>
-#include <stdio.h>
 #include <algorithm>
+#include <iostream>
 #include <random>
+#include <stdio.h>
 
-#include <opencv2/opencv.hpp>
 #include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "Camera.hpp"
 #include "OptimizationCeres.h"

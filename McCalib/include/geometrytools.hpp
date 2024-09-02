@@ -60,4 +60,4 @@ cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
                            std::vector<double> &r3,
                            const bool use_quaternion_averaging = true);
 
-} //namespace McCalib
+} // namespace McCalib

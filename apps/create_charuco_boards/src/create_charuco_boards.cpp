@@ -1,6 +1,6 @@
 #include <iomanip>
-#include <stdio.h>
 #include <numeric>
+#include <stdio.h>
 
 #include "boost/filesystem.hpp"
 #include <opencv2/aruco/charuco.hpp>
@@ -60,21 +60,19 @@ int main(int argc, char *argv[]) {
   }
 
   // Create the charuco
-  const cv::aruco::Dictionary dict = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
+  const cv::aruco::Dictionary dict =
+      cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
   std::vector<cv::aruco::CharucoBoard> charuco_boards;
   int offset_count = 0;
   for (std::size_t i = 0; i < num_board; i++) {
-    if (i == 0)
-    {
+    if (i == 0) {
       // if it is the first board then just use the standard idx
       const cv::aruco::CharucoBoard charuco = cv::aruco::CharucoBoard(
           cv::Size(number_x_square_per_board[i], number_y_square_per_board[i]),
           length_square, length_marker, dict);
 
       charuco_boards.push_back(charuco);
-    }
-    else
-    {
+    } else {
       int id_offset = charuco_boards[i - 1].getIds().size() + offset_count;
       offset_count = id_offset;
 
@@ -88,7 +86,7 @@ int main(int argc, char *argv[]) {
 
       charuco_boards.push_back(charuco);
     }
-    
+
     // create the charuco board
     cv::Mat boardImage;
     charuco_boards[i].generateImage(
