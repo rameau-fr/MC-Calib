@@ -42,7 +42,7 @@ jobs:
       - name: Run cppcheck
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-dev:latest
+          image: bailool/mc-calib-dev:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             cppcheck MC-Calib/McCalib/include
@@ -58,7 +58,7 @@ jobs:
       - name: Run clang-tidy
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-dev:latest
+          image: bailool/mc-calib-dev:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -90,7 +90,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-dev:latest
+          image: bailool/mc-calib-dev:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -122,7 +122,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-dev:latest
+          image: bailool/mc-calib-dev:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -165,7 +165,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-prod:latest
+          image: bailool/mc-calib-prod:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib:rw
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -228,7 +228,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-dev:latest
+          image: bailool/mc-calib-dev:opencv410
           options: -v ${{ github.workspace }}:${{ github.workspace }}
           run: |
             mkdir ${{ github.workspace }}/build && cd ${{ github.workspace }}/build
@@ -266,7 +266,7 @@ jobs:
       - name: Run python linters
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-dev:latest
+          image: bailool/mc-calib-dev:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             cd MC-Calib/python_utils
@@ -292,7 +292,7 @@ jobs:
       - name: Run python utils
         uses: addnab/docker-run-action@v3
         with:
-          image: bailool/mc-calib-prod:latest
+          image: bailool/mc-calib-prod:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib:rw
           run: |
             cd MC-Calib/python_utils

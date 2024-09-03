@@ -20,8 +20,8 @@ There are several ways to get the environment ready. Choose any of them:
    - Pull the image:
 
      ```bash
-     docker pull bailool/mc-calib-prod # production environment
-     docker pull bailool/mc-calib-dev  # development environment
+     docker pull bailool/mc-calib-prod:opencv410 # production environment
+     docker pull bailool/mc-calib-dev:opencv410  # development environment
      ```
 
    - Run pulled image (set `PATH_TO_REPO_ROOT` and `PATH_TO_DATA` appropriately):
