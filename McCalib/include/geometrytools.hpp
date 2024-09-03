@@ -35,11 +35,13 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> &scene_points,
                   const double p = 0.99, bool refine = true);
 std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
                                         cv::Mat rot, cv::Mat trans);
-cv::Mat handeyeCalibration(std::vector<cv::Mat> pose_abs_1,
-                           std::vector<cv::Mat> pose_abs_2);
-cv::Mat handeyeBootstratpTranslationCalibration(
-    unsigned int nb_cluster, unsigned int nb_it,
-    std::vector<cv::Mat> pose_abs_1, std::vector<cv::Mat> pose_abs_2);
+cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
+                           const std::vector<cv::Mat> &pose_abs_2);
+cv::Mat
+handeyeBootstratpTranslationCalibration(const unsigned int nb_cluster,
+                                        const unsigned int nb_it,
+                                        const std::vector<cv::Mat> &pose_abs_1,
+                                        const std::vector<cv::Mat> &pose_abs_2);
 double median(std::vector<double> &v);
 cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
                             const std::vector<cv::Point2f> &image_points,

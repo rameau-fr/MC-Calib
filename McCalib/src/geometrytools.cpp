@@ -357,14 +357,14 @@ std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
  *
 
  */
-cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
-                           const std::vector<cv::Mat> pose_abs_2) {
+cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
+                           const std::vector<cv::Mat> &pose_abs_2) {
 
   // Prepare the poses for handeye calibration
-  const size_t num_poses = pose_abs_1.size();
+  const size_t num_poses = std::min(pose_abs_1.size(), pose_abs_2.size());
   std::vector<cv::Mat> r_cam_group_1(num_poses), t_cam_group_1(num_poses),
       r_cam_group_2(num_poses), t_cam_group_2(num_poses);
-  for (size_t i = 0; i < num_poses; i++) {
+  for (std::size_t i = 0; i < num_poses; i++) {
     // get the poses
     cv::Mat pose_cam_group_1 = pose_abs_1[i].inv();
     cv::Mat pose_cam_group_2 = pose_abs_2[i];
@@ -393,6 +393,27 @@ cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
 }
 
 /**
+ * @brief Prepare the translational component of the cameras to be clustered
+ *
+ */
+cv::Mat getTranslationsForClustering(const std::vector<cv::Mat> &pose_abs_1,
+                                     const std::vector<cv::Mat> &pose_abs_2) {
+  const std::size_t num_poses = std::min(pose_abs_1.size(), pose_abs_2.size());
+
+  cv::Mat position_1_2;
+  for (std::size_t i = 0u; i < num_poses; i++) {
+    cv::Mat trans_1, trans_2, rot_1, rot_2;
+    Proj2RT(pose_abs_1[i], rot_1, trans_1);
+    Proj2RT(pose_abs_2[i], rot_2, trans_2);
+    cv::Mat concat_trans_1_2;
+    cv::hconcat(trans_1.t(), trans_2.t(), concat_trans_1_2);
+    position_1_2.push_back(concat_trans_1_2);
+  }
+  position_1_2.convertTo(position_1_2, CV_32F);
+  return position_1_2;
+}
+
+/**
  * @brief Calibrate 2 cameras with handeye calibration
  *
  * In this function only N pairs of images are used
@@ -403,31 +424,22 @@ cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
  * The mean value of valid poses is returned
  */
 cv::Mat handeyeBootstratpTranslationCalibration(
-    unsigned int nb_cluster, unsigned int nb_it,
-    std::vector<cv::Mat> pose_abs_1, std::vector<cv::Mat> pose_abs_2) {
-  // N clusters but less if less images available
-  nb_cluster =
-      (pose_abs_1.size() < nb_cluster) ? pose_abs_1.size() : nb_cluster;
+    const unsigned int nb_cluster, const unsigned int nb_it,
+    const std::vector<cv::Mat> &pose_abs_1,
+    const std::vector<cv::Mat> &pose_abs_2) {
 
-  // Prepare the translational component of the cameras to be clustered
-  cv::Mat position_1_2; // concatenation of the translation of pose 1 and 2 for
-                        // clustering
-  for (unsigned int i = 0; i < pose_abs_1.size(); i++) {
-    cv::Mat trans_1, trans_2, rot_1, rot_2;
-    Proj2RT(pose_abs_1[i], rot_1, trans_1);
-    Proj2RT(pose_abs_2[i], rot_2, trans_2);
-    cv::Mat concat_trans_1_2;
-    cv::hconcat(trans_1.t(), trans_2.t(), concat_trans_1_2);
-    position_1_2.push_back(concat_trans_1_2);
-  }
-  position_1_2.convertTo(position_1_2, CV_32F);
+  // concat of the translation of pose 1 and 2 for clustering
+  cv::Mat position_1_2 = getTranslationsForClustering(pose_abs_1, pose_abs_2);
 
   // Cluster the observation to select the most diverse poses
+  const unsigned int num_clusters =
+      std::min(nb_cluster, static_cast<unsigned int>(
+                               std::min(pose_abs_1.size(), pose_abs_2.size())));
   cv::Mat labels;
   cv::Mat centers;
   int nb_kmean_iterations = 5;
   std::ignore =
-      cv::kmeans(position_1_2, nb_cluster, labels,
+      cv::kmeans(position_1_2, num_clusters, labels,
                  cv::TermCriteria(
                      cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 0.01),
                  nb_kmean_iterations, cv::KMEANS_PP_CENTERS, centers);
@@ -436,12 +448,11 @@ cv::Mat handeyeBootstratpTranslationCalibration(
   // Iterate n times the
   std::vector<double> r1_he, r2_he, r3_he; // structure to save valid rot
   std::vector<double> t1_he, t2_he, t3_he; // structure to save valid trans
-  unsigned int nb_clust_pick = 6;
+  const unsigned int nb_clust_pick = 6;
   unsigned int nb_success = 0;
   for (unsigned int iter = 0; iter < nb_it; iter++) {
-
     // pick from n of these clusters randomly
-    std::vector<unsigned int> shuffled_ind(nb_cluster);
+    std::vector<unsigned int> shuffled_ind(num_clusters);
     std::iota(shuffled_ind.begin(), shuffled_ind.end(), 0);
     std::random_device rd; // initialize random number generator
     std::mt19937 g(rd());
@@ -463,7 +474,6 @@ cv::Mat handeyeBootstratpTranslationCalibration(
         }
       }
       // randomly select an index in the occurrences of the cluster
-      srand(time(NULL));
       std::random_device rd;
       std::mt19937 gen(rd());
       std::uniform_int_distribution<> dis(0, idx.size() - 1);
