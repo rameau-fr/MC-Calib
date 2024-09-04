@@ -413,6 +413,20 @@ cv::Mat getTranslationsForClustering(const std::vector<cv::Mat> &pose_abs_1,
   return position_1_2;
 }
 
+cv::Mat clusterTranslations(const cv::Mat &position_1_2,
+                            const unsigned int num_clusters) {
+  const unsigned int nb_kmean_iterations = 5;
+  cv::Mat labels;
+  cv::Mat centers;
+  std::ignore =
+      cv::kmeans(position_1_2, num_clusters, labels,
+                 cv::TermCriteria(
+                     cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 0.01),
+                 nb_kmean_iterations, cv::KMEANS_PP_CENTERS, centers);
+  labels.convertTo(labels, CV_32S);
+  return labels;
+}
+
 /**
  * @brief Calibrate 2 cameras with handeye calibration
  *
@@ -435,15 +449,7 @@ cv::Mat handeyeBootstratpTranslationCalibration(
   const unsigned int num_clusters =
       std::min(nb_cluster, static_cast<unsigned int>(
                                std::min(pose_abs_1.size(), pose_abs_2.size())));
-  cv::Mat labels;
-  cv::Mat centers;
-  int nb_kmean_iterations = 5;
-  std::ignore =
-      cv::kmeans(position_1_2, num_clusters, labels,
-                 cv::TermCriteria(
-                     cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 0.01),
-                 nb_kmean_iterations, cv::KMEANS_PP_CENTERS, centers);
-  labels.convertTo(labels, CV_32S);
+  const cv::Mat labels = clusterTranslations(position_1_2, num_clusters);
 
   // Iterate n times the
   std::vector<double> r1_he, r2_he, r3_he; // structure to save valid rot

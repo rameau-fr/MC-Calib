@@ -1466,10 +1466,10 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
   // HANDEYE CALIBRATION
   cv::Mat pose_g1_g2;
   if (he_approach_ == 0) {
-    // Boot strapping technique
+    // Bootstrapping technique
     const unsigned int nb_cluster = 20u;
-    const unsigned int nb_it_he =
-        200u; // Nb of time we apply the handeye calibration
+    // number of iterations of handeye calibration
+    const unsigned int nb_it_he = 200u;
     pose_g1_g2 = handeyeBootstratpTranslationCalibration(
         nb_cluster, nb_it_he, pose_abs_1, pose_abs_2);
   } else {
