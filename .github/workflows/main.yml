@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v2  # required to mount the Github Workspace to a volume
 
       - name: Run clang-format-lint
-        uses: DoozyX/clang-format-lint-action@v0.11
+        uses: DoozyX/clang-format-lint-action@v0.18.1
         with:
           source: '.'
           exclude: './third_party ./external .git'
