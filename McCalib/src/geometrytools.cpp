@@ -472,6 +472,36 @@ selectPoses(const cv::Mat &clusters_lables,
   return selected_poses_idxs;
 }
 
+void preparePosesForHandEyeCalibration(
+    const std::vector<cv::Mat> &pose_abs_1,
+    const std::vector<cv::Mat> &pose_abs_2,
+    const std::vector<unsigned int> &selected_poses_idxs,
+    std::vector<cv::Mat> &r_cam_group_1, std::vector<cv::Mat> &t_cam_group_1,
+    std::vector<cv::Mat> &r_cam_group_2, std::vector<cv::Mat> &t_cam_group_2) {
+  const std::size_t nb_clust_pick = selected_poses_idxs.size();
+  r_cam_group_1.reserve(nb_clust_pick);
+  t_cam_group_1.reserve(nb_clust_pick);
+  r_cam_group_2.reserve(nb_clust_pick);
+  t_cam_group_2.reserve(nb_clust_pick);
+  for (const unsigned int pose_ind_i : selected_poses_idxs) {
+    // get the poses
+    const cv::Mat pose_cam_group_1 = pose_abs_1[pose_ind_i].inv();
+    const cv::Mat pose_cam_group_2 = pose_abs_2[pose_ind_i];
+
+    // save in datastruct
+    cv::Mat r_1, r_2, t_1, t_2;
+    Proj2RT(pose_cam_group_1, r_1, t_1);
+    Proj2RT(pose_cam_group_2, r_2, t_2);
+    cv::Mat r_1_mat, r_2_mat;
+    cv::Rodrigues(r_1, r_1_mat);
+    cv::Rodrigues(r_2, r_2_mat);
+    r_cam_group_1.push_back(r_1_mat);
+    t_cam_group_1.push_back(t_1);
+    r_cam_group_2.push_back(r_2_mat);
+    t_cam_group_2.push_back(t_2);
+  }
+}
+
 /**
  * @brief Calibrate 2 cameras with handeye calibration
  *
@@ -514,34 +544,15 @@ cv::Mat handeyeBootstratpTranslationCalibration(
     // Prepare the poses for handeye calibration
     std::vector<cv::Mat> r_cam_group_1, t_cam_group_1, r_cam_group_2,
         t_cam_group_2;
-    r_cam_group_1.reserve(nb_clust_pick);
-    t_cam_group_1.reserve(nb_clust_pick);
-    r_cam_group_2.reserve(nb_clust_pick);
-    t_cam_group_2.reserve(nb_clust_pick);
-    for (const auto &pose_ind_i : selected_poses_idxs) {
-      // get the poses
-      cv::Mat pose_cam_group_1 = pose_abs_1[pose_ind_i].inv();
-      cv::Mat pose_cam_group_2 = pose_abs_2[pose_ind_i];
-
-      // save in datastruct
-      cv::Mat r_1, r_2, t_1, t_2;
-      Proj2RT(pose_cam_group_1, r_1, t_1);
-      Proj2RT(pose_cam_group_2, r_2, t_2);
-      cv::Mat r_1_mat, r_2_mat;
-      cv::Rodrigues(r_1, r_1_mat);
-      cv::Rodrigues(r_2, r_2_mat);
-      r_cam_group_1.push_back(r_1_mat);
-      t_cam_group_1.push_back(t_1);
-      r_cam_group_2.push_back(r_2_mat);
-      t_cam_group_2.push_back(t_2);
-    }
+    preparePosesForHandEyeCalibration(
+        pose_abs_1, pose_abs_2, selected_poses_idxs, r_cam_group_1,
+        t_cam_group_1, r_cam_group_2, t_cam_group_2);
 
     // Hand-eye calibration
     cv::Mat r_g1_g2, t_g1_g2;
     cv::calibrateHandEye(r_cam_group_1, t_cam_group_1, r_cam_group_2,
                          t_cam_group_2, r_g1_g2, t_g1_g2,
                          cv::CALIB_HAND_EYE_TSAI);
-    // cv::CALIB_HAN
     cv::Mat pose_g1_g2 = RT2Proj(r_g1_g2, t_g1_g2);
 
     // Check the consistency of the set
