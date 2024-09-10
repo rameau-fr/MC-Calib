@@ -574,14 +574,13 @@ cv::Mat handeyeBootstratpTranslationCalibration(
           double traceRot =
               cv::trace(ErrRotMat)[0] - std::numeric_limits<double>::epsilon();
           double err_degree = std::acos(0.5 * (traceRot - 1.0)) * 180.0 / M_PI;
-          if (err_degree > max_error)
-            max_error = err_degree;
+          max_error = std::max(max_error, err_degree);
         }
       }
     }
     if (max_error < 15) {
       nb_success++;
-      // if it is a sucess then add to our valid pose evector
+      // if it is a sucess then add to our valid pose vector
       cv::Mat rot_temp, trans_temp;
       Proj2RT(pose_g1_g2, rot_temp, trans_temp);
       r1_he.push_back(rot_temp.at<double>(0));
@@ -602,8 +601,8 @@ cv::Mat handeyeBootstratpTranslationCalibration(
     t_he.at<double>(2) = median(t3_he);
     cv::Mat pose_g1_g2 = RVecT2Proj(r_he, t_he);
     return pose_g1_g2;
-  } else // else run the normal handeye calibration on all the samples
-  {
+  } else {
+    LOG_DEBUG << "Run the normal handeye calibration on all the samples";
     cv::Mat pose_g1_g2 = handeyeCalibration(pose_abs_1, pose_abs_1);
     return pose_g1_g2;
   }
@@ -611,9 +610,12 @@ cv::Mat handeyeBootstratpTranslationCalibration(
 
 // median of the vector but modifies original vector
 double median(std::vector<double> &v) {
-  size_t n = v.size() / 2;
-  std::nth_element(v.begin(), v.begin() + n, v.end());
-  return v[n];
+  const std::size_t n_elements = v.size();
+  if (n_elements == 0)
+    return 0.f;
+  std::sort(v.begin(), v.end());
+  const std::size_t mid = n_elements / 2;
+  return n_elements % 2 == 0 ? (v[mid] + v[mid - 1]) / 2 : v[mid];
 }
 
 // RANSAC algorithm
