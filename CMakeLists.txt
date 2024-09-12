@@ -16,18 +16,8 @@ find_package(Ceres REQUIRED)
 # boost related setup
 set(Boost_USE_STATIC_LIBS ON)
 set(Boost_USE_MULTITHREADED ON)
-find_package(Boost COMPONENTS log system filesystem REQUIRED)
+find_package(Boost COMPONENTS log system REQUIRED)
 message(STATUS "Boost version: ${Boost_VERSION}")
-
-# This is needed if your Boost version is newer than your CMake version
-# or if you have an old version of CMake (<3.5)
-if(NOT TARGET Boost::filesystem)
-    add_library(Boost::filesystem IMPORTED INTERFACE)
-    set_property(TARGET Boost::filesystem PROPERTY
-        INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIR})
-    set_property(TARGET Boost::filesystem PROPERTY
-        INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
-endif()
 
 IF(SSSE3_FOUND)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse3")

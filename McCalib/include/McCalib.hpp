@@ -1,14 +1,15 @@
 #pragma once
 
-#include "boost/filesystem.hpp"
-#include "opencv2/core/core.hpp"
+#include <filesystem>
 #include <iostream>
 #include <mutex>
 #include <numeric>
+#include <stdio.h>
+
+#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
 
 #include "Board.hpp"
 #include "BoardObs.hpp"

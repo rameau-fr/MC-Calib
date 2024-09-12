@@ -28,7 +28,7 @@ Calibration::Calibration(const std::string config_path) {
   int nb_x_square, nb_y_square;
   float length_square, length_marker;
   const bool is_file_available =
-      boost::filesystem::exists(config_path) && config_path.length() > 0;
+      std::filesystem::exists(config_path) && config_path.length() > 0;
   if (!is_file_available) {
     LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
     return;
@@ -94,8 +94,8 @@ Calibration::Calibration(const std::string config_path) {
            << "   Distortion mode : " << distortion_model;
 
   // check if the save dir exist and create it if it does not
-  if (!boost::filesystem::exists(save_path_) && save_path_.length() > 0) {
-    boost::filesystem::create_directories(save_path_);
+  if (!std::filesystem::exists(save_path_) && save_path_.length() > 0) {
+    std::filesystem::create_directories(save_path_);
   }
 
   // prepare the distortion type per camera
@@ -229,7 +229,7 @@ void Calibration::loadDetectedKeypoints() {
  */
 void Calibration::boardExtraction() {
   if (!keypoints_path_.empty() && keypoints_path_ != "None" &&
-      boost::filesystem::exists(keypoints_path_)) {
+      std::filesystem::exists(keypoints_path_)) {
     loadDetectedKeypoints();
   } else {
     detectBoards();
@@ -657,9 +657,8 @@ void Calibration::insertNewObjectObservation(
 void Calibration::initializeCalibrationAllCam() {
   if (!cam_params_path_.empty() && cam_params_path_ != "None") {
     cv::FileStorage fs;
-    const bool is_file_available =
-        boost::filesystem::exists(cam_params_path_) &&
-        cam_params_path_.length() > 0;
+    const bool is_file_available = std::filesystem::exists(cam_params_path_) &&
+                                   cam_params_path_.length() > 0;
     if (!is_file_available) {
       LOG_FATAL << "Camera parameters path '" << cam_params_path_
                 << "' doesn't exist.";
@@ -1892,11 +1891,11 @@ void Calibration::saveReprojectionImages(const int cam_id) {
   std::string path_save = path_root + cam_folder + "/";
 
   // check if the file exist and create it if it does not
-  if (!boost::filesystem::exists(path_root) && path_root.length() > 0) {
-    boost::filesystem::create_directories(path_root);
+  if (!std::filesystem::exists(path_root) && path_root.length() > 0) {
+    std::filesystem::create_directories(path_root);
   }
-  if (!boost::filesystem::exists(path_save) && path_root.length() > 0) {
-    boost::filesystem::create_directory(path_save);
+  if (!std::filesystem::exists(path_save) && path_root.length() > 0) {
+    std::filesystem::create_directory(path_save);
   }
 
   std::shared_ptr<Camera> cam = cams_[cam_id];
@@ -2004,11 +2003,11 @@ void Calibration::saveDetectionImages(const int cam_id) {
   std::string path_save = path_root + cam_folder + "/";
 
   // check if the file exist and create it if it does not
-  if (!boost::filesystem::exists(path_root) && path_root.length() > 0) {
-    boost::filesystem::create_directories(path_root);
+  if (!std::filesystem::exists(path_root) && path_root.length() > 0) {
+    std::filesystem::create_directories(path_root);
   }
-  if (!boost::filesystem::exists(path_save) && path_root.length() > 0) {
-    boost::filesystem::create_directory(path_save);
+  if (!std::filesystem::exists(path_save) && path_root.length() > 0) {
+    std::filesystem::create_directory(path_save);
   }
 
   std::shared_ptr<Camera> cam = cams_[cam_id];

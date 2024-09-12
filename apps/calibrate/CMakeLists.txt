@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 add_executable(calibrate ${SOURCES})
-target_link_libraries(calibrate -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log Boost::system Boost::filesystem McCalib)
+target_link_libraries(calibrate -L/usr/local/lib ${OpenCV_LIBS} ${CERES_LIBRARIES} Boost::log Boost::system McCalib)

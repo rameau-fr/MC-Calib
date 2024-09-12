@@ -1,4 +1,5 @@
 #include <chrono>
+#include <filesystem>
 #include <iomanip>
 #include <stdio.h>
 
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
   (void)argc; // casting to fix -Werror=unused-parameter
   const std::string config_path = argv[1];
   const bool is_file_available =
-      boost::filesystem::exists(config_path) && config_path.length() > 0;
+      std::filesystem::exists(config_path) && config_path.length() > 0;
   if (!is_file_available) {
     LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
     return -1;

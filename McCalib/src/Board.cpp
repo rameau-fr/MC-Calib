@@ -1,10 +1,12 @@
-#include "boost/filesystem.hpp"
-#include "opencv2/core/core.hpp"
+
+#include <filesystem>
 #include <iostream>
 #include <numeric>
+#include <stdio.h>
+
+#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
 
 #include "Board.hpp"
 #include "Frame.hpp"
@@ -23,7 +25,7 @@ Board::Board(const std::string config_path, const int board_idx) {
   int nb_board;
   cv::FileStorage fs; // FileStorage object to read calibration params from file
   const bool is_file_available =
-      boost::filesystem::exists(config_path) && config_path.length() > 0;
+      std::filesystem::exists(config_path) && config_path.length() > 0;
   if (!is_file_available) {
     LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
     return;
