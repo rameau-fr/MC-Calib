@@ -1,10 +1,12 @@
 #pragma once
 
-#include "opencv2/core/core.hpp"
+#include <filesystem>
 #include <iostream>
+#include <stdio.h>
+
+#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
 
 #include "BoardObs.hpp"
 #include "CameraGroupObs.hpp"
@@ -44,12 +46,13 @@ public:
       cam_group_observations_; // cam group stored
 
   // Image
-  std::map<int, std::string> frame_path_; // camera_id // path
+  std::map<int, std::filesystem::path> frame_path_; // camera_id // path
 
   // Functions
   Frame() = delete;
   ~Frame(){};
-  Frame(const int frame_idx, const int cam_idx, const std::string frame_path);
+  Frame(const int frame_idx, const int cam_idx,
+        const std::filesystem::path &frame_path);
   void insertNewBoard(std::shared_ptr<BoardObs> newBoard);
   void insertNewCamObs(std::shared_ptr<CameraObs> newCamObs);
   void insertNewObject(std::shared_ptr<Object3DObs> new_object);

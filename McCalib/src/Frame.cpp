@@ -1,13 +1,14 @@
-#include "opencv2/core/core.hpp"
 #include <iostream>
+#include <stdio.h>
+
+#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
 
 #include "Frame.hpp"
 
 Frame::Frame(const int frame_idx, const int cam_idx,
-             const std::string frame_path) {
+             const std::filesystem::path &frame_path) {
   frame_idx_ = frame_idx;
   frame_path_[cam_idx] = frame_path;
 }

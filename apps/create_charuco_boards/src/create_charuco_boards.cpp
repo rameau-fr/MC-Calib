@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   }
 
   // path of the configuration file
-  std::string pathInt = argv[1];
+  std::filesystem::path pathInt = argv[1];
   // Read the parameters from the configuration file
   int num_x_square, num_y_square, res_x, res_y, NbBoard;
   float length_square, length_marker;
@@ -22,8 +22,9 @@ int main(int argc, char *argv[]) {
   std::vector<int> resolution_x_per_board, resolution_y_per_board;
   std::vector<double> square_size_per_board;
   cv::FileStorage fs; // FileStorage to read calibration params from file
-  const bool is_file_available =
-      std::filesystem::exists(pathInt) && pathInt.length() > 0;
+  const bool is_file_available = std::filesystem::exists(pathInt) &&
+                                 pathInt.has_filename() &&
+                                 pathInt.extension() == ".yml";
   if (!is_file_available) {
     std::cout << "Config path '" << pathInt << "' doesn't exist." << std::endl;
     return -1;

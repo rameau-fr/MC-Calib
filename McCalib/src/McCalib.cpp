@@ -8,6 +8,7 @@
 #include "McCalib.hpp"
 #include "logger.h"
 #include "point_refinement.h"
+#include "utilities.hpp"
 
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
@@ -20,15 +21,17 @@ namespace McCalib {
  *
  * @param config_path path to the configuration file
  */
-Calibration::Calibration(const std::string config_path) {
+Calibration::Calibration(const std::filesystem::path &config_path) {
   cv::FileStorage fs; // cv::FileStorage to read calibration params from file
   int distortion_model;
   std::vector<int> distortion_per_camera;
   std::vector<int> boards_index;
   int nb_x_square, nb_y_square;
   float length_square, length_marker;
-  const bool is_file_available =
-      std::filesystem::exists(config_path) && config_path.length() > 0;
+  const bool is_file_available = std::filesystem::exists(config_path) &&
+                                 config_path.has_filename() &&
+                                 config_path.extension() == ".yml";
+
   if (!is_file_available) {
     LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
     return;
@@ -49,7 +52,7 @@ Calibration::Calibration(const std::string config_path) {
   fs["min_perc_pts"] >> min_perc_pts_;
   fs["number_x_square"] >> nb_x_square;
   fs["number_y_square"] >> nb_y_square;
-  fs["root_path"] >> root_dir_;
+  root_path_ = convertStrToPath(fs["root_path"]);
   fs["cam_prefix"] >> cam_prefix_;
   fs["quaternion_averaging:"] >> quaternion_averaging_;
   fs["ransac_threshold"] >> ransac_thresh_;
@@ -59,10 +62,10 @@ Calibration::Calibration(const std::string config_path) {
   fs["boards_index"] >> boards_index;
   fs["length_square"] >> length_square;
   fs["length_marker"] >> length_marker;
-  fs["save_path"] >> save_path_;
-  fs["camera_params_file_name"] >> camera_params_file_name_;
-  fs["cam_params_path"] >> cam_params_path_;
-  fs["keypoints_path"] >> keypoints_path_;
+  save_path_ = convertStrToPath(fs["save_path"]);
+  camera_params_file_name_ = convertStrToPath(fs["camera_params_file_name"]);
+  cam_params_path_ = convertStrToPath(fs["cam_params_path"]);
+  keypoints_path_ = convertStrToPath(fs["keypoints_path"]);
   fs["save_reprojection"] >> save_repro_;
   fs["save_detection"] >> save_detect_;
   fs["square_size_per_board"] >> square_size_per_board_;
@@ -94,7 +97,7 @@ Calibration::Calibration(const std::string config_path) {
            << "   Distortion mode : " << distortion_model;
 
   // check if the save dir exist and create it if it does not
-  if (!std::filesystem::exists(save_path_) && save_path_.length() > 0) {
+  if (!std::filesystem::exists(save_path_) && save_path_.has_filename()) {
     std::filesystem::create_directories(save_path_);
   }
 
@@ -162,12 +165,12 @@ void Calibration::detectBoards() {
     std::stringstream ss;
     ss << std::setw(3) << std::setfill('0') << cam + 1;
     const std::string cam_nb = ss.str();
-    const std::string cam_path = root_dir_ + cam_prefix_ + cam_nb;
+    const std::filesystem::path cam_path = root_path_ / (cam_prefix_ + cam_nb);
     LOG_INFO << "Extraction camera " << cam_nb;
 
     // iterate through the images for corner extraction
     std::vector<cv::String> fn;
-    cv::glob(cam_path + "/*.*", fn, true);
+    cv::glob(cam_path / "*.*", fn, true);
 
     // filter based on allowed extensions
     std::vector<cv::String> fn_filtered;
@@ -195,7 +198,7 @@ void Calibration::loadDetectedKeypoints() {
     int img_cols;
     int img_rows;
     std::vector<int> frame_idxs;
-    std::vector<std::string> frame_paths;
+    std::vector<std::filesystem::path> frame_paths;
     std::vector<int> board_idxs;
     std::vector<std::vector<cv::Point2f>> points;
     std::vector<std::vector<int>> charuco_idxs;
@@ -203,7 +206,11 @@ void Calibration::loadDetectedKeypoints() {
     data_per_camera["img_width"] >> img_cols;
     data_per_camera["img_height"] >> img_rows;
     data_per_camera["frame_idxs"] >> frame_idxs;
-    data_per_camera["frame_paths"] >> frame_paths;
+
+    std::vector<std::string> frame_paths_str;
+    data_per_camera["frame_paths"] >> frame_paths_str;
+    frame_paths = convertVecStrToVecPath(frame_paths_str);
+
     data_per_camera["board_idxs"] >> board_idxs;
     data_per_camera["pts_2d"] >> points;
     data_per_camera["charuco_idxs"] >> charuco_idxs;
@@ -369,10 +376,10 @@ void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
  */
 void Calibration::saveCamerasParams() {
 
-  std::string save_path_camera_params =
+  const std::filesystem::path save_path_camera_params =
       (!camera_params_file_name_.empty())
-          ? save_path_ + camera_params_file_name_
-          : save_path_ + "calibrated_cameras_data.yml";
+          ? save_path_ / camera_params_file_name_
+          : save_path_ / "calibrated_cameras_data.yml";
   cv::FileStorage fs(save_path_camera_params, cv::FileStorage::WRITE);
   for (const auto &it_cam_group : cam_group_) {
     std::shared_ptr<CameraGroup> cur_cam_group = it_cam_group.second;
@@ -407,7 +414,8 @@ void Calibration::saveCamerasParams() {
  * Format: X Y Z board_id pts_id
  */
 void Calibration::save3DObj() {
-  std::string save_path_object = save_path_ + "calibrated_objects_data.yml";
+  const std::filesystem::path save_path_object =
+      save_path_ / "calibrated_objects_data.yml";
   cv::FileStorage fs(save_path_object, cv::FileStorage::WRITE);
 
   for (const auto &it_obj : object_3d_) {
@@ -448,8 +456,8 @@ void Calibration::save3DObj() {
  *
  */
 void Calibration::save3DObjPose() {
-  std::string save_path_object_pose =
-      save_path_ + "calibrated_objects_pose_data.yml";
+  const std::filesystem::path save_path_object_pose =
+      save_path_ / "calibrated_objects_pose_data.yml";
   cv::FileStorage fs(save_path_object_pose, cv::FileStorage::WRITE);
   for (const auto &it_obj : object_3d_) {
     std::shared_ptr<Object3D> cur_object = it_obj.second;
@@ -486,8 +494,8 @@ void Calibration::save3DObjPose() {
  *
  */
 void Calibration::saveDetectedKeypoints() const {
-  const std::string save_keypoint_path =
-      save_path_ + "detected_keypoints_data.yml";
+  const std::filesystem::path save_keypoint_path =
+      save_path_ / "detected_keypoints_data.yml";
   cv::FileStorage fs(save_keypoint_path, cv::FileStorage::WRITE);
 
   fs << "nb_camera" << static_cast<int>(cams_.size());
@@ -590,7 +598,7 @@ void Calibration::insertNewBoard(const int cam_idx, const int frame_idx,
                                  const int board_idx,
                                  const std::vector<cv::Point2f> pts_2d,
                                  const std::vector<int> charuco_idx,
-                                 const std::string frame_path) {
+                                 const std::filesystem::path frame_path) {
   std::shared_ptr<BoardObs> new_board = std::make_shared<BoardObs>(
       cam_idx, frame_idx, board_idx, pts_2d, charuco_idx, cams_[cam_idx],
       boards_3d_[board_idx]);
@@ -658,7 +666,8 @@ void Calibration::initializeCalibrationAllCam() {
   if (!cam_params_path_.empty() && cam_params_path_ != "None") {
     cv::FileStorage fs;
     const bool is_file_available = std::filesystem::exists(cam_params_path_) &&
-                                   cam_params_path_.length() > 0;
+                                   cam_params_path_.has_filename() &&
+                                   cam_params_path_.extension() == ".yml";
     if (!is_file_available) {
       LOG_FATAL << "Camera parameters path '" << cam_params_path_
                 << "' doesn't exist.";
@@ -1884,17 +1893,17 @@ void Calibration::refineAllCameraGroupAndObjects() {
  */
 void Calibration::saveReprojectionImages(const int cam_id) {
   // Prepare the path to save the images
-  std::string path_root = save_path_ + "Reprojection/";
+  const std::filesystem::path path_root = save_path_ / "Reprojection";
   std::stringstream ss;
   ss << std::setw(3) << std::setfill('0') << cam_id;
-  std::string cam_folder = ss.str();
-  std::string path_save = path_root + cam_folder + "/";
+  const std::string cam_folder = ss.str();
+  const std::filesystem::path path_save = path_root / cam_folder;
 
   // check if the file exist and create it if it does not
-  if (!std::filesystem::exists(path_root) && path_root.length() > 0) {
+  if (!std::filesystem::exists(path_root) && path_root.has_filename()) {
     std::filesystem::create_directories(path_root);
   }
-  if (!std::filesystem::exists(path_save) && path_root.length() > 0) {
+  if (!std::filesystem::exists(path_save) && path_root.has_filename()) {
     std::filesystem::create_directory(path_save);
   }
 
@@ -1903,7 +1912,7 @@ void Calibration::saveReprojectionImages(const int cam_id) {
   // Iterate through the frames where this camera has visibility
   for (const auto &it_frame : frames_) {
     // Open the image
-    std::string im_path = it_frame.second->frame_path_[cam_id];
+    const std::filesystem::path im_path = it_frame.second->frame_path_[cam_id];
     cv::Mat image = cv::imread(im_path);
 
     // Iterate through the camera group observations
@@ -1975,8 +1984,8 @@ void Calibration::saveReprojectionImages(const int cam_id) {
       // Save image
       std::stringstream ss1;
       ss1 << std::setw(6) << std::setfill('0') << it_frame.second->frame_idx_;
-      std::string image_name = ss1.str() + ".jpg";
-      cv::imwrite(path_save + image_name, image);
+      const std::string image_name = ss1.str() + ".jpg";
+      cv::imwrite(path_save / image_name, image);
     }
   }
 }
@@ -1996,17 +2005,17 @@ void Calibration::saveReprojectionImagesAllCam() {
  */
 void Calibration::saveDetectionImages(const int cam_id) {
   // Prepare the path to save the images
-  std::string path_root = save_path_ + "Detection/";
+  const std::filesystem::path path_root = save_path_ / "Detection";
   std::stringstream ss;
   ss << std::setw(3) << std::setfill('0') << cam_id;
   std::string cam_folder = ss.str();
-  std::string path_save = path_root + cam_folder + "/";
+  const std::filesystem::path path_save = path_root / cam_folder;
 
   // check if the file exist and create it if it does not
-  if (!std::filesystem::exists(path_root) && path_root.length() > 0) {
+  if (!std::filesystem::exists(path_root) && path_root.has_filename()) {
     std::filesystem::create_directories(path_root);
   }
-  if (!std::filesystem::exists(path_save) && path_root.length() > 0) {
+  if (!std::filesystem::exists(path_save) && path_root.has_filename()) {
     std::filesystem::create_directory(path_save);
   }
 
@@ -2015,7 +2024,7 @@ void Calibration::saveDetectionImages(const int cam_id) {
   // Iterate through the frames where this camera has visibility
   for (const auto &it_frame : frames_) {
     // Open the image
-    std::string im_path = it_frame.second->frame_path_[cam_id];
+    const std::filesystem::path im_path = it_frame.second->frame_path_[cam_id];
     cv::Mat image = cv::imread(im_path);
 
     // Iterate through the camera group observations
@@ -2055,7 +2064,7 @@ void Calibration::saveDetectionImages(const int cam_id) {
       std::stringstream ss1;
       ss1 << std::setw(6) << std::setfill('0') << it_frame.second->frame_idx_;
       std::string image_name = ss1.str() + ".jpg";
-      cv::imwrite(path_save + image_name, image);
+      cv::imwrite(path_save / image_name, image);
     }
   }
 }
@@ -2241,8 +2250,8 @@ double Calibration::computeAvgReprojectionError() {
  *
  */
 void Calibration::saveReprojectionErrorToFile() {
-  std::string save_reprojection_error =
-      save_path_ + "reprojection_error_data.yml";
+  const std::filesystem::path save_reprojection_error =
+      save_path_ / "reprojection_error_data.yml";
   cv::FileStorage fs(save_reprojection_error, cv::FileStorage::WRITE);
   cv::Mat frame_list;
   int nb_cam_group = cam_group_.size();

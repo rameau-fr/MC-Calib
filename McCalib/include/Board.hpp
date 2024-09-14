@@ -1,7 +1,9 @@
 #pragma once
 
-#include "opencv2/core/core.hpp"
+#include <filesystem>
 #include <iostream>
+
+#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
@@ -45,7 +47,7 @@ public:
   // Functions
   Board() = delete;
   ~Board(){};
-  Board(const std::string config, const int board_idx);
+  Board(const std::filesystem::path &config, const int board_idx);
   void insertNewBoard(std::shared_ptr<BoardObs> new_board);
   void insertNewFrame(std::shared_ptr<Frame> new_frame);
 };

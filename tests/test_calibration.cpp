@@ -59,7 +59,8 @@ void calibrate(McCalib::Calibration &Calib) {
   Calib.saveDetectedKeypoints();
 }
 
-void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
+void calibrateAndCheckGt(const std::filesystem::path &config_path,
+                         const std::filesystem::path &gt_path) {
   McCalib::Calibration Calib(config_path);
   calibrate(Calib);
 
@@ -121,51 +122,56 @@ void calibrateAndCheckGt(std::string config_path, std::string gt_path) {
 BOOST_AUTO_TEST_SUITE(CheckCalibration)
 
 BOOST_AUTO_TEST_CASE(CheckBlenderDatasetIsPlacedCorrectly) {
-  std::string blender_images_path = "../data/Blender_Images";
+  const std::filesystem::path blender_images_path = "../data/Blender_Images";
   bool is_path_existent = std::filesystem::exists(blender_images_path);
   BOOST_REQUIRE_EQUAL(is_path_existent, true);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario1) {
-  std::string config_path =
+  const std::filesystem::path config_path =
       "../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml";
-  std::string gt_path = "../data/Blender_Images/Scenario_1/GroundTruth.yml";
+  const std::filesystem::path gt_path =
+      "../data/Blender_Images/Scenario_1/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
   calibrateAndCheckGt(config_path, gt_path);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario2) {
-  std::string config_path =
+  const std::filesystem::path config_path =
       "../tests/configs_for_end2end_tests/calib_param_synth_Scenario2.yml";
-  std::string gt_path = "../data/Blender_Images/Scenario_2/GroundTruth.yml";
+  const std::filesystem::path gt_path =
+      "../data/Blender_Images/Scenario_2/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
   calibrateAndCheckGt(config_path, gt_path);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario3) {
-  std::string config_path =
+  const std::filesystem::path config_path =
       "../tests/configs_for_end2end_tests/calib_param_synth_Scenario3.yml";
-  std::string gt_path = "../data/Blender_Images/Scenario_3/GroundTruth.yml";
+  const std::filesystem::path gt_path =
+      "../data/Blender_Images/Scenario_3/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
   calibrateAndCheckGt(config_path, gt_path);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario4) {
-  std::string config_path =
+  const std::filesystem::path config_path =
       "../tests/configs_for_end2end_tests/calib_param_synth_Scenario4.yml";
-  std::string gt_path = "../data/Blender_Images/Scenario_4/GroundTruth.yml";
+  const std::filesystem::path gt_path =
+      "../data/Blender_Images/Scenario_4/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
   calibrateAndCheckGt(config_path, gt_path);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario5) {
-  std::string config_path =
+  const std::filesystem::path config_path =
       "../tests/configs_for_end2end_tests/calib_param_synth_Scenario5.yml";
-  std::string gt_path = "../data/Blender_Images/Scenario_5/GroundTruth.yml";
+  const std::filesystem::path gt_path =
+      "../data/Blender_Images/Scenario_5/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
   calibrateAndCheckGt(config_path, gt_path);
