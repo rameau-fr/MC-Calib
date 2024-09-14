@@ -160,7 +160,7 @@ min_perc_pts: 0.5           # min percentage of points visible to assume a good 
 cam_params_path: "None"     # file with cameras intrinsics to initialize the intrinsic, write "None" if no initialization available 
 
 ######################################## Images Parameters ###################################################
-root_path: "../data/Synthetic_calibration_image/Scenario_1/Images/"
+root_path: "../data/Synthetic_calibration_image/Scenario_1/Images"
 cam_prefix: "Cam_"
 keypoints_path: "None"      # "path_to/detected_keypoints_data.yml" to save time on keypoint detection
 
@@ -173,7 +173,7 @@ number_iterations: 1000     # Max number of iterations for the non linear refine
 he_approach: 0              #0: bootstrapped he technique, 1: traditional he
 
 ######################################## Output Parameters ###################################################
-save_path: "experiments/Synthetic_calibration_image/Scenario_1/"
+save_path: "experiments/Synthetic_calibration_image/Scenario_1"
 save_detection: 1
 save_reprojection: 1
 camera_params_file_name: "" # "name.yml"
