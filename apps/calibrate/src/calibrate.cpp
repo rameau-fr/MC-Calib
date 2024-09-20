@@ -1,11 +1,12 @@
 #include <chrono>
+#include <filesystem>
 #include <iomanip>
 #include <stdio.h>
 
 #include "McCalib.hpp"
 #include "logger.h"
 
-void runCalibrationWorkflow(std::string config_path) {
+void runCalibrationWorkflow(const std::filesystem::path &config_path) {
   // Instantiate the calibration and initialize the parameters
   McCalib::Calibration Calib(config_path);
   Calib.boardExtraction();
@@ -85,9 +86,10 @@ void runCalibrationWorkflow(std::string config_path) {
 
 int main(int argc, char *argv[]) {
   (void)argc; // casting to fix -Werror=unused-parameter
-  const std::string config_path = argv[1];
-  const bool is_file_available =
-      boost::filesystem::exists(config_path) && config_path.length() > 0;
+  const std::filesystem::path config_path = argv[1];
+  const bool is_file_available = std::filesystem::exists(config_path) &&
+                                 config_path.has_filename() &&
+                                 config_path.extension() == ".yml";
   if (!is_file_available) {
     LOG_FATAL << "Config path '" << config_path << "' doesn't exist.";
     return -1;

@@ -1,4 +1,4 @@
-find_package (Boost REQUIRED COMPONENTS unit_test_framework log_setup log filesystem REQUIRED)
+find_package (Boost REQUIRED COMPONENTS unit_test_framework log_setup log REQUIRED)
 
 set(SOURCES
     main.cpp test_graph.cpp test_calibration.cpp test_geometrytools.cpp simple_unit_tests_example.cpp

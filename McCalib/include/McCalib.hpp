@@ -1,14 +1,15 @@
 #pragma once
 
-#include "boost/filesystem.hpp"
-#include "opencv2/core/core.hpp"
+#include <filesystem>
 #include <iostream>
 #include <mutex>
 #include <numeric>
+#include <stdio.h>
+
+#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
 
 #include "Board.hpp"
 #include "BoardObs.hpp"
@@ -43,14 +44,17 @@ public:
   float min_perc_pts_;
 
   // images path
-  std::string root_dir_, cam_prefix_;
+  std::filesystem::path root_path_;
+  std::string cam_prefix_;
 
   // intput/output path
-  std::string cam_params_path_; // path to precalibrated cameras intrinsics
-  std::string keypoints_path_;  // path to predetected keypoints
-  std::string save_path_;       // path to save calibrated cameras parameter
-  std::string camera_params_file_name_; // file name with cameras params
-  int save_repro_, save_detect_;        // flag to save or not the images
+  std::filesystem::path
+      cam_params_path_; // path to precalibrated cameras intrinsics
+  std::filesystem::path keypoints_path_; // path to predetected keypoints
+  std::filesystem::path save_path_; // path to save calibrated cameras parameter
+  std::filesystem::path
+      camera_params_file_name_;  // file name with cameras params
+  int save_repro_, save_detect_; // flag to save or not the images
 
   // various boards size parameters
   std::vector<int> number_x_square_per_board_, number_y_square_per_board_;
@@ -141,9 +145,9 @@ public:
   // Functions
   Calibration() = delete;
   ~Calibration(){};
-  Calibration(
-      const std::string config_path); // initialize the charuco pattern, nb
-                                      // of cameras, nb of boards etc.
+  Calibration(const std::filesystem::path
+                  &config_path); // initialize the charuco pattern, nb
+                                 // of cameras, nb of boards etc.
   Calibration(const Calibration &) = delete;
   Calibration &operator=(const Calibration &) = delete;
 
@@ -160,12 +164,11 @@ public:
                                       // re-used to save time in detection stage
   void displayBoards(const cv::Mat image, const int cam_idx,
                      const int frame_idx);
-  void
-  insertNewBoard(const int cam_idx, const int frame_idx, const int board_idx,
-                 const std::vector<cv::Point2f> pts_2d,
-                 const std::vector<int> charuco_idx,
-                 const std::string frame_path); // insert a new board in all the
-                                                // different datastructure
+  void insertNewBoard(
+      const int cam_idx, const int frame_idx, const int board_idx,
+      const std::vector<cv::Point2f> pts_2d, const std::vector<int> charuco_idx,
+      const std::filesystem::path frame_path); // insert a new board in all the
+                                               // different datastructure
   void
   insertNewObjectObservation(std::shared_ptr<Object3DObs>
                                  new_obj_obs); // insert new object observation
