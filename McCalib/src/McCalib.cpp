@@ -1,18 +1,18 @@
-#include "opencv2/core/core.hpp"
 #include <iostream>
-#include <opencv2/aruco/charuco.hpp>
-#include <opencv2/opencv.hpp>
 #include <random>
 #include <stdio.h>
+#include <thread>
+
+#include <boost/asio/post.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <opencv2/aruco/charuco.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
 
 #include "McCalib.hpp"
 #include "logger.h"
 #include "point_refinement.h"
 #include "utilities.hpp"
-
-#include <boost/asio/post.hpp>
-#include <boost/asio/thread_pool.hpp>
-#include <thread>
 
 namespace McCalib {
 
@@ -120,17 +120,28 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
   std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
   int offset_count = 0;
   for (int i = 0; i <= max_board_idx; i++) {
-    cv::Ptr<cv::aruco::CharucoBoard> charuco = cv::aruco::CharucoBoard::create(
-        number_x_square_per_board_[i], number_y_square_per_board_[i],
-        length_square, length_marker, dict_);
-    if (i != 0) // If it is the first board then just use the standard idx
-    {
-      int id_offset = charuco_boards[i - 1]->ids.size() + offset_count;
+    if (i == 0) {
+      // If it is the first board then just use the standard idx
+      cv::Ptr<cv::aruco::CharucoBoard> charuco =
+          new cv::aruco::CharucoBoard(cv::Size(number_x_square_per_board_[i],
+                                               number_y_square_per_board_[i]),
+                                      length_square, length_marker, dict_);
+
+      charuco_boards[i] = charuco;
+    } else {
+      int id_offset = charuco_boards[i - 1]->getIds().size() + offset_count;
       offset_count = id_offset;
-      for (auto &id : charuco->ids)
-        id += id_offset;
+      const std::size_t num_idxs = charuco_boards[i - 1]->getIds().size();
+      std::vector<int> cur_ids(num_idxs);
+      std::iota(cur_ids.begin(), cur_ids.end(), id_offset);
+
+      cv::Ptr<cv::aruco::CharucoBoard> charuco = new cv::aruco::CharucoBoard(
+          cv::Size(number_x_square_per_board_[i],
+                   number_y_square_per_board_[i]),
+          length_square, length_marker, dict_, cur_ids);
+
+      charuco_boards[i] = charuco;
     }
-    charuco_boards[i] = charuco;
   }
 
   // Initialize the 3D boards
@@ -308,11 +319,12 @@ void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
   // key == board id, value == ID corners on checkerboard
   std::map<int, std::vector<int>> charuco_idx;
 
-  charuco_params_->adaptiveThreshConstant = 1;
+  charuco_params_.adaptiveThreshConstant = 1;
 
   for (std::size_t i = 0; i < nb_board_; i++) {
-    cv::aruco::detectMarkers(image, boards_3d_[i]->charuco_board_->dictionary,
-                             marker_corners[i], marker_idx[i], charuco_params_);
+    cv::aruco::ArucoDetector detector(
+        boards_3d_[i]->charuco_board_->getDictionary(), charuco_params_);
+    detector.detectMarkers(image, marker_corners[i], marker_idx[i]);
 
     if (marker_corners[i].size() > 0) {
       cv::aruco::interpolateCornersCharuco(marker_corners[i], marker_idx[i],
@@ -1462,9 +1474,10 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
   // HANDEYE CALIBRATION
   cv::Mat pose_g1_g2;
   if (he_approach_ == 0) {
-    // Boot strapping technique
-    int nb_cluster = 20;
-    int nb_it_he = 200; // Nb of time we apply the handeye calibration
+    // Bootstrapping technique
+    const unsigned int nb_cluster = 20u;
+    // number of iterations of handeye calibration
+    const unsigned int nb_it_he = 200u;
     pose_g1_g2 = handeyeBootstratpTranslationCalibration(
         nb_cluster, nb_it_he, pose_abs_1, pose_abs_2);
   } else {

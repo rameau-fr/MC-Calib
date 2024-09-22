@@ -8,6 +8,8 @@
 
 #include "CameraGroupObs.hpp"
 
+namespace McCalib {
+
 /**
  * @brief Associate this observation with its respective camera group
  *
@@ -211,3 +213,5 @@ void CameraGroupObs::updateObjObsPose() {
     }
   }
 }
+
+} // namespace McCalib

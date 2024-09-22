@@ -11,6 +11,8 @@
 #include "Frame.hpp"
 #include "Object3DObs.hpp"
 
+namespace McCalib {
+
 /**
  * @class Camera
  *
@@ -64,3 +66,5 @@ public:
   void setIntrinsics(const cv::Mat K, const cv::Mat distortion_vector);
   bool checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs);
 };
+
+} // namespace McCalib

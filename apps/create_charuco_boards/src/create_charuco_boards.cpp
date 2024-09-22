@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <iomanip>
+#include <numeric>
 #include <stdio.h>
 
 #include <opencv2/aruco/charuco.hpp>
@@ -60,27 +61,36 @@ int main(int argc, char *argv[]) {
   }
 
   // Create the charuco
-  cv::Ptr<cv::aruco::Dictionary> dict =
+  const cv::aruco::Dictionary dict =
       cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
-  std::vector<cv::Ptr<cv::aruco::CharucoBoard>> charucoBoards;
+  std::vector<cv::aruco::CharucoBoard> charuco_boards;
   int offset_count = 0;
   for (std::size_t i = 0; i < num_board; i++) {
-    // declare the board
-    cv::Ptr<cv::aruco::CharucoBoard> charuco = cv::aruco::CharucoBoard::create(
-        number_x_square_per_board[i], number_y_square_per_board[i],
-        length_square, length_marker, dict);
-    // If it is the first board then just use the standard idx
-    if (i != 0) {
-      int id_offset = charucoBoards[i - 1]->ids.size() + offset_count;
+    if (i == 0) {
+      // if it is the first board then just use the standard idx
+      const cv::aruco::CharucoBoard charuco = cv::aruco::CharucoBoard(
+          cv::Size(number_x_square_per_board[i], number_y_square_per_board[i]),
+          length_square, length_marker, dict);
+
+      charuco_boards.push_back(charuco);
+    } else {
+      int id_offset = charuco_boards[i - 1].getIds().size() + offset_count;
       offset_count = id_offset;
-      for (auto &id : charuco->ids) {
-        id += id_offset;
-      }
+
+      const std::size_t num_idxs = charuco_boards[i - 1].getIds().size();
+      std::vector<int> cur_ids(num_idxs);
+      std::iota(cur_ids.begin(), cur_ids.end(), id_offset);
+
+      cv::aruco::CharucoBoard charuco = cv::aruco::CharucoBoard(
+          cv::Size(number_x_square_per_board[i], number_y_square_per_board[i]),
+          length_square, length_marker, dict, cur_ids);
+
+      charuco_boards.push_back(charuco);
     }
+
     // create the charuco board
-    charucoBoards.push_back(charuco);
     cv::Mat boardImage;
-    charucoBoards[i]->draw(
+    charuco_boards[i].generateImage(
         cv::Size(resolution_x_per_board[i], resolution_y_per_board[i]),
         boardImage, 10, 1);
     // Display marker

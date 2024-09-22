@@ -6,6 +6,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class Board;
 class BoardObs;
 class Object3DObs;
@@ -68,3 +70,5 @@ public:
   void refineObject(const int nb_iterations);
   void updateObjectPts();
 };
+
+} // namespace McCalib

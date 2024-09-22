@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class Camera;
 class Board;
 class BoardObs;
@@ -82,3 +84,5 @@ public:
   cv::Mat getRotInGroupVec() const;
   cv::Mat getTransInGroupVec() const;
 };
+
+} // namespace McCalib

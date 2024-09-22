@@ -1,10 +1,14 @@
 #include "opencv2/core/core.hpp"
+#include <algorithm>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <random>
 #include <stdio.h>
 
 #include "geometrytools.hpp"
 #include "logger.h"
+
+namespace McCalib {
 
 // Tools for rotation and projection matrix
 cv::Mat RT2Proj(cv::Mat R, cv::Mat T) {
@@ -165,7 +169,9 @@ void ransacTriangulation(std::vector<cv::Point2f> point2d,
   // Ransac iterations
   while (N > trialcount && countit < it) {
     // pick 2 points
-    std::random_shuffle(myvector.begin(), myvector.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(myvector.begin(), myvector.end(), g);
     std::array<int, 4> idx = {myvector[0], myvector[1], myvector[2],
                               myvector[3]};
 
@@ -245,9 +251,10 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> &scenePoints,
 
   // Ransac iterations
   while (N > trialcount && countit < it) {
-
     // pick 4 points
-    std::random_shuffle(myvector.begin(), myvector.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(myvector.begin(), myvector.end(), g);
     std::array<int, 4> idx = {myvector[0], myvector[1], myvector[2],
                               myvector[3]};
 
@@ -350,14 +357,14 @@ std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
  *
 
  */
-cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
-                           const std::vector<cv::Mat> pose_abs_2) {
+cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
+                           const std::vector<cv::Mat> &pose_abs_2) {
 
   // Prepare the poses for handeye calibration
-  const size_t num_poses = pose_abs_1.size();
+  const size_t num_poses = std::min(pose_abs_1.size(), pose_abs_2.size());
   std::vector<cv::Mat> r_cam_group_1(num_poses), t_cam_group_1(num_poses),
       r_cam_group_2(num_poses), t_cam_group_2(num_poses);
-  for (size_t i = 0; i < num_poses; i++) {
+  for (std::size_t i = 0; i < num_poses; i++) {
     // get the poses
     cv::Mat pose_cam_group_1 = pose_abs_1[i].inv();
     cv::Mat pose_cam_group_2 = pose_abs_2[i];
@@ -386,6 +393,116 @@ cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
 }
 
 /**
+ * @brief Prepare the translational component of the cameras to be clustered
+ *
+ */
+cv::Mat getTranslationsForClustering(const std::vector<cv::Mat> &pose_abs_1,
+                                     const std::vector<cv::Mat> &pose_abs_2,
+                                     const std::size_t num_poses) {
+  cv::Mat position_1_2;
+  for (std::size_t i = 0u; i < num_poses; i++) {
+    cv::Mat trans_1, trans_2, rot_1, rot_2;
+    Proj2RT(pose_abs_1[i], rot_1, trans_1);
+    Proj2RT(pose_abs_2[i], rot_2, trans_2);
+    cv::Mat concat_trans_1_2;
+    cv::hconcat(trans_1.t(), trans_2.t(), concat_trans_1_2);
+    position_1_2.push_back(concat_trans_1_2);
+  }
+  position_1_2.convertTo(position_1_2, CV_32F);
+  return position_1_2;
+}
+
+cv::Mat clusterTranslations(const cv::Mat &position_1_2,
+                            const unsigned int num_clusters) {
+  const unsigned int nb_kmean_iterations = 5;
+  cv::Mat labels;
+  cv::Mat centers;
+  std::ignore =
+      cv::kmeans(position_1_2, num_clusters, labels,
+                 cv::TermCriteria(
+                     cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 0.01),
+                 nb_kmean_iterations, cv::KMEANS_PP_CENTERS, centers);
+  labels.convertTo(labels, CV_32S);
+  return labels;
+}
+
+std::vector<unsigned int> selectClusters(const unsigned int num_clusters,
+                                         const unsigned int nb_clust_pick) {
+  // pick from n clusters randomly
+  std::vector<unsigned int> shuffled_ind(num_clusters);
+  std::iota(shuffled_ind.begin(), shuffled_ind.end(), 0);
+  assert(shuffled_ind.size() == num_clusters);
+
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(shuffled_ind.begin(), shuffled_ind.end(), g);
+  std::vector<unsigned int> cluster_select;
+  cluster_select.reserve(nb_clust_pick);
+  for (unsigned int k = 0; k < nb_clust_pick; ++k) {
+    cluster_select.push_back(shuffled_ind[k]);
+  }
+
+  assert(cluster_select.size() == nb_clust_pick);
+  return cluster_select;
+}
+
+std::vector<unsigned int>
+selectPoses(const cv::Mat &clusters_lables,
+            const std::vector<unsigned int> &selected_cluster_idxs,
+            const unsigned int num_poses) {
+  // Select one pair of pose (indexes) from each cluster
+  std::vector<unsigned int> selected_poses_idxs;
+  selected_poses_idxs.reserve(selected_cluster_idxs.size());
+  for (const unsigned int cluster_idx : selected_cluster_idxs) {
+    std::vector<unsigned int> pose_idxs;
+    for (unsigned int pose_idx = 0u; pose_idx < num_poses; pose_idx++) {
+      if (clusters_lables.at<unsigned int>(pose_idx) == cluster_idx) {
+        pose_idxs.push_back(pose_idx);
+      }
+    }
+    // randomly select an index in the occurrences of the cluster
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, pose_idxs.size() - 1);
+    unsigned int random_idx = dis(gen);
+    selected_poses_idxs.push_back(pose_idxs[random_idx]);
+  }
+
+  assert(selected_poses_idxs.size() == selected_cluster_idxs.size());
+  return selected_poses_idxs;
+}
+
+void preparePosesForHandEyeCalibration(
+    const std::vector<cv::Mat> &pose_abs_1,
+    const std::vector<cv::Mat> &pose_abs_2,
+    const std::vector<unsigned int> &selected_poses_idxs,
+    std::vector<cv::Mat> &r_cam_group_1, std::vector<cv::Mat> &t_cam_group_1,
+    std::vector<cv::Mat> &r_cam_group_2, std::vector<cv::Mat> &t_cam_group_2) {
+  const std::size_t nb_clust_pick = selected_poses_idxs.size();
+  r_cam_group_1.reserve(nb_clust_pick);
+  t_cam_group_1.reserve(nb_clust_pick);
+  r_cam_group_2.reserve(nb_clust_pick);
+  t_cam_group_2.reserve(nb_clust_pick);
+  for (const unsigned int pose_ind_i : selected_poses_idxs) {
+    // get the poses
+    const cv::Mat pose_cam_group_1 = pose_abs_1[pose_ind_i].inv();
+    const cv::Mat pose_cam_group_2 = pose_abs_2[pose_ind_i];
+
+    // save in datastruct
+    cv::Mat r_1, r_2, t_1, t_2;
+    Proj2RT(pose_cam_group_1, r_1, t_1);
+    Proj2RT(pose_cam_group_2, r_2, t_2);
+    cv::Mat r_1_mat, r_2_mat;
+    cv::Rodrigues(r_1, r_1_mat);
+    cv::Rodrigues(r_2, r_2_mat);
+    r_cam_group_1.push_back(r_1_mat);
+    t_cam_group_1.push_back(t_1);
+    r_cam_group_2.push_back(r_2_mat);
+    t_cam_group_2.push_back(t_2);
+  }
+}
+
+/**
  * @brief Calibrate 2 cameras with handeye calibration
  *
  * In this function only N pairs of images are used
@@ -396,116 +513,57 @@ cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
  * The mean value of valid poses is returned
  */
 cv::Mat handeyeBootstratpTranslationCalibration(
-    unsigned int nb_cluster, unsigned int nb_it,
-    std::vector<cv::Mat> pose_abs_1, std::vector<cv::Mat> pose_abs_2) {
-  // N clusters but less if less images available
-  nb_cluster =
-      (pose_abs_1.size() < nb_cluster) ? pose_abs_1.size() : nb_cluster;
+    const unsigned int nb_cluster, const unsigned int nb_it,
+    const std::vector<cv::Mat> &pose_abs_1,
+    const std::vector<cv::Mat> &pose_abs_2) {
 
-  // Prepare the translational component of the cameras to be clustered
-  cv::Mat position_1_2; // concatenation of the translation of pose 1 and 2 for
-                        // clustering
-  for (unsigned int i = 0; i < pose_abs_1.size(); i++) {
-    cv::Mat trans_1, trans_2, rot_1, rot_2;
-    Proj2RT(pose_abs_1[i], rot_1, trans_1);
-    Proj2RT(pose_abs_2[i], rot_2, trans_2);
-    cv::Mat concat_trans_1_2;
-    cv::hconcat(trans_1.t(), trans_2.t(), concat_trans_1_2);
-    position_1_2.push_back(concat_trans_1_2);
-  }
-  position_1_2.convertTo(position_1_2, CV_32F);
+  // concat of the translation of pose 1 and 2 for clustering
+  const std::size_t num_poses = std::min(pose_abs_1.size(), pose_abs_2.size());
+  cv::Mat position_1_2 =
+      getTranslationsForClustering(pose_abs_1, pose_abs_2, num_poses);
 
   // Cluster the observation to select the most diverse poses
-  cv::Mat labels;
-  cv::Mat centers;
-  int nb_kmean_iterations = 5;
-  std::ignore =
-      cv::kmeans(position_1_2, nb_cluster, labels,
-                 cv::TermCriteria(
-                     cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 10, 0.01),
-                 nb_kmean_iterations, cv::KMEANS_PP_CENTERS, centers);
-  labels.convertTo(labels, CV_32S);
+  const unsigned int num_clusters =
+      std::min(nb_cluster, static_cast<unsigned int>(
+                               std::min(pose_abs_1.size(), pose_abs_2.size())));
+  const cv::Mat clusters_lables =
+      clusterTranslations(position_1_2, num_clusters);
 
   // Iterate n times the
   std::vector<double> r1_he, r2_he, r3_he; // structure to save valid rot
   std::vector<double> t1_he, t2_he, t3_he; // structure to save valid trans
-  unsigned int nb_clust_pick = 6;
+  const unsigned int nb_clust_pick = 6;
   unsigned int nb_success = 0;
   for (unsigned int iter = 0; iter < nb_it; iter++) {
+    const std::vector<unsigned int> selected_cluster_idxs =
+        selectClusters(num_clusters, nb_clust_pick);
 
-    // pick from n of these clusters randomly
-    std::vector<unsigned int> shuffled_ind(nb_cluster);
-    std::iota(shuffled_ind.begin(), shuffled_ind.end(), 0);
-    std::random_device rd; // initialize random number generator
-    std::mt19937 g(rd());
-    std::shuffle(shuffled_ind.begin(), shuffled_ind.end(), g);
-    std::vector<unsigned int> cluster_select;
-    cluster_select.reserve(nb_clust_pick);
-    for (unsigned int k = 0; k < nb_clust_pick; ++k) {
-      cluster_select.push_back(shuffled_ind[k]);
-    }
-
-    // Select one pair of pose for each cluster
-    std::vector<unsigned int> pose_ind;
-    pose_ind.reserve(cluster_select.size());
-    for (const unsigned int &clust_ind : cluster_select) {
-      std::vector<unsigned int> idx;
-      for (unsigned int j = 0; j < pose_abs_2.size(); j++) {
-        if (labels.at<unsigned int>(j) == clust_ind) {
-          idx.push_back(j);
-        }
-      }
-      // randomly select an index in the occurrences of the cluster
-      srand(time(NULL));
-      std::random_device rd;
-      std::mt19937 gen(rd());
-      std::uniform_int_distribution<> dis(0, idx.size() - 1);
-      unsigned int cluster_idx = dis(gen);
-      pose_ind.push_back(idx[cluster_idx]);
-    }
+    const std::vector<unsigned int> selected_poses_idxs =
+        selectPoses(clusters_lables, selected_cluster_idxs, num_poses);
 
     // Prepare the poses for handeye calibration
     std::vector<cv::Mat> r_cam_group_1, t_cam_group_1, r_cam_group_2,
         t_cam_group_2;
-    r_cam_group_1.reserve(pose_ind.size());
-    t_cam_group_1.reserve(pose_ind.size());
-    r_cam_group_2.reserve(pose_ind.size());
-    t_cam_group_2.reserve(pose_ind.size());
-    for (const auto &pose_ind_i : pose_ind) {
-      // get the poses
-      cv::Mat pose_cam_group_1 = pose_abs_1[pose_ind_i].inv();
-      cv::Mat pose_cam_group_2 = pose_abs_2[pose_ind_i];
-
-      // save in datastruct
-      cv::Mat r_1, r_2, t_1, t_2;
-      Proj2RT(pose_cam_group_1, r_1, t_1);
-      Proj2RT(pose_cam_group_2, r_2, t_2);
-      cv::Mat r_1_mat, r_2_mat;
-      cv::Rodrigues(r_1, r_1_mat);
-      cv::Rodrigues(r_2, r_2_mat);
-      r_cam_group_1.push_back(r_1_mat);
-      t_cam_group_1.push_back(t_1);
-      r_cam_group_2.push_back(r_2_mat);
-      t_cam_group_2.push_back(t_2);
-    }
+    preparePosesForHandEyeCalibration(
+        pose_abs_1, pose_abs_2, selected_poses_idxs, r_cam_group_1,
+        t_cam_group_1, r_cam_group_2, t_cam_group_2);
 
     // Hand-eye calibration
     cv::Mat r_g1_g2, t_g1_g2;
     cv::calibrateHandEye(r_cam_group_1, t_cam_group_1, r_cam_group_2,
                          t_cam_group_2, r_g1_g2, t_g1_g2,
                          cv::CALIB_HAND_EYE_TSAI);
-    // cv::CALIB_HAN
     cv::Mat pose_g1_g2 = RT2Proj(r_g1_g2, t_g1_g2);
 
     // Check the consistency of the set
     double max_error = 0;
-    for (unsigned int i = 0; i < pose_ind.size(); i++) {
-      cv::Mat pose_cam_group_1_1 = pose_abs_1[pose_ind[i]];
-      cv::Mat pose_cam_group_2_1 = pose_abs_2[pose_ind[i]];
-      for (unsigned int j = 0; j < pose_ind.size(); j++) {
+    for (unsigned int i = 0; i < selected_poses_idxs.size(); i++) {
+      cv::Mat pose_cam_group_1_1 = pose_abs_1[selected_poses_idxs[i]];
+      cv::Mat pose_cam_group_2_1 = pose_abs_2[selected_poses_idxs[i]];
+      for (unsigned int j = 0; j < selected_poses_idxs.size(); j++) {
         if (i != j) {
-          cv::Mat pose_cam_group_1_2 = pose_abs_1[pose_ind[i]];
-          cv::Mat pose_cam_group_2_2 = pose_abs_2[pose_ind[i]];
+          cv::Mat pose_cam_group_1_2 = pose_abs_1[selected_poses_idxs[i]];
+          cv::Mat pose_cam_group_2_2 = pose_abs_2[selected_poses_idxs[i]];
           cv::Mat PP1 = pose_cam_group_1_2.inv() * pose_cam_group_1_1;
           cv::Mat PP2 = pose_cam_group_2_1.inv() * pose_cam_group_2_2;
           cv::Mat ErrMat = PP2.inv() * pose_g1_g2 * PP1 * pose_g1_g2;
@@ -516,14 +574,13 @@ cv::Mat handeyeBootstratpTranslationCalibration(
           double traceRot =
               cv::trace(ErrRotMat)[0] - std::numeric_limits<double>::epsilon();
           double err_degree = std::acos(0.5 * (traceRot - 1.0)) * 180.0 / M_PI;
-          if (err_degree > max_error)
-            max_error = err_degree;
+          max_error = std::max(max_error, err_degree);
         }
       }
     }
     if (max_error < 15) {
       nb_success++;
-      // if it is a sucess then add to our valid pose evector
+      // if it is a sucess then add to our valid pose vector
       cv::Mat rot_temp, trans_temp;
       Proj2RT(pose_g1_g2, rot_temp, trans_temp);
       r1_he.push_back(rot_temp.at<double>(0));
@@ -544,8 +601,8 @@ cv::Mat handeyeBootstratpTranslationCalibration(
     t_he.at<double>(2) = median(t3_he);
     cv::Mat pose_g1_g2 = RVecT2Proj(r_he, t_he);
     return pose_g1_g2;
-  } else // else run the normal handeye calibration on all the samples
-  {
+  } else {
+    LOG_DEBUG << "Run the normal handeye calibration on all the samples";
     cv::Mat pose_g1_g2 = handeyeCalibration(pose_abs_1, pose_abs_1);
     return pose_g1_g2;
   }
@@ -553,9 +610,12 @@ cv::Mat handeyeBootstratpTranslationCalibration(
 
 // median of the vector but modifies original vector
 double median(std::vector<double> &v) {
-  size_t n = v.size() / 2;
-  std::nth_element(v.begin(), v.begin() + n, v.end());
-  return v[n];
+  const std::size_t n_elements = v.size();
+  if (n_elements == 0)
+    return 0.f;
+  std::sort(v.begin(), v.end());
+  const std::size_t mid = n_elements / 2;
+  return n_elements % 2 == 0 ? (v[mid] + v[mid - 1]) / 2 : v[mid];
 }
 
 // RANSAC algorithm
@@ -745,3 +805,5 @@ cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
 
   return average_rotation;
 }
+
+} // namespace McCalib

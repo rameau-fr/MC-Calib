@@ -9,6 +9,8 @@
 #include "CameraGroup.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 /**
  * @brief Initialize the camera group object
  *
@@ -577,3 +579,5 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
     LOG_INFO << "Camera  " << it.first << "  :: " << getCameraPoseMat(it.first);
   }
 }
+
+} // namespace McCalib

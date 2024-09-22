@@ -4,7 +4,7 @@
 
 - It is also possible to generate Doxygen documentation locally:
 
-   - Install [Doxygen](https://www.doxygen.nl/download.html) or use `bailool/mc-calib-dev` docker image:
+   - Install [Doxygen](https://www.doxygen.nl/download.html) or use `bailool/mc-calib-dev:opencv410` docker image:
 
       ```bash
       sudo apt install flex
