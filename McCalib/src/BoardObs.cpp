@@ -9,6 +9,8 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 /**
  * @brief Initialize the board observation object
  *
@@ -197,3 +199,5 @@ float BoardObs::computeReprojectionError() {
   return (error_board_vec.size() > 0) ? sum_err_board / error_board_vec.size()
                                       : 0.f;
 }
+
+} // namespace McCalib

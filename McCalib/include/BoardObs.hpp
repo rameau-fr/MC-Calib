@@ -7,6 +7,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class Camera;
 class Board;
 
@@ -60,3 +62,5 @@ public:
   cv::Mat getRotVec() const;
   cv::Mat getTransVec() const;
 };
+
+} // namespace McCalib

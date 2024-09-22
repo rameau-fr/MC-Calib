@@ -3,6 +3,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 /****** ******/
 
 float step_threshold = 0.001;
@@ -185,3 +187,5 @@ void saddleSubpixelRefinement(const cv::Mat &input,
   saddleSubpixelRefinement(smooth, initial, A, valid, refined, window_half_size,
                            max_iterations);
 }
+
+} // namespace McCalib

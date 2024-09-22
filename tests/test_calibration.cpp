@@ -91,7 +91,7 @@ void calibrateAndCheckGt(const std::filesystem::path &config_path,
     tran_gt = camera_pose_matrix_gt(cv::Range(0, 3), cv::Range(3, 4));
 
     // get calibrated values
-    std::shared_ptr<Camera> cur_cam = Calib.cams_[camera_idx - 1];
+    std::shared_ptr<McCalib::Camera> cur_cam = Calib.cams_[camera_idx - 1];
     int camera_group_idx = 0; // specific to the setup with single camera group
     cv::Mat camera_matrix_pred = cur_cam->getCameraMat();
     cv::Mat camera_pose_matrix_pred =

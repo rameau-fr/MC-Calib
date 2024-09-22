@@ -8,6 +8,8 @@
 #include "OptimizationCeres.h"
 #include "logger.h"
 
+namespace McCalib {
+
 Camera::Camera(const int cam_idx, const int distortion_model)
     : cam_idx_(cam_idx), distortion_model_(distortion_model) {}
 
@@ -295,3 +297,5 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
   LOG_INFO << "distortion vector after optimization :: "
            << getDistortionVectorVector();
 }
+
+} // namespace McCalib

@@ -11,6 +11,8 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 /**
  * @brief Insert a new object observation for this 3D object
  *
@@ -262,3 +264,5 @@ void Object3D::updateObjectPts() {
     }
   }
 }
+
+} // namespace McCalib

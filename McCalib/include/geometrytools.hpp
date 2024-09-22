@@ -6,6 +6,8 @@
 #include <random>
 #include <stdio.h>
 
+namespace McCalib {
+
 cv::Mat RT2Proj(cv::Mat R, cv::Mat T);
 cv::Mat RVecT2Proj(cv::Mat RVec, cv::Mat T);
 cv::Mat RVecT2ProjInt(cv::Mat RVec, cv::Mat T, cv::Mat K);
@@ -57,3 +59,5 @@ cv::Mat convertQuaternionToRotationMatrix(const std::array<double, 4> &q);
 cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
                            std::vector<double> &r3,
                            const bool use_quaternion_averaging = true);
+
+} // namespace McCalib

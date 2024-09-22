@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class BoardObs;
 class Frame;
 
@@ -51,3 +53,5 @@ public:
   void insertNewBoard(std::shared_ptr<BoardObs> new_board);
   void insertNewFrame(std::shared_ptr<Frame> new_frame);
 };
+
+} // namespace McCalib
