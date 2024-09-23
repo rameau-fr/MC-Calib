@@ -31,7 +31,7 @@ void Object3D::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
  * @param color color of the 3D object
  */
 Object3D::Object3D(const int nb_boards, const int ref_board_id,
-                   const int obj_id, const std::array<int, 3> color)
+                   const int obj_id, const std::array<int, 3> &color)
     : nb_boards_(nb_boards), ref_board_id_(ref_board_id), obj_id_(obj_id),
       nb_pts_(0), color_(color) {}
 
@@ -63,7 +63,8 @@ void Object3D::insertNewFrame(std::shared_ptr<Frame> new_frame) {
  * @param t_vec translation vector
  * @param board_id id of the board of interest in the object
  */
-void Object3D::getBoardPoseVec(cv::Mat &r_vec, cv::Mat &t_vec, int board_id) {
+void Object3D::getBoardPoseVec(const int board_id, cv::Mat &r_vec,
+                               cv::Mat &t_vec) {
   cv::Mat rot_v = cv::Mat::zeros(3, 1, CV_64F);
   cv::Mat trans_v = cv::Mat::zeros(3, 1, CV_64F);
   rot_v.at<double>(0) = relative_board_pose_[board_id][0];
@@ -86,7 +87,7 @@ void Object3D::getBoardPoseVec(cv::Mat &r_vec, cv::Mat &t_vec, int board_id) {
 cv::Mat Object3D::getBoardPoseMat(int board_id) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getBoardPoseVec(r_vec, t_vec, board_id);
+  getBoardPoseVec(board_id, r_vec, t_vec);
   cv::Mat pose = RVecT2Proj(r_vec, t_vec);
   return pose;
 }
@@ -97,7 +98,7 @@ cv::Mat Object3D::getBoardPoseMat(int board_id) {
  * @param pose 4x4 pose matrix of the board in the object
  * @param board_id board index of interest
  */
-void Object3D::setBoardPoseMat(cv::Mat pose, int board_id) {
+void Object3D::setBoardPoseMat(const int board_id, const cv::Mat &pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   relative_board_pose_[board_id] = {r_vec.at<double>(0), r_vec.at<double>(1),
@@ -112,7 +113,8 @@ void Object3D::setBoardPoseMat(cv::Mat pose, int board_id) {
  * @param t_vec translation vector
  * @param board_id board index of interest
  */
-void Object3D::setBoardPoseVec(cv::Mat r_vec, cv::Mat t_vec, int board_id) {
+void Object3D::setBoardPoseVec(const int board_id, const cv::Mat &r_vec,
+                               const cv::Mat &t_vec) {
   relative_board_pose_[board_id] = {r_vec.at<double>(0), r_vec.at<double>(1),
                                     r_vec.at<double>(2), t_vec.at<double>(0),
                                     t_vec.at<double>(1), t_vec.at<double>(2)};
@@ -128,7 +130,7 @@ void Object3D::setBoardPoseVec(cv::Mat r_vec, cv::Mat t_vec, int board_id) {
 cv::Mat Object3D::getBoardRotVec(int board_id) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getBoardPoseVec(r_vec, t_vec, board_id);
+  getBoardPoseVec(board_id, r_vec, t_vec);
   return r_vec;
 }
 
@@ -142,7 +144,7 @@ cv::Mat Object3D::getBoardRotVec(int board_id) {
 cv::Mat Object3D::getBoardTransVec(int board_id) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getBoardPoseVec(r_vec, t_vec, board_id);
+  getBoardPoseVec(board_id, r_vec, t_vec);
   return t_vec;
 }
 

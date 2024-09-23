@@ -27,7 +27,7 @@ CameraGroup::CameraGroup(const int id_ref_cam, const int cam_group_idx)
  *
  * @param new_camera pointer to the new camera
  */
-void CameraGroup::insertCamera(std::shared_ptr<Camera> new_camera) {
+void CameraGroup::insertCamera(const std::shared_ptr<Camera> new_camera) {
   cameras_[new_camera->cam_idx_] = new_camera;
   cam_idx.push_back(new_camera->cam_idx_);
 }
@@ -38,7 +38,7 @@ void CameraGroup::insertCamera(std::shared_ptr<Camera> new_camera) {
  * @param new_object_observation pointer to the object observation
  */
 void CameraGroup::insertNewObjectObservation(
-    std::shared_ptr<Object3DObs> new_object_observation) {
+    const std::shared_ptr<Object3DObs> new_object_observation) {
   object_observations_[object_observations_.size()] = new_object_observation;
 }
 
@@ -47,7 +47,7 @@ void CameraGroup::insertNewObjectObservation(
  *
  * @param new_frame pointer to the new frame
  */
-void CameraGroup::insertNewFrame(std::shared_ptr<Frame> new_frame) {
+void CameraGroup::insertNewFrame(const std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
 }
 
@@ -59,11 +59,12 @@ CameraGroup::~CameraGroup() {}
  * The rotation and translation vector are passed by reference and set within
  * the function.
  *
+ * @param id_cam index of the camera of interest in the group
  * @param r_vec return (by reference) Rodrigues rotation vector
  * @param t_vec return (by reference) translation vector
- * @param id_cam index of the camera of interest in the group
  */
-void CameraGroup::getCameraPoseVec(cv::Mat &r_vec, cv::Mat &t_vec, int id_cam) {
+void CameraGroup::getCameraPoseVec(const int id_cam, cv::Mat &r_vec,
+                                   cv::Mat &t_vec) {
   cv::Mat rot_v = cv::Mat::zeros(3, 1, CV_64F);
   cv::Mat trans_v = cv::Mat::zeros(3, 1, CV_64F);
   rot_v.at<double>(0) = relative_camera_pose_[id_cam][0];
@@ -83,10 +84,10 @@ void CameraGroup::getCameraPoseVec(cv::Mat &r_vec, cv::Mat &t_vec, int id_cam) {
  *
  * @return pose matrix of the camera in the group
  */
-cv::Mat CameraGroup::getCameraPoseMat(int id_cam) {
+cv::Mat CameraGroup::getCameraPoseMat(const int id_cam) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getCameraPoseVec(r_vec, t_vec, id_cam);
+  getCameraPoseVec(id_cam, r_vec, t_vec);
   cv::Mat pose = RVecT2Proj(r_vec, t_vec);
   return pose;
 }
@@ -97,7 +98,7 @@ cv::Mat CameraGroup::getCameraPoseMat(int id_cam) {
  * @param pose 4x4 pose to set
  * @param id_cam index of the camera of interest in the group
  */
-void CameraGroup::setCameraPoseMat(cv::Mat pose, int id_cam) {
+void CameraGroup::setCameraPoseMat(const cv::Mat &pose, const int id_cam) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   relative_camera_pose_[id_cam] = {r_vec.at<double>(0), r_vec.at<double>(1),
@@ -112,7 +113,8 @@ void CameraGroup::setCameraPoseMat(cv::Mat pose, int id_cam) {
  * @param t_vec translation vector to set
  * @param id_cam index of the camera of interest in the group
  */
-void CameraGroup::setCameraPoseVec(cv::Mat r_vec, cv::Mat t_vec, int id_cam) {
+void CameraGroup::setCameraPoseVec(const cv::Mat &r_vec, const cv::Mat &t_vec,
+                                   const int id_cam) {
   relative_camera_pose_[id_cam] = {r_vec.at<double>(0), r_vec.at<double>(1),
                                    r_vec.at<double>(2), t_vec.at<double>(0),
                                    t_vec.at<double>(1), t_vec.at<double>(2)};
@@ -124,10 +126,10 @@ void CameraGroup::setCameraPoseVec(cv::Mat r_vec, cv::Mat t_vec, int id_cam) {
  * @param id_cam index of the camera of interest in the group
  * @return 1x3 Rodrigues vector of the camera "id_cam"
  */
-cv::Mat CameraGroup::getCameraRotVec(int id_cam) {
+cv::Mat CameraGroup::getCameraRotVec(const int id_cam) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getCameraPoseVec(r_vec, t_vec, id_cam);
+  getCameraPoseVec(id_cam, r_vec, t_vec);
   return r_vec;
 }
 
@@ -137,10 +139,10 @@ cv::Mat CameraGroup::getCameraRotVec(int id_cam) {
  * @param id_cam index of the camera of interest in the group
  * @return 1x3 translation vector of the camera "id_cam"
  */
-cv::Mat CameraGroup::getCameraTransVec(int id_cam) {
+cv::Mat CameraGroup::getCameraTransVec(const int id_cam) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getCameraPoseVec(r_vec, t_vec, id_cam);
+  getCameraPoseVec(id_cam, r_vec, t_vec);
   return t_vec;
 }
 
@@ -330,8 +332,8 @@ void CameraGroup::reproErrorCameraGroup() {
                       object_pts_trans1, getCameraRotVec(current_cam_id),
                       getCameraTransVec(current_cam_id),
                       cam_ptr->getCameraMat(),
-                      cam_ptr->getDistortionVectorVector(), repro_pts,
-                      cam_ptr->distortion_model_);
+                      cam_ptr->getDistortionVectorVector(),
+                      cam_ptr->distortion_model_, repro_pts);
                   float sum_error = 0;
                   // Compute error
                   for (std::size_t i = 0; i < repro_pts.size(); i++) {

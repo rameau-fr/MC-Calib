@@ -162,15 +162,16 @@ public:
   void save3DObjPose();     // Save 3D objects pose
   void saveDetectedKeypoints() const; // save detection keypoints, can be
                                       // re-used to save time in detection stage
-  void displayBoards(const cv::Mat image, const int cam_idx,
+  void displayBoards(const cv::Mat &image, const int cam_idx,
                      const int frame_idx);
   void insertNewBoard(
       const int cam_idx, const int frame_idx, const int board_idx,
-      const std::vector<cv::Point2f> pts_2d, const std::vector<int> charuco_idx,
-      const std::filesystem::path frame_path); // insert a new board in all the
-                                               // different datastructure
+      const std::vector<cv::Point2f> &pts_2d,
+      const std::vector<int> &charuco_idx,
+      const std::filesystem::path &frame_path); // insert a new board in all the
+                                                // different datastructure
   void
-  insertNewObjectObservation(std::shared_ptr<Object3DObs>
+  insertNewObjectObservation(const std::shared_ptr<Object3DObs>
                                  new_obj_obs); // insert new object observation
   void initializeCalibrationAllCam(); // initialize the calibration of all the
                                       // cameras
@@ -220,8 +221,8 @@ public:
   void computeAllObjPoseInCameraGroup();
   void computeObjectsPairPose();
   cv::Mat
-  computeDistanceBetweenPoints(const std::vector<cv::Point2f> obj_pts_2d,
-                               const std::vector<cv::Point2f> repro_pts);
+  computeDistanceBetweenPoints(const std::vector<cv::Point2f> &obj_pts_2d,
+                               const std::vector<cv::Point2f> &repro_pts);
   double computeAvgReprojectionError();
   void initInterObjectsGraph();
   void mergeObjects();
@@ -237,7 +238,7 @@ public:
 
 private:
   void detectBoardsInImageWithCamera(
-      const std::string frame_path, const int cam_idx,
+      const std::string &frame_path, const int cam_idx,
       const int frame_idx); // detect the boards in the input frame
 
   std::mutex insert_new_board_lock_;

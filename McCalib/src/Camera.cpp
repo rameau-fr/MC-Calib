@@ -33,7 +33,7 @@ cv::Mat Camera::getCameraMat() const {
  *
  * @param camera_matrix 3x3 camera matrix (K)
  */
-void Camera::setCameraMat(const cv::Mat camera_matrix) {
+void Camera::setCameraMat(const cv::Mat &camera_matrix) {
   intrinsics_[0] = camera_matrix.at<double>(0, 0);
   intrinsics_[1] = camera_matrix.at<double>(1, 1); // focal
   intrinsics_[2] = camera_matrix.at<double>(0, 2);
@@ -50,7 +50,7 @@ void Camera::setCameraMat(const cv::Mat camera_matrix) {
  *
  * @param distortion_vector
  */
-void Camera::setDistortionVector(const cv::Mat distortion_vector) {
+void Camera::setDistortionVector(const cv::Mat &distortion_vector) {
   if (distortion_model_ == 0) {
     for (std::size_t intrinIdx = 4u; intrinIdx <= 8u; ++intrinIdx) {
       std::size_t distIdx = intrinIdx - 4u;
@@ -116,8 +116,8 @@ void Camera::getIntrinsics(cv::Mat &camera_matrix, cv::Mat &distortion_vector) {
  * @param camera_matrix 3x3 K matrix
  * @param distortion_vector 1x5 distortion vector (following OpenCV)
  */
-void Camera::setIntrinsics(const cv::Mat camera_matrix,
-                           const cv::Mat distortion_vector) {
+void Camera::setIntrinsics(const cv::Mat &camera_matrix,
+                           const cv::Mat &distortion_vector) {
   setCameraMat(camera_matrix);
   setDistortionVector(distortion_vector);
 }
@@ -127,7 +127,7 @@ void Camera::setIntrinsics(const cv::Mat camera_matrix,
  *
  * @param new_board pointer to the new board
  */
-void Camera::insertNewBoard(std::shared_ptr<BoardObs> new_board) {
+void Camera::insertNewBoard(const std::shared_ptr<BoardObs> new_board) {
   board_observations_[board_observations_.size()] = new_board;
   vis_board_idx_.push_back(new_board->board_id_);
 }
@@ -137,7 +137,7 @@ void Camera::insertNewBoard(std::shared_ptr<BoardObs> new_board) {
  *
  * @param new_frame pointer to the new frame to include
  */
-void Camera::insertNewFrame(std::shared_ptr<Frame> new_frame) {
+void Camera::insertNewFrame(const std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
 }
 
@@ -146,7 +146,7 @@ void Camera::insertNewFrame(std::shared_ptr<Frame> new_frame) {
  *
  * @param new_object pointer to the new object to be inserted
  */
-void Camera::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
+void Camera::insertNewObject(const std::shared_ptr<Object3DObs> new_object) {
   object_observations_[object_observations_.size()] = new_object;
   vis_object_idx_.push_back(new_object->object_3d_id_);
 }
@@ -239,7 +239,8 @@ void Camera::initializeCalibration() {
  * https://github.com/realizator/stereopi-fisheye-robot/blob/master/
  * 4_calibration_fisheye.py
  */
-bool Camera::checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs) {
+bool Camera::checkBorderToleranceFisheye(
+    const std::shared_ptr<BoardObs> board_obs) {
   bool valid_board = true;
   const float thresh_border_x = float(im_cols_) * border_marging;
   const float thresh_border_y = float(im_rows_) * border_marging;

@@ -285,7 +285,7 @@ void Calibration::detectBoardsWithCamera(const std::vector<cv::String> &fn,
  * @param cam_idx camera index which acquire the frame
  * @param frame_idx frame index
  */
-void Calibration::detectBoardsInImageWithCamera(const std::string frame_path,
+void Calibration::detectBoardsInImageWithCamera(const std::string &frame_path,
                                                 const int cam_idx,
                                                 const int frame_idx) {
   cv::Mat image = cv::imread(frame_path);
@@ -557,7 +557,7 @@ void Calibration::saveDetectedKeypoints() const {
  * @param cam_idx camera index
  * @param frame_idx frame index
  */
-void Calibration::displayBoards(const cv::Mat image, const int cam_idx,
+void Calibration::displayBoards(const cv::Mat &image, const int cam_idx,
                                 const int frame_idx) {
   std::pair<int, int> cam_frame = std::make_pair(cam_idx, frame_idx);
   std::map<std::pair<int, int>, std::shared_ptr<CameraObs>>::iterator it =
@@ -596,9 +596,9 @@ void Calibration::displayBoards(const cv::Mat image, const int cam_idx,
  */
 void Calibration::insertNewBoard(const int cam_idx, const int frame_idx,
                                  const int board_idx,
-                                 const std::vector<cv::Point2f> pts_2d,
-                                 const std::vector<int> charuco_idx,
-                                 const std::filesystem::path frame_path) {
+                                 const std::vector<cv::Point2f> &pts_2d,
+                                 const std::vector<int> &charuco_idx,
+                                 const std::filesystem::path &frame_path) {
   std::shared_ptr<BoardObs> new_board = std::make_shared<BoardObs>(
       cam_idx, frame_idx, board_idx, pts_2d, charuco_idx, cams_[cam_idx],
       boards_3d_[board_idx]);
@@ -904,7 +904,7 @@ void Calibration::init3DObjects() {
       }
 
       // Store the relative board transformation in the object
-      newObject3D->setBoardPoseMat(transform, current_board_id);
+      newObject3D->setBoardPoseMat(current_board_id, transform);
 
       // Transform the 3D pts to push in the object 3D
       std::vector<cv::Point3f> trans_pts =
@@ -1784,7 +1784,7 @@ void Calibration::mergeObjects() {
             // insert new board
             newObject3D->insertBoardInObject(current_board);
             // Store the relative board transformation in the object
-            newObject3D->setBoardPoseMat(transform, current_board->board_id_);
+            newObject3D->setBoardPoseMat(current_board->board_id_, transform);
             // Transform the 3D pts to push in the object 3D
             std::vector<cv::Point3f> trans_pts = transform3DPts(
                 current_board->pts_3d_,
@@ -1956,7 +1956,7 @@ void Calibration::saveReprojectionImages(const int cam_id) {
             trans_vec.copyTo(tt);
             projectPointsWithDistortion(pts_3d, rr, tt, cam->getCameraMat(),
                                         cam->getDistortionVectorVector(),
-                                        pts_repro, cam->distortion_model_);
+                                        cam->distortion_model_, pts_repro);
 
             // plot the keypoints on the image (red project // green detected)
             std::vector<double> color_repro{0, 0, 255};
@@ -2149,8 +2149,8 @@ void Calibration::merge3DObjects() {
  * @return list of distances between points
  */
 cv::Mat Calibration::computeDistanceBetweenPoints(
-    const std::vector<cv::Point2f> obj_pts_2d,
-    const std::vector<cv::Point2f> repro_pts) {
+    const std::vector<cv::Point2f> &obj_pts_2d,
+    const std::vector<cv::Point2f> &repro_pts) {
   cv::Mat error_list;
   for (std::size_t i = 0; i < repro_pts.size(); i++) {
     float rep_err = std::sqrt(std::pow((obj_pts_2d[i].x - repro_pts[i].x), 2) +
@@ -2227,8 +2227,8 @@ double Calibration::computeAvgReprojectionError() {
                     it.second->getCameraRotVec(current_cam_id),
                     it.second->getCameraTransVec(current_cam_id),
                     cam_ptr->getCameraMat(),
-                    cam_ptr->getDistortionVectorVector(), repro_pts,
-                    cam_ptr->distortion_model_);
+                    cam_ptr->getDistortionVectorVector(),
+                    cam_ptr->distortion_model_, repro_pts);
 
                 cv::Mat error_list =
                     computeDistanceBetweenPoints(obj_pts_2d, repro_pts);
@@ -2323,8 +2323,8 @@ void Calibration::saveReprojectionErrorToFile() {
                     it.second->getCameraRotVec(current_cam_id),
                     it.second->getCameraTransVec(current_cam_id),
                     cam_ptr->getCameraMat(),
-                    cam_ptr->getDistortionVectorVector(), repro_pts,
-                    cam_ptr->distortion_model_);
+                    cam_ptr->getDistortionVectorVector(),
+                    cam_ptr->distortion_model_, repro_pts);
 
                 cv::Mat error_list =
                     computeDistanceBetweenPoints(obj_pts_2d, repro_pts);

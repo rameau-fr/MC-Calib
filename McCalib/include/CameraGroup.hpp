@@ -49,16 +49,17 @@ public:
   CameraGroup() = delete;
   ~CameraGroup();
   CameraGroup(const int id_ref_cam, const int cam_group_idx);
-  void insertCamera(std::shared_ptr<Camera> new_camera);
+  void insertCamera(const std::shared_ptr<Camera> new_camera);
   void insertNewObjectObservation(
-      std::shared_ptr<Object3DObs> new_object_observation);
-  void insertNewFrame(std::shared_ptr<Frame> new_frame);
-  void getCameraPoseVec(cv::Mat &r_vec, cv::Mat &t_vec, int id_cam);
-  cv::Mat getCameraPoseMat(int id_cam);
-  void setCameraPoseMat(cv::Mat pose, int id_cam);
-  void setCameraPoseVec(cv::Mat r_vec, cv::Mat t_vec, int id_cam);
-  cv::Mat getCameraRotVec(int id_cam);
-  cv::Mat getCameraTransVec(int id_cam);
+      const std::shared_ptr<Object3DObs> new_object_observation);
+  void insertNewFrame(const std::shared_ptr<Frame> new_frame);
+  void getCameraPoseVec(const int id_cam, cv::Mat &r_vec, cv::Mat &t_vec);
+  cv::Mat getCameraPoseMat(const int id_cam);
+  void setCameraPoseMat(const cv::Mat &pose, const int id_cam);
+  void setCameraPoseVec(const cv::Mat &r_vec, const cv::Mat &t_vec,
+                        const int id_cam);
+  cv::Mat getCameraRotVec(const int id_cam);
+  cv::Mat getCameraTransVec(const int id_cam);
   void computeObjPoseInCameraGroup();
   void refineCameraGroup(const int nb_iterations);
   void reproErrorCameraGroup();

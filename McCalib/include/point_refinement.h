@@ -25,8 +25,9 @@ struct SaddlePoint {
   SaddlePoint(double x, double y) : x(x), y(y) {}
 };
 
-void initSaddlePointRefinement(int half_kernel_size, cv::Mat &saddleKernel,
-                               cv::Mat &invAtAAt, cv::Mat &valid) {
+void initSaddlePointRefinement(const int half_kernel_size,
+                               cv::Mat &saddleKernel, cv::Mat &invAtAAt,
+                               cv::Mat &valid) {
   int window_size = half_kernel_size * 2 + 1;
   saddleKernel.create(window_size, window_size, CV_64FC1);
   double maxVal = half_kernel_size + 1, sum = 0;
@@ -78,8 +79,8 @@ template <typename PointType>
 void saddleSubpixelRefinement(const cv::Mat &smooth_input,
                               const std::vector<PointType> &initial, cv::Mat &A,
                               cv::Mat &valid, std::vector<SaddlePoint> &refined,
-                              int window_half_size = 3,
-                              int max_iterations = 3) {
+                              const int window_half_size = 3,
+                              const int max_iterations = 3) {
   cv::Mat b(A.cols, 1, CV_64FC1);
 
   refined.resize(initial.size());
@@ -175,8 +176,8 @@ template <typename PointType>
 void saddleSubpixelRefinement(const cv::Mat &input,
                               const std::vector<PointType> &initial,
                               std::vector<SaddlePoint> &refined,
-                              int window_half_size = 2,
-                              int max_iterations = 20) {
+                              const int window_half_size = 2,
+                              const int max_iterations = 20) {
   cv::Mat weights, A, valid;
   initSaddlePointRefinement(window_half_size, weights, A, valid);
 

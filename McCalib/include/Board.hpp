@@ -50,8 +50,8 @@ public:
   Board() = delete;
   ~Board(){};
   Board(const std::filesystem::path &config, const int board_idx);
-  void insertNewBoard(std::shared_ptr<BoardObs> new_board);
-  void insertNewFrame(std::shared_ptr<Frame> new_frame);
+  void insertNewBoard(const std::shared_ptr<BoardObs> new_board);
+  void insertNewFrame(const std::shared_ptr<Frame> new_frame);
 };
 
 } // namespace McCalib

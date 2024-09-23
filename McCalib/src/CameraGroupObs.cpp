@@ -15,7 +15,7 @@ namespace McCalib {
  *
  * @param new_cam_group camera group to be added
  */
-CameraGroupObs::CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group,
+CameraGroupObs::CameraGroupObs(const std::shared_ptr<CameraGroup> new_cam_group,
                                const bool quaternion_averaging) {
   cam_group_ = new_cam_group;
   cam_group_idx_ = new_cam_group->cam_group_idx_;
@@ -28,7 +28,7 @@ CameraGroupObs::CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group,
  * @param new_object_observation observation to be added
  */
 void CameraGroupObs::insertObjectObservation(
-    std::shared_ptr<Object3DObs> new_object_observation) {
+    const std::shared_ptr<Object3DObs> new_object_observation) {
   object_idx_.push_back(new_object_observation->object_3d_id_);
   object_observations_[object_observations_.size()] = new_object_observation;
 }
@@ -114,8 +114,8 @@ void CameraGroupObs::computeObjectsPose() {
  * @param t_vec return (by reference) translation vector
  * @param object_id object index of interest in the cam group
  */
-void CameraGroupObs::getObjectPoseVec(cv::Mat &r_vec, cv::Mat &t_vec,
-                                      int object_id) {
+void CameraGroupObs::getObjectPoseVec(const int object_id, cv::Mat &r_vec,
+                                      cv::Mat &t_vec) {
   cv::Mat rot_v = cv::Mat::zeros(3, 1, CV_64F);
   cv::Mat trans_v = cv::Mat::zeros(3, 1, CV_64F);
   rot_v.at<double>(0) = object_pose_[object_id][0];
@@ -135,10 +135,10 @@ void CameraGroupObs::getObjectPoseVec(cv::Mat &r_vec, cv::Mat &t_vec,
  *
  * @return Pose matrix of the object in the group
  */
-cv::Mat CameraGroupObs::getObjectPoseMat(int object_id) {
+cv::Mat CameraGroupObs::getObjectPoseMat(const int object_id) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getObjectPoseVec(r_vec, t_vec, object_id);
+  getObjectPoseVec(object_id, r_vec, t_vec);
   cv::Mat pose = RVecT2Proj(r_vec, t_vec);
   return pose;
 }
@@ -149,7 +149,8 @@ cv::Mat CameraGroupObs::getObjectPoseMat(int object_id) {
  * @param pose 4x4 pose to set
  * @param object_id object index of interest in the group
  */
-void CameraGroupObs::setObjectPoseMat(cv::Mat pose, int object_id) {
+void CameraGroupObs::setObjectPoseMat(const cv::Mat &pose,
+                                      const int object_id) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   object_pose_[object_id] = {r_vec.at<double>(0), r_vec.at<double>(1),
@@ -164,8 +165,9 @@ void CameraGroupObs::setObjectPoseMat(cv::Mat pose, int object_id) {
  * @param t_vec translation vector to set
  * @param object_id object index of interest in the group
  */
-void CameraGroupObs::setObjectPoseVec(cv::Mat r_vec, cv::Mat t_vec,
-                                      int object_id) {
+void CameraGroupObs::setObjectPoseVec(const cv::Mat &r_vec,
+                                      const cv::Mat &t_vec,
+                                      const int object_id) {
   object_pose_[object_id] = {r_vec.at<double>(0), r_vec.at<double>(1),
                              r_vec.at<double>(2), t_vec.at<double>(0),
                              t_vec.at<double>(1), t_vec.at<double>(2)};
@@ -178,10 +180,10 @@ void CameraGroupObs::setObjectPoseVec(cv::Mat r_vec, cv::Mat t_vec,
  *
  * @return 1x3 Rodrigues vector of the camera "object_id"
  */
-cv::Mat CameraGroupObs::getObjectRotVec(int object_id) {
+cv::Mat CameraGroupObs::getObjectRotVec(const int object_id) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getObjectPoseVec(r_vec, t_vec, object_id);
+  getObjectPoseVec(object_id, r_vec, t_vec);
   return r_vec;
 }
 
@@ -192,10 +194,10 @@ cv::Mat CameraGroupObs::getObjectRotVec(int object_id) {
  *
  * @return 1x3 translation vector of the camera "object_id"
  */
-cv::Mat CameraGroupObs::getObjectTransVec(int object_id) {
+cv::Mat CameraGroupObs::getObjectTransVec(const int object_id) {
   cv::Mat r_vec;
   cv::Mat t_vec;
-  getObjectPoseVec(r_vec, t_vec, object_id);
+  getObjectPoseVec(object_id, r_vec, t_vec);
   return t_vec;
 }
 

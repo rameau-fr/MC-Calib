@@ -35,9 +35,9 @@ public:
   // Functions
   CameraObs() = delete;
   ~CameraObs(){};
-  CameraObs(std::shared_ptr<BoardObs> new_board);
-  void insertNewBoard(std::shared_ptr<BoardObs> new_board);
-  void insertNewObject(std::shared_ptr<Object3DObs> new_object);
+  CameraObs(const std::shared_ptr<BoardObs> new_board);
+  void insertNewBoard(const std::shared_ptr<BoardObs> new_board);
+  void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
 };
 
 } // namespace McCalib

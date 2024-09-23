@@ -112,7 +112,7 @@ cv::Mat Object3DObs::getTransVec() const {
  *
  * @param pose 4x4 pose matrix
  */
-void Object3DObs::setPoseMat(cv::Mat pose) {
+void Object3DObs::setPoseMat(const cv::Mat &pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
@@ -126,7 +126,7 @@ void Object3DObs::setPoseMat(cv::Mat pose) {
  * @param r_vec Rodrigues rotation vector
  * @param t_vec translation vector
  */
-void Object3DObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
+void Object3DObs::setPoseVec(const cv::Mat &r_vec, const cv::Mat &t_vec) {
   pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
            t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
@@ -137,7 +137,7 @@ void Object3DObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
  *
  * @param pose 4x4 pose matrix
  */
-void Object3DObs::setPoseInGroupMat(cv::Mat pose) {
+void Object3DObs::setPoseInGroupMat(const cv::Mat &pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   group_pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
@@ -151,7 +151,8 @@ void Object3DObs::setPoseInGroupMat(cv::Mat pose) {
  * @param r_vec Rodrigues rotation vector
  * @param t_vec translation vector
  */
-void Object3DObs::setPoseInGroupVec(const cv::Mat r_vec, const cv::Mat t_vec) {
+void Object3DObs::setPoseInGroupVec(const cv::Mat &r_vec,
+                                    const cv::Mat &t_vec) {
   group_pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
                  t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
@@ -268,8 +269,8 @@ float Object3DObs::computeReprojectionError() const {
   if (cam_ptr) {
     projectPointsWithDistortion(object_pts_temp, getRotVec(), getTransVec(),
                                 cam_ptr->getCameraMat(),
-                                cam_ptr->getDistortionVectorVector(), repro_pts,
-                                cam_ptr->distortion_model_);
+                                cam_ptr->getDistortionVectorVector(),
+                                cam_ptr->distortion_model_, repro_pts);
     for (std::size_t j = 0; j < repro_pts.size(); j++) {
       float rep_err = std::sqrt(std::pow((pts_2d_[j].x - repro_pts[j].x), 2) +
                                 std::pow((pts_2d_[j].y - repro_pts[j].y), 2));

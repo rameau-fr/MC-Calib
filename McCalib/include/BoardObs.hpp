@@ -50,13 +50,14 @@ public:
   BoardObs() = delete;
   ~BoardObs(){};
   BoardObs(const int camera_id, const int frame_id, const int board_id,
-           const std::vector<cv::Point2f> pts_2d,
-           const std::vector<int> charuco_id, std::shared_ptr<Camera> cam,
-           std::shared_ptr<Board> board_3d);
+           const std::vector<cv::Point2f> &pts_2d,
+           const std::vector<int> &charuco_id,
+           const std::shared_ptr<Camera> cam,
+           const std::shared_ptr<Board> board_3d);
   void getPoseVec(cv::Mat &R, cv::Mat &T) const;
   cv::Mat getPoseMat() const;
-  void setPoseMat(const cv::Mat Pose);
-  void setPoseVec(const cv::Mat Rvec, const cv::Mat T);
+  void setPoseMat(const cv::Mat &Pose);
+  void setPoseVec(const cv::Mat &Rvec, const cv::Mat &T);
   void estimatePose(const float ransac_thresh, const int ransac_iterations);
   float computeReprojectionError();
   cv::Mat getRotVec() const;

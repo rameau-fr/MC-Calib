@@ -67,18 +67,18 @@ public:
   // Functions
   Object3DObs() = delete;
   ~Object3DObs(){};
-  Object3DObs(std::shared_ptr<Object3D> obj_obs, const int object_idx);
-  void insertNewBoardObs(std::shared_ptr<BoardObs> new_board_obs);
+  Object3DObs(const std::shared_ptr<Object3D> obj_obs, const int object_idx);
+  void insertNewBoardObs(const std::shared_ptr<BoardObs> new_board_obs);
   void getPoseVec(cv::Mat &R, cv::Mat &T) const;
   cv::Mat getPoseMat() const;
-  void setPoseMat(const cv::Mat Pose);
-  void setPoseVec(const cv::Mat Rvec, const cv::Mat T);
+  void setPoseMat(const cv::Mat &Pose);
+  void setPoseVec(const cv::Mat &Rvec, const cv::Mat &T);
   cv::Mat getRotVec() const;
   cv::Mat getTransVec() const;
   void estimatePose(const float ransac_thresh, const int ransac_iterations);
   float computeReprojectionError() const;
-  void setPoseInGroupMat(const cv::Mat pose);
-  void setPoseInGroupVec(const cv::Mat r_vec, const cv::Mat t_vec);
+  void setPoseInGroupMat(const cv::Mat &pose);
+  void setPoseInGroupVec(const cv::Mat &r_vec, const cv::Mat &t_vec);
   void getPoseInGroupVec(cv::Mat &r_vec, cv::Mat &t_vec) const;
   cv::Mat getPoseInGroupMat() const;
   cv::Mat getRotInGroupVec() const;

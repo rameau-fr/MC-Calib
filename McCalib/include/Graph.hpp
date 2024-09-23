@@ -30,11 +30,11 @@ public:
       typename boost::graph_traits<GraphUndirectedWeighted>::vertex_descriptor
           Vertex;
 
-  void addVertex(int vertex);
-  void addEdge(int v1, int v2, double weight);
+  void addVertex(const int vertex);
+  void addEdge(const int v1, const int v2, const double weight);
   GraphUndirectedWeighted getGraph();
   std::vector<std::vector<int>> connectedComponents();
-  std::vector<int> shortestPathBetween(int v1, int v2);
+  std::vector<int> shortestPathBetween(const int v1, const int v2);
   void clearGraph();
 
 private:
