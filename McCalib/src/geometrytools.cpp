@@ -6,8 +6,10 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 // Tools for rotation and projection matrix
-cv::Mat RT2Proj(cv::Mat R, cv::Mat T) {
+cv::Mat RT2Proj(const cv::Mat &R, const cv::Mat &T) {
   cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
                   0, 0, 0, 1);
   R.copyTo(Proj(cv::Range(0, 3), cv::Range(0, 3)));
@@ -15,7 +17,7 @@ cv::Mat RT2Proj(cv::Mat R, cv::Mat T) {
   return Proj;
 }
 
-cv::Mat RVecT2Proj(cv::Mat RVec, cv::Mat T) {
+cv::Mat RVecT2Proj(const cv::Mat &RVec, const cv::Mat &T) {
   cv::Mat R;
   cv::Rodrigues(RVec, R);
   cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
@@ -25,7 +27,7 @@ cv::Mat RVecT2Proj(cv::Mat RVec, cv::Mat T) {
   return Proj;
 }
 
-cv::Mat RVecT2ProjInt(cv::Mat RVec, cv::Mat T, cv::Mat K) {
+cv::Mat RVecT2ProjInt(const cv::Mat &RVec, const cv::Mat &T, const cv::Mat &K) {
   cv::Mat R;
   cv::Rodrigues(RVec, R);
   cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
@@ -37,14 +39,14 @@ cv::Mat RVecT2ProjInt(cv::Mat RVec, cv::Mat T, cv::Mat K) {
   return Proj;
 }
 
-void Proj2RT(cv::Mat Proj, cv::Mat &R,
+void Proj2RT(const cv::Mat &Proj, cv::Mat &R,
              cv::Mat &T) // Rodrigues and translation vector
 {
   cv::Rodrigues(Proj(cv::Range(0, 3), cv::Range(0, 3)), R);
   T = Proj(cv::Range(0, 3), cv::Range(3, 4));
 }
 
-cv::Mat vectorProj(std::vector<float> ProjV) // R Rodrigues | T vector
+cv::Mat vectorProj(const std::vector<float> &ProjV) // R Rodrigues | T vector
 {
   cv::Mat RV(1, 3, CV_64F);
   cv::Mat TV(3, 1, CV_64F);
@@ -64,7 +66,7 @@ cv::Mat vectorProj(std::vector<float> ProjV) // R Rodrigues | T vector
 }
 
 // Projection matrix to float array
-std::array<float, 6> ProjToVec(cv::Mat Proj) {
+std::array<float, 6> ProjToVec(const cv::Mat &Proj) {
   cv::Mat R(1, 3, CV_64F);
   cv::Mat T(3, 1, CV_64F);
   cv::Rodrigues(Proj(cv::Range(0, 3), cv::Range(0, 3)), R);
@@ -76,7 +78,8 @@ std::array<float, 6> ProjToVec(cv::Mat Proj) {
 }
 
 // Invert vector representation
-void invertRvecT(cv::Mat Rvec, cv::Mat T, cv::Mat &iR, cv::Mat &iT) {
+void invertRvecT(const cv::Mat &Rvec, const cv::Mat &T, cv::Mat &iR,
+                 cv::Mat &iT) {
   cv::Mat Proj = RVecT2Proj(Rvec, T);
   Proj = Proj.inv();
   Proj2RT(Proj, iR, iT);
@@ -91,10 +94,10 @@ void invertRvecT(cv::Mat &Rvec, cv::Mat &T) {
 // My SVD triangulation
 // Triangulate a 3D point from multiple observations
 cv::Point3f
-triangulateNViewLinearEigen(const std::vector<cv::Point2f> Pts2D,
-                            const std::vector<cv::Mat> RotationVec,
-                            const std::vector<cv::Mat> TranslationVec,
-                            cv::Mat Intrinsic) {
+triangulateNViewLinearEigen(const std::vector<cv::Point2f> &Pts2D,
+                            const std::vector<cv::Mat> &RotationVec,
+                            const std::vector<cv::Mat> &TranslationVec,
+                            const cv::Mat &Intrinsic) {
   cv::Mat A; // Projection matrix
   for (std::size_t i = 0; i < RotationVec.size(); i++) {
     cv::Mat cam_temp =
@@ -119,8 +122,8 @@ triangulateNViewLinearEigen(const std::vector<cv::Point2f> Pts2D,
 }
 
 // Fit the line according to the point set ax + by + c = 0, res is the residual
-void calcLinePara(std::vector<cv::Point2f> pts, double &a, double &b, double &c,
-                  double &res) {
+void calcLinePara(const std::vector<cv::Point2f> &pts, double &a, double &b,
+                  double &c, double &res) {
   res = 0;
   cv::Vec4f line;
   std::vector<cv::Point2f> ptsF;
@@ -143,12 +146,13 @@ void calcLinePara(std::vector<cv::Point2f> pts, double &a, double &b, double &c,
 // RANSAC algorithm
 // Return Inliers, p = proba (typical = 0.99), Output : Best Pts3D maximizing
 // inliers, Thresh = reprojection tolerance in pixels, it = max iteration
-void ransacTriangulation(std::vector<cv::Point2f> point2d,
-                         std::vector<cv::Mat> rotation_vec,
-                         std::vector<cv::Mat> translation_vec,
-                         cv::Mat intrinsic, cv::Mat distortion_vector,
-                         cv::Point3f &best_points3d, double thresh, double p,
-                         int it) {
+void ransacTriangulation(const std::vector<cv::Point2f> &point2d,
+                         const std::vector<cv::Mat> &rotation_vec,
+                         const std::vector<cv::Mat> &translation_vec,
+                         const cv::Mat &intrinsic,
+                         const cv::Mat &distortion_vector, const double thresh,
+                         const double p, const int it,
+                         cv::Point3f &best_points3d) {
   // Init parameters
   int N = it;
   int trialcount = 0;
@@ -316,8 +320,9 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> &scenePoints,
   return InliersR;
 }
 
-std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
-                                        cv::Mat Rot, cv::Mat Trans) {
+std::vector<cv::Point3f> transform3DPts(const std::vector<cv::Point3f> &pts3D,
+                                        const cv::Mat &Rot,
+                                        const cv::Mat &Trans) {
   cv::Mat RotM;
   cv::Rodrigues(Rot, RotM);
   double r11 = RotM.at<double>(0, 0);
@@ -333,16 +338,15 @@ std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
   double ty = Trans.at<double>(1);
   double tz = Trans.at<double>(2);
 
-  for (auto &pt3D : pts3D) {
+  std::vector<cv::Point3f> pts3D_transformed;
+  for (const cv::Point3f &pt3D : pts3D) {
     float x = tx + r11 * pt3D.x + r12 * pt3D.y + r13 * pt3D.z;
     float y = ty + r21 * pt3D.x + r22 * pt3D.y + r23 * pt3D.z;
     float z = tz + r31 * pt3D.x + r32 * pt3D.y + r33 * pt3D.z;
-    pt3D.x = x;
-    pt3D.y = y;
-    pt3D.z = z;
+    pts3D_transformed.emplace_back(x, y, z);
   }
 
-  return pts3D;
+  return pts3D_transformed;
 }
 
 /**
@@ -350,8 +354,8 @@ std::vector<cv::Point3f> transform3DPts(std::vector<cv::Point3f> pts3D,
  *
 
  */
-cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
-                           const std::vector<cv::Mat> pose_abs_2) {
+cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
+                           const std::vector<cv::Mat> &pose_abs_2) {
 
   // Prepare the poses for handeye calibration
   const size_t num_poses = pose_abs_1.size();
@@ -396,11 +400,12 @@ cv::Mat handeyeCalibration(const std::vector<cv::Mat> pose_abs_1,
  * The mean value of valid poses is returned
  */
 cv::Mat handeyeBootstratpTranslationCalibration(
-    unsigned int nb_cluster, unsigned int nb_it,
-    std::vector<cv::Mat> pose_abs_1, std::vector<cv::Mat> pose_abs_2) {
+    const unsigned int nb_clusters, const unsigned int nb_it,
+    const std::vector<cv::Mat> &pose_abs_1,
+    const std::vector<cv::Mat> &pose_abs_2) {
   // N clusters but less if less images available
-  nb_cluster =
-      (pose_abs_1.size() < nb_cluster) ? pose_abs_1.size() : nb_cluster;
+  const unsigned int nb_cluster =
+      (pose_abs_1.size() < nb_clusters) ? pose_abs_1.size() : nb_clusters;
 
   // Prepare the translational component of the cameras to be clustered
   cv::Mat position_1_2; // concatenation of the translation of pose 1 and 2 for
@@ -564,9 +569,9 @@ double median(std::vector<double> &v) {
 // distortion_type: 0 (perspective), 1 (fisheye)
 cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
                             const std::vector<cv::Point2f> &image_points,
-                            const cv::Mat intrinsic, cv::Mat distortion_vector,
-                            cv::Mat &best_R, cv::Mat &best_T,
-                            const float thresh, const int it,
+                            const cv::Mat &intrinsic,
+                            const cv::Mat &distortion_vector, cv::Mat &best_R,
+                            cv::Mat &best_T, const float thresh, const int it,
                             const int distortion_type, const double p,
                             const bool refine) {
   cv::Mat Inliers;
@@ -596,10 +601,11 @@ cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
           float(intrinsic.at<double>(1, 2));
     }
     // Run p3p
-    distortion_vector = (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
-    Inliers =
-        ransacP3P(scene_points, imagePointsUndis, New_Intrinsic,
-                  distortion_vector, best_R, best_T, thresh, it, p, refine);
+    const cv::Mat zero_distortion_vector =
+        (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
+    Inliers = ransacP3P(scene_points, imagePointsUndis, New_Intrinsic,
+                        zero_distortion_vector, best_R, best_T, thresh, it, p,
+                        refine);
   }
 
   return Inliers;
@@ -607,12 +613,12 @@ cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
 
 // Project point for fisheye and perspective ()
 // distortion_type: 0 (perspective), 1 (fisheye)
-void projectPointsWithDistortion(std::vector<cv::Point3f> object_pts,
-                                 cv::Mat rot, cv::Mat trans,
-                                 cv::Mat camera_matrix,
-                                 cv::Mat distortion_vector,
-                                 std::vector<cv::Point2f> &repro_pts,
-                                 int distortion_type) {
+void projectPointsWithDistortion(const std::vector<cv::Point3f> &object_pts,
+                                 const cv::Mat &rot, const cv::Mat &trans,
+                                 const cv::Mat &camera_matrix,
+                                 const cv::Mat &distortion_vector,
+                                 const int distortion_type,
+                                 std::vector<cv::Point2f> &repro_pts) {
   if (distortion_type == 0) // perspective (Brown)
   {
     cv::projectPoints(object_pts, rot, trans, camera_matrix, distortion_vector,
@@ -625,7 +631,7 @@ void projectPointsWithDistortion(std::vector<cv::Point3f> object_pts,
   }
 }
 
-cv::Mat convertRotationMatrixToQuaternion(cv::Mat R) {
+cv::Mat convertRotationMatrixToQuaternion(const cv::Mat &R) {
   // code is adapted from
   // https://gist.github.com/shubh-agrawal/76754b9bfb0f4143819dbd146d15d4c8
 
@@ -745,3 +751,5 @@ cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
 
   return average_rotation;
 }
+
+} // namespace McCalib

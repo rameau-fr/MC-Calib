@@ -13,6 +13,8 @@
 #include "CameraObs.hpp"
 #include "Object3DObs.hpp"
 
+namespace McCalib {
+
 /**
  * @class Frame
  *
@@ -53,10 +55,12 @@ public:
   ~Frame(){};
   Frame(const int frame_idx, const int cam_idx,
         const std::filesystem::path &frame_path);
-  void insertNewBoard(std::shared_ptr<BoardObs> newBoard);
-  void insertNewCamObs(std::shared_ptr<CameraObs> newCamObs);
-  void insertNewObject(std::shared_ptr<Object3DObs> new_object);
-  void
-  insertNewCameraGroupObs(std::shared_ptr<CameraGroupObs> new_cam_group_obs,
-                          const int camera_group_idx);
+  void insertNewBoard(const std::shared_ptr<BoardObs> newBoard);
+  void insertNewCamObs(const std::shared_ptr<CameraObs> newCamObs);
+  void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
+  void insertNewCameraGroupObs(
+      const std::shared_ptr<CameraGroupObs> new_cam_group_obs,
+      const int camera_group_idx);
 };
+
+} // namespace McCalib

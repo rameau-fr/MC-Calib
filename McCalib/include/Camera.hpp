@@ -11,6 +11,8 @@
 #include "Frame.hpp"
 #include "Object3DObs.hpp"
 
+namespace McCalib {
+
 /**
  * @class Camera
  *
@@ -51,16 +53,18 @@ public:
   Camera() = delete;
   Camera(const int cam_idx, const int distortion_model);
   ~Camera(){};
-  void insertNewBoard(std::shared_ptr<BoardObs> newBoard);
-  void insertNewFrame(std::shared_ptr<Frame> newFrame);
-  void insertNewObject(std::shared_ptr<Object3DObs> new_object);
+  void insertNewBoard(const std::shared_ptr<BoardObs> newBoard);
+  void insertNewFrame(const std::shared_ptr<Frame> newFrame);
+  void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
   void initializeCalibration();
   void refineIntrinsicCalibration(const int nb_iterations);
   cv::Mat getCameraMat() const;
-  void setCameraMat(const cv::Mat K);
-  void setDistortionVector(const cv::Mat distortion_vector);
+  void setCameraMat(const cv::Mat &K);
+  void setDistortionVector(const cv::Mat &distortion_vector);
   cv::Mat getDistortionVectorVector() const;
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
-  void setIntrinsics(const cv::Mat K, const cv::Mat distortion_vector);
-  bool checkBorderToleranceFisheye(std::shared_ptr<BoardObs> board_obs);
+  void setIntrinsics(const cv::Mat &K, const cv::Mat &distortion_vector);
+  bool checkBorderToleranceFisheye(const std::shared_ptr<BoardObs> board_obs);
 };
+
+} // namespace McCalib

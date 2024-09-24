@@ -9,6 +9,8 @@
 #include "geometrytools.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 /**
  * @brief Initialize the board observation object
  *
@@ -21,9 +23,10 @@
  * @param board_3d 3D board corresponding to the observation
  */
 BoardObs::BoardObs(const int camera_id, const int frame_id, const int board_id,
-                   const std::vector<cv::Point2f> pts_2d,
-                   const std::vector<int> charuco_id,
-                   std::shared_ptr<Camera> cam, std::shared_ptr<Board> board_3d)
+                   const std::vector<cv::Point2f> &pts_2d,
+                   const std::vector<int> &charuco_id,
+                   const std::shared_ptr<Camera> cam,
+                   const std::shared_ptr<Board> board_3d)
     : frame_id_(frame_id), camera_id_(camera_id), board_id_(board_id),
       pts_2d_(pts_2d), charuco_id_(charuco_id), cam_(cam), board_3d_(board_3d) {
 }
@@ -89,7 +92,7 @@ cv::Mat BoardObs::getTransVec() const {
  *
  * @param pose 4x4 pose matrix
  */
-void BoardObs::setPoseMat(const cv::Mat pose) {
+void BoardObs::setPoseMat(const cv::Mat &pose) {
   cv::Mat r_vec, t_vec;
   Proj2RT(pose, r_vec, t_vec);
   pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
@@ -103,7 +106,7 @@ void BoardObs::setPoseMat(const cv::Mat pose) {
  * @param r_vec Rodrigues rotation vector
  * @param t_vec translation vector
  */
-void BoardObs::setPoseVec(const cv::Mat r_vec, const cv::Mat t_vec) {
+void BoardObs::setPoseVec(const cv::Mat &r_vec, const cv::Mat &t_vec) {
   pose_ = {r_vec.at<double>(0), r_vec.at<double>(1), r_vec.at<double>(2),
            t_vec.at<double>(0), t_vec.at<double>(1), t_vec.at<double>(2)};
 }
@@ -175,8 +178,8 @@ float BoardObs::computeReprojectionError() {
   if (cam_ptr) {
     projectPointsWithDistortion(board_pts_temp, getRotVec(), getTransVec(),
                                 cam_ptr->getCameraMat(),
-                                cam_ptr->getDistortionVectorVector(), repro_pts,
-                                cam_ptr->distortion_model_);
+                                cam_ptr->getDistortionVectorVector(),
+                                cam_ptr->distortion_model_, repro_pts);
     for (std::size_t j = 0; j < repro_pts.size(); j++) {
       float rep_err = std::sqrt(std::pow((pts_2d_[j].x - repro_pts[j].x), 2) +
                                 std::pow((pts_2d_[j].y - repro_pts[j].y), 2));
@@ -197,3 +200,5 @@ float BoardObs::computeReprojectionError() {
   return (error_board_vec.size() > 0) ? sum_err_board / error_board_vec.size()
                                       : 0.f;
 }
+
+} // namespace McCalib

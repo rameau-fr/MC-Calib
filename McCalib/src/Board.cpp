@@ -11,6 +11,8 @@
 #include "Frame.hpp"
 #include "logger.h"
 
+namespace McCalib {
+
 /**
  * @brief Initialize Board object
  *
@@ -72,7 +74,7 @@ Board::Board(const std::filesystem::path &config_path, const int board_idx) {
  *
  * @param new_board the pointer to the new board
  */
-void Board::insertNewBoard(std::shared_ptr<BoardObs> new_board) {
+void Board::insertNewBoard(const std::shared_ptr<BoardObs> new_board) {
   board_observations_[board_observations_.size()] = new_board;
 }
 
@@ -83,6 +85,8 @@ void Board::insertNewBoard(std::shared_ptr<BoardObs> new_board) {
  *
  * @param new_frame the pointer of the new frame
  */
-void Board::insertNewFrame(std::shared_ptr<Frame> new_frame) {
+void Board::insertNewFrame(const std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
 }
+
+} // namespace McCalib

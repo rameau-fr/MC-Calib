@@ -6,6 +6,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class Board;
 class BoardObs;
 class Object3DObs;
@@ -55,16 +57,19 @@ public:
   Object3D() = delete;
   ~Object3D(){};
   Object3D(const int nb_boards, const int ref_board_id, const int obj_id,
-           const std::array<int, 3> color);
-  void insertBoardInObject(std::shared_ptr<Board> new_board);
-  void insertNewObject(std::shared_ptr<Object3DObs> new_object);
-  void insertNewFrame(std::shared_ptr<Frame> new_frame);
-  void getBoardPoseVec(cv::Mat &r_vec, cv::Mat &t_vec, int board_id);
-  cv::Mat getBoardPoseMat(int board_id);
-  void setBoardPoseMat(cv::Mat pose, int board_id);
-  void setBoardPoseVec(cv::Mat r_vec, cv::Mat t_vec, int board_id);
-  cv::Mat getBoardRotVec(int board_id);
-  cv::Mat getBoardTransVec(int board_id);
+           const std::array<int, 3> &color);
+  void insertBoardInObject(const std::shared_ptr<Board> new_board);
+  void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
+  void insertNewFrame(const std::shared_ptr<Frame> new_frame);
+  void getBoardPoseVec(const int board_id, cv::Mat &r_vec, cv::Mat &t_vec);
+  cv::Mat getBoardPoseMat(const int board_id);
+  void setBoardPoseMat(const int board_id, const cv::Mat &pose);
+  void setBoardPoseVec(const int board_id, const cv::Mat &r_vec,
+                       const cv::Mat &t_vec);
+  cv::Mat getBoardRotVec(const int board_id);
+  cv::Mat getBoardTransVec(const int board_id);
   void refineObject(const int nb_iterations);
   void updateObjectPts();
 };
+
+} // namespace McCalib

@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 #include <stdio.h>
 
+namespace McCalib {
+
 class CameraGroup;
 
 /**
@@ -37,16 +39,19 @@ public:
   // Functions
   CameraGroupObs() = delete;
   ~CameraGroupObs();
-  CameraGroupObs(std::shared_ptr<CameraGroup> new_cam_group,
+  CameraGroupObs(const std::shared_ptr<CameraGroup> new_cam_group,
                  const bool quaternion_averaging);
-  void
-  insertObjectObservation(std::shared_ptr<Object3DObs> new_object_observation);
+  void insertObjectObservation(
+      const std::shared_ptr<Object3DObs> new_object_observation);
   void computeObjectsPose();
-  void getObjectPoseVec(cv::Mat &r_vec, cv::Mat &t_vec, int object_id);
-  cv::Mat getObjectPoseMat(int object_id);
-  void setObjectPoseMat(cv::Mat pose, int object_id);
-  void setObjectPoseVec(cv::Mat r_vec, cv::Mat t_vec, int object_id);
-  cv::Mat getObjectRotVec(int object_id);
-  cv::Mat getObjectTransVec(int object_id);
+  void getObjectPoseVec(const int object_id, cv::Mat &r_vec, cv::Mat &t_vec);
+  cv::Mat getObjectPoseMat(const int object_id);
+  void setObjectPoseMat(const cv::Mat &pose, const int object_id);
+  void setObjectPoseVec(const cv::Mat &r_vec, const cv::Mat &t_vec,
+                        const int object_id);
+  cv::Mat getObjectRotVec(const int object_id);
+  cv::Mat getObjectTransVec(const int object_id);
   void updateObjObsPose();
 };
+
+} // namespace McCalib
