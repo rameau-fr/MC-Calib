@@ -1456,6 +1456,7 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
 
   // Check if enough common poses are available:
   if (pose_abs_1.size() <= 3 || pose_abs_2.size() <= 3) {
+    LOG_INFO << "Not enough common poses available for handeye calibration";
     return;
   }
 
@@ -1463,9 +1464,10 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
   cv::Mat pose_g1_g2;
   if (he_approach_ == 0) {
     // Boot strapping technique
-    int nb_cluster = 20;
-    int nb_it_he = 200; // Nb of time we apply the handeye calibration
-    pose_g1_g2 = handeyeBootstratpTranslationCalibration(
+    const unsigned int nb_cluster = 20u;
+    const unsigned int nb_it_he =
+        200u; // Nb of time we apply the handeye calibration
+    pose_g1_g2 = handeyeBootstraptTranslationCalibration(
         nb_cluster, nb_it_he, pose_abs_1, pose_abs_2);
   } else {
     pose_g1_g2 = handeyeCalibration(pose_abs_1, pose_abs_2);

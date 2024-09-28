@@ -43,7 +43,7 @@ std::vector<cv::Point3f> transform3DPts(const std::vector<cv::Point3f> &pts3D,
 cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
                            const std::vector<cv::Mat> &pose_abs_2);
 cv::Mat
-handeyeBootstratpTranslationCalibration(const unsigned int nb_cluster,
+handeyeBootstraptTranslationCalibration(const unsigned int nb_cluster,
                                         const unsigned int nb_it,
                                         const std::vector<cv::Mat> &pose_abs_1,
                                         const std::vector<cv::Mat> &pose_abs_2);
