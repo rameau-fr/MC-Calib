@@ -532,6 +532,72 @@ void preparePosesForHandEyeCalibration(
 }
 
 /**
+ * @brief Get rotation and translation vectors for handeye calibration
+ *
+ * @param pose_abs_1 poses of camera #1 in a pair
+ * @param pose_abs_2 poses of camera #2 in a pair
+ * @param clusters_labels clusters labels
+ * @param num_clusters number of clusters
+ * @param nb_clust_pick number of clusters to pick
+ * @return returns rotation and translation vectors as well as selected poses
+ * indexes
+ */
+void getPosesForHandeyeCalibration(
+    const std::vector<cv::Mat> &pose_abs_1,
+    const std::vector<cv::Mat> &pose_abs_2, const cv::Mat &clusters_labels,
+    const unsigned int num_clusters, const unsigned int nb_clust_pick,
+    std::vector<cv::Mat> &r_cam_group_1, std::vector<cv::Mat> &t_cam_group_1,
+    std::vector<cv::Mat> &r_cam_group_2, std::vector<cv::Mat> &t_cam_group_2,
+    std::vector<unsigned int> &selected_poses_idxs) {
+  const std::vector<unsigned int> selected_cluster_idxs =
+      selectClusters(num_clusters, nb_clust_pick);
+
+  selected_poses_idxs = selectPoses(clusters_labels, selected_cluster_idxs);
+
+  preparePosesForHandEyeCalibration(pose_abs_1, pose_abs_2, selected_poses_idxs,
+                                    r_cam_group_1, t_cam_group_1, r_cam_group_2,
+                                    t_cam_group_2);
+}
+
+/**
+ * @brief Check rotational solution
+ *
+ * @param pose_abs_1 poses of camera #1 in a pair
+ * @param pose_abs_2 poses of camera #2 in a pair
+ * @param selected_poses_idxs selected poses indexes
+ * @param pose_g1_g2 pose from handeye calibration solution
+ * @return returns max rotation error
+ */
+double checkSetConsistency(const std::vector<cv::Mat> &pose_abs_1,
+                           const std::vector<cv::Mat> &pose_abs_2,
+                           const std::vector<unsigned int> &selected_poses_idxs,
+                           const cv::Mat &pose_g1_g2) {
+  double max_rotational_error = 0.;
+  for (unsigned int i = 0; i < selected_poses_idxs.size(); i++) {
+    cv::Mat pose_cam_group_1_1 = pose_abs_1[selected_poses_idxs[i]];
+    cv::Mat pose_cam_group_2_1 = pose_abs_2[selected_poses_idxs[i]];
+    for (unsigned int j = 0; j < selected_poses_idxs.size(); j++) {
+      if (i != j) {
+        cv::Mat pose_cam_group_1_2 = pose_abs_1[selected_poses_idxs[i]];
+        cv::Mat pose_cam_group_2_2 = pose_abs_2[selected_poses_idxs[i]];
+        cv::Mat PP1 = pose_cam_group_1_2.inv() * pose_cam_group_1_1;
+        cv::Mat PP2 = pose_cam_group_2_1.inv() * pose_cam_group_2_2;
+        cv::Mat ErrMat = PP2.inv() * pose_g1_g2 * PP1 * pose_g1_g2;
+        cv::Mat ErrRot, ErrTrans;
+        Proj2RT(ErrMat, ErrRot, ErrTrans);
+        cv::Mat ErrRotMat;
+        cv::Rodrigues(ErrRot, ErrRotMat);
+        double traceRot =
+            cv::trace(ErrRotMat)[0] - std::numeric_limits<double>::epsilon();
+        double err_degree = std::acos(0.5 * (traceRot - 1.0)) * 180.0 / M_PI;
+        max_rotational_error = std::max(max_rotational_error, err_degree);
+      }
+    }
+  }
+  return max_rotational_error;
+}
+
+/**
  * @brief Calibrate 2 cameras with handeye calibration
  *
  * In this function only N pairs of images are used
@@ -559,7 +625,7 @@ cv::Mat handeyeBootstraptTranslationCalibration(
 
   // Cluster the observation to select the most diverse poses
   const unsigned int num_clusters = std::min(nb_cluster, num_poses);
-  const cv::Mat clusters_lables =
+  const cv::Mat clusters_labels =
       clusterTranslations(position_1_2, num_clusters);
 
   std::vector<double> r1_he, r2_he, r3_he; // structure to save valid rot
@@ -567,18 +633,13 @@ cv::Mat handeyeBootstraptTranslationCalibration(
   const unsigned int nb_clust_pick = 6;
   unsigned int nb_success = 0;
   for (unsigned int iter = 0; iter < nb_it; iter++) {
-    const std::vector<unsigned int> selected_cluster_idxs =
-        selectClusters(num_clusters, nb_clust_pick);
-
-    const std::vector<unsigned int> selected_poses_idxs =
-        selectPoses(clusters_lables, selected_cluster_idxs);
-
-    // Prepare the poses for handeye calibration
     std::vector<cv::Mat> r_cam_group_1, t_cam_group_1, r_cam_group_2,
         t_cam_group_2;
-    preparePosesForHandEyeCalibration(
-        pose_abs_1, pose_abs_2, selected_poses_idxs, r_cam_group_1,
-        t_cam_group_1, r_cam_group_2, t_cam_group_2);
+    std::vector<unsigned int> selected_poses_idxs;
+    getPosesForHandeyeCalibration(pose_abs_1, pose_abs_2, clusters_labels,
+                                  num_clusters, nb_clust_pick, r_cam_group_1,
+                                  t_cam_group_1, r_cam_group_2, t_cam_group_2,
+                                  selected_poses_idxs);
 
     // Hand-eye calibration
     cv::Mat r_g1_g2, t_g1_g2;
@@ -587,30 +648,9 @@ cv::Mat handeyeBootstraptTranslationCalibration(
                          cv::CALIB_HAND_EYE_TSAI);
     cv::Mat pose_g1_g2 = RT2Proj(r_g1_g2, t_g1_g2);
 
-    // Check the consistency of the set
-    double max_error = 0;
-    for (unsigned int i = 0; i < selected_poses_idxs.size(); i++) {
-      cv::Mat pose_cam_group_1_1 = pose_abs_1[selected_poses_idxs[i]];
-      cv::Mat pose_cam_group_2_1 = pose_abs_2[selected_poses_idxs[i]];
-      for (unsigned int j = 0; j < selected_poses_idxs.size(); j++) {
-        if (i != j) {
-          cv::Mat pose_cam_group_1_2 = pose_abs_1[selected_poses_idxs[i]];
-          cv::Mat pose_cam_group_2_2 = pose_abs_2[selected_poses_idxs[i]];
-          cv::Mat PP1 = pose_cam_group_1_2.inv() * pose_cam_group_1_1;
-          cv::Mat PP2 = pose_cam_group_2_1.inv() * pose_cam_group_2_2;
-          cv::Mat ErrMat = PP2.inv() * pose_g1_g2 * PP1 * pose_g1_g2;
-          cv::Mat ErrRot, ErrTrans;
-          Proj2RT(ErrMat, ErrRot, ErrTrans);
-          cv::Mat ErrRotMat;
-          cv::Rodrigues(ErrRot, ErrRotMat);
-          double traceRot =
-              cv::trace(ErrRotMat)[0] - std::numeric_limits<double>::epsilon();
-          double err_degree = std::acos(0.5 * (traceRot - 1.0)) * 180.0 / M_PI;
-          max_error = std::max(max_error, err_degree);
-        }
-      }
-    }
-    if (max_error < 15) {
+    double max_rotational_error = checkSetConsistency(
+        pose_abs_1, pose_abs_2, selected_poses_idxs, pose_g1_g2);
+    if (max_rotational_error < 15) {
       nb_success++;
       // if it is a sucess then add to our valid pose vector
       cv::Mat rot_temp, trans_temp;
