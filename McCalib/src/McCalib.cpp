@@ -123,6 +123,7 @@ Calibration::Calibration(const std::string config_path) {
           new cv::aruco::CharucoBoard(cv::Size(number_x_square_per_board_[i],
                                                number_y_square_per_board_[i]),
                                       length_square, length_marker, dict_);
+      charuco->setLegacyPattern(true);
 
       charuco_boards[i] = charuco;
     } else {
@@ -136,6 +137,7 @@ Calibration::Calibration(const std::string config_path) {
           cv::Size(number_x_square_per_board_[i],
                    number_y_square_per_board_[i]),
           length_square, length_marker, dict_, cur_ids);
+      charuco->setLegacyPattern(true);
 
       charuco_boards[i] = charuco;
     }

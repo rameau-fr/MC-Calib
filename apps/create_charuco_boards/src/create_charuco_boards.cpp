@@ -67,9 +67,10 @@ int main(int argc, char *argv[]) {
   for (std::size_t i = 0; i < num_board; i++) {
     if (i == 0) {
       // if it is the first board then just use the standard idx
-      const cv::aruco::CharucoBoard charuco = cv::aruco::CharucoBoard(
+      cv::aruco::CharucoBoard charuco = cv::aruco::CharucoBoard(
           cv::Size(number_x_square_per_board[i], number_y_square_per_board[i]),
           length_square, length_marker, dict);
+      charuco.setLegacyPattern(true);
 
       charuco_boards.push_back(charuco);
     } else {
@@ -83,6 +84,7 @@ int main(int argc, char *argv[]) {
       cv::aruco::CharucoBoard charuco = cv::aruco::CharucoBoard(
           cv::Size(number_x_square_per_board[i], number_y_square_per_board[i]),
           length_square, length_marker, dict, cur_ids);
+      charuco.setLegacyPattern(true);
 
       charuco_boards.push_back(charuco);
     }
