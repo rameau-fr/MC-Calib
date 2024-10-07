@@ -20,8 +20,8 @@ There are several ways to get the environment ready. Choose any of them:
    - Pull the image:
 
      ```bash
-     docker pull bailool/mc-calib-prod # production environment
-     docker pull bailool/mc-calib-dev  # development environment
+     docker pull bailool/mc-calib-prod:opencv455 # production environment
+     docker pull bailool/mc-calib-dev:opencv455  # development environment
      ```
 
    - Run pulled image (set `PATH_TO_REPO_ROOT` and `PATH_TO_DATA` appropriately):
@@ -31,7 +31,7 @@ There are several ways to get the environment ready. Choose any of them:
                   -ti --rm \
                   --volume="$PATH_TO_REPO_ROOT:/home/MC-Calib" \
                   --volume="$PATH_TO_DATA:/home/MC-Calib/data" \
-                  bailool/mc-calib-prod
+                  bailool/mc-calib-prod:opencv455
       ```
       
 2. It is also possible to build the docker environment manually (see [instructions](/docs/Docker.md))
