@@ -17,8 +17,8 @@ on:
   workflow_dispatch:
 
 env:
-  MC_CALIB_PROD_DOCKER_IMG: "bailool/mc-calib-prod:latest"
-  MC_CALIB_DEV_DOCKER_IMG: "bailool/mc-calib-dev:latest"
+  MC_CALIB_PROD_DOCKER_IMG: bailool/mc-calib-prod:latest
+  MC_CALIB_DEV_DOCKER_IMG: bailool/mc-calib-dev:latest
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -46,7 +46,7 @@ jobs:
       - name: Run cppcheck
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_DEV_DOCKER_IMG
+          image: ${{env.MC_CALIB_DEV_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             cppcheck MC-Calib/McCalib/include
@@ -62,7 +62,7 @@ jobs:
       - name: Run clang-tidy
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_DEV_DOCKER_IMG
+          image: ${{env.MC_CALIB_DEV_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -94,7 +94,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_DEV_DOCKER_IMG
+          image: ${{env.MC_CALIB_DEV_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -126,7 +126,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_DEV_DOCKER_IMG
+          image: ${{env.MC_CALIB_DEV_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -169,7 +169,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_PROD_DOCKER_IMG
+          image: ${{env.MC_CALIB_PROD_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:/home/MC-Calib:rw
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
@@ -232,7 +232,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_DEV_DOCKER_IMG
+          image: ${{env.MC_CALIB_DEV_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:${{ github.workspace }}
           run: |
             mkdir ${{ github.workspace }}/build && cd ${{ github.workspace }}/build
@@ -270,7 +270,7 @@ jobs:
       - name: Run python linters
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_DEV_DOCKER_IMG
+          image: ${{env.MC_CALIB_DEV_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             cd MC-Calib/python_utils
@@ -296,7 +296,7 @@ jobs:
       - name: Run python utils
         uses: addnab/docker-run-action@v3
         with:
-          image: $MC_CALIB_PROD_DOCKER_IMG
+          image: ${{env.MC_CALIB_PROD_DOCKER_IMG}}
           options: -v ${{ github.workspace }}:/home/MC-Calib:rw
           run: |
             cd MC-Calib/python_utils
