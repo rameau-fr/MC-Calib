@@ -7,7 +7,7 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 # Installation
 
-Requirements: Ceres, Boost, OpenCV {4.2.x, 4.5.x}, c++17 
+Requirements: Ceres, Boost, OpenCV 4.5.5, c++17 
 
 For Windows users, follow [this installation guide](/docs/Windows.md)
 
@@ -38,7 +38,7 @@ There are several ways to get the environment ready. Choose any of them:
 
 3. Alternatively, every dependency can be installed independently without docker:
 
-   - [Install](https://docs.opencv.org/4.5.2/d7/d9f/tutorial_linux_install.html) OpenCV 4.5.x. Either instal system-wide with `sudo make install` or link to your `build` in `CmakeLists.txt`.
+   - [Install](https://docs.opencv.org/4.5.5/d7/d9f/tutorial_linux_install.html) OpenCV 4.5.5. Either instal system-wide with `sudo make install` or link to your `build` in `CmakeLists.txt`.
 
    - Follow [installation guidelines](http://ceres-solver.org/installation.html#linux) to install Ceres.
 
