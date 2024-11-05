@@ -166,10 +166,32 @@ jobs:
       - name: Unzip MC-Calib-data
         run: tar xf ${{ github.workspace }}/data/Blender_Images.tar.gz -C ${{ github.workspace }}/data
         
-      - name: Run tests
+      - name: Run tests with OpenCV==4.2.0
         uses: addnab/docker-run-action@v3
         with:
           image: ${{env.MC_CALIB_PROD_DOCKER_IMG}}
+          options: -v ${{ github.workspace }}:/home/MC-Calib:rw
+          run: |
+            mkdir MC-Calib/build && cd MC-Calib/build
+            cmake -DCMAKE_BUILD_TYPE=Release ..
+            make -j4
+            ./tests/boost_tests_run
+
+      - name: Run tests with OpenCV==4.5.5
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-prod:opencv455
+          options: -v ${{ github.workspace }}:/home/MC-Calib:rw
+          run: |
+            mkdir MC-Calib/build && cd MC-Calib/build
+            cmake -DCMAKE_BUILD_TYPE=Release ..
+            make -j4
+            ./tests/boost_tests_run
+
+      - name: Run tests with OpenCV==4.10.0
+        uses: addnab/docker-run-action@v3
+        with:
+          image: bailool/mc-calib-prod:opencv410
           options: -v ${{ github.workspace }}:/home/MC-Calib:rw
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
