@@ -80,7 +80,7 @@ endif (DOXYGEN_FOUND)
 
 
 ##########################################################################
-add_subdirectory(apps/create_charuco_boards)
 add_subdirectory(McCalib)
+add_subdirectory(apps/create_charuco_boards)
 add_subdirectory(apps/calibrate)
 add_subdirectory(tests)

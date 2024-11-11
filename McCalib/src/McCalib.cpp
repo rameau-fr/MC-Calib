@@ -117,30 +117,19 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
     boards_index.resize(nb_board_);
     std::iota(boards_index.begin(), boards_index.end(), 0);
   }
-  std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
-  int offset_count = 0;
-  for (int i = 0; i <= max_board_idx; i++) {
-    cv::Ptr<cv::aruco::CharucoBoard> charuco = cv::aruco::CharucoBoard::create(
-        number_x_square_per_board_[i], number_y_square_per_board_[i],
-        length_square, length_marker, dict_);
-    if (i != 0) // If it is the first board then just use the standard idx
-    {
-      int id_offset = charuco_boards[i - 1]->ids.size() + offset_count;
-      offset_count = id_offset;
-      for (auto &id : charuco->ids)
-        id += id_offset;
-    }
-    charuco_boards[i] = charuco;
-  }
+
+  const auto charuco_boards = createCharucoBoards(
+      nb_board_, number_x_square_per_board_, number_y_square_per_board_,
+      length_square, length_marker, dict_);
 
   // Initialize the 3D boards
-  for (std::size_t i = 0; i < nb_board_; i++) {
+  for (auto const &[i, charuco_board] : charuco_boards) {
     // Initialize board
     std::shared_ptr<Board> new_board = std::make_shared<Board>(config_path, i);
     boards_3d_[i] = new_board;
     boards_3d_[i]->nb_pts_ =
         (boards_3d_[i]->nb_x_square_ - 1) * (boards_3d_[i]->nb_y_square_ - 1);
-    boards_3d_[i]->charuco_board_ = charuco_boards[boards_index[i]];
+    boards_3d_[i]->charuco_board_ = charuco_board;
     boards_3d_[i]->pts_3d_.reserve(boards_3d_[i]->nb_pts_);
     // Prepare the 3D pts of the boards
     for (int y = 0; y < boards_3d_[i]->nb_y_square_ - 1; y++) {
@@ -308,11 +297,26 @@ void Calibration::detectBoardsInImageWithCamera(const std::string &frame_path,
   // key == board id, value == ID corners on checkerboard
   std::map<int, std::vector<int>> charuco_idx;
 
+#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
+     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
   charuco_params_->adaptiveThreshConstant = 1;
+#else
+  charuco_params_.adaptiveThreshConstant = 1;
+#endif
 
   for (std::size_t i = 0; i < nb_board_; i++) {
+
+#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
+     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
+
     cv::aruco::detectMarkers(image, boards_3d_[i]->charuco_board_->dictionary,
                              marker_corners[i], marker_idx[i], charuco_params_);
+
+#else
+    cv::aruco::ArucoDetector detector(
+        boards_3d_[i]->charuco_board_->getDictionary(), charuco_params_);
+    detector.detectMarkers(image, marker_corners[i], marker_idx[i]);
+#endif
 
     if (marker_corners[i].size() > 0) {
       cv::aruco::interpolateCornersCharuco(marker_corners[i], marker_idx[i],
