@@ -146,7 +146,7 @@ jobs:
               ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
 
 
-  unit-tests-in-release-mode-opencv410:
+  unit-tests-in-release-mode-opencv4100:
     runs-on: ubuntu-latest
     needs:
       - clang-format-lint
@@ -323,7 +323,7 @@ jobs:
   python-utils-linters:
     runs-on: ubuntu-latest
     needs:
-      - unit-tests-in-release-mode-opencv420
+      - unit-tests-in-release-mode-opencv4100
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -343,7 +343,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - python-utils-linters
-      - unit-tests-in-release-mode-opencv420
+      - unit-tests-in-release-mode-opencv4100
     steps:
       - name: Checkout
         uses: actions/checkout@v2
