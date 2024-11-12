@@ -49,7 +49,8 @@ RUN git clone --branch 2.2.0 --single-branch https://github.com/ceres-solver/cer
 
 # Install python requirements for python_utils scripts
 RUN --mount=type=bind,source=python_utils/requirements_prod.txt,target=/tmp/requirements.txt \
-    python -m pip install --requirement /tmp/requirements.txt --break-system-packages && \
+	apt update && apt install -y libgl1 libglib2.0-0 && \    
+	python -m pip install --requirement /tmp/requirements.txt --break-system-packages && \
 	rm -rf /var/lib/apt/lists/*
 
 FROM prod as dev
