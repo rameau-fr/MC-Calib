@@ -8,17 +8,21 @@
 #include "utilities.hpp"
 
 void saveBoards(const std::vector<cv::Mat> boards) {
+  std::filesystem::path charuco_boards_path = "charuco_boards";
+  std::string char_name = "charuco_board_";
+  std::string ext_name = ".bmp";
+  if (!std::filesystem::exists(charuco_boards_path)) {
+    std::filesystem::create_directories(charuco_boards_path);
+  }
   for (std::size_t board_idx = 0u; board_idx < boards.size(); ++board_idx) {
     // Save the markers
     std::ostringstream ss;
     ss << std::setw(3) << std::setfill('0') << board_idx;
     std::string s1 = ss.str();
-    std::string charname = "charuco_board_";
-    std::string extname = ".bmp";
-    std::string savename = charname + s1;
-    savename += extname;
-    std::cout << "save_name " << savename << std::endl;
-    cv::imwrite(savename, boards[board_idx]);
+    std::string save_name = char_name + s1 + ext_name;
+    std::filesystem::path save_path = charuco_boards_path / save_name;
+    std::cout << "save_name: " << save_path << std::endl;
+    cv::imwrite(save_path, boards[board_idx]);
   }
 }
 
