@@ -17,8 +17,8 @@ on:
   workflow_dispatch:
 
 env:
-  MC_CALIB_PROD_DOCKER_IMG: bailool/mc-calib-prod:opencv410
-  MC_CALIB_DEV_DOCKER_IMG: bailool/mc-calib-dev:opencv410
+  MC_CALIB_PROD_DOCKER_IMG: bailool/mc-calib-prod:opencv4100
+  MC_CALIB_DEV_DOCKER_IMG: bailool/mc-calib-dev:opencv4100
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
