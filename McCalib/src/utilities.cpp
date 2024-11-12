@@ -66,15 +66,12 @@ createCharucoBoardsImages(const unsigned int num_board,
 
   std::vector<cv::Mat> charuco_boards_images;
   charuco_boards_images.reserve(num_board);
-  for (std::size_t i = 0u; i < charuco_boards.size(); ++i) {
-    // create the charuco board image
+  for (auto const &[i, charuco_board] : charuco_boards) {
     cv::Mat board_image;
-    for (auto const &charuco_board_iter : charuco_boards) {
-      charuco_board_iter.second->draw(
-          cv::Size(resolution_x_per_board[i], resolution_y_per_board[i]),
-          board_image, 10, 1);
-      charuco_boards_images.push_back(board_image);
-    }
+    charuco_board->draw(
+        cv::Size(resolution_x_per_board[i], resolution_y_per_board[i]),
+        board_image, 10, 1);
+    charuco_boards_images.push_back(board_image);
   }
   return charuco_boards_images;
 }
@@ -130,15 +127,12 @@ createCharucoBoardsImages(const unsigned int num_board,
 
   std::vector<cv::Mat> charuco_boards_images;
   charuco_boards_images.reserve(num_board);
-  for (std::size_t i = 0u; i < charuco_boards.size(); ++i) {
-    // create the charuco board image
+  for (auto const &[i, charuco_board] : charuco_boards) {
     cv::Mat board_image;
-    for (auto const &charuco_board_iter : charuco_boards) {
-      charuco_board_iter.second->generateImage(
-          cv::Size(resolution_x_per_board[i], resolution_y_per_board[i]),
-          board_image, 10, 1);
-      charuco_boards_images.push_back(board_image);
-    }
+    charuco_board->generateImage(
+        cv::Size(resolution_x_per_board[i], resolution_y_per_board[i]),
+        board_image, 10, 1);
+    charuco_boards_images.push_back(board_image);
   }
 
   return charuco_boards_images;
