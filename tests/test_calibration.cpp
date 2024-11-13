@@ -11,9 +11,9 @@
 
 #define PI 3.14159265
 
-const double INTRINSICS_TOLERANCE = 4.0;          // in percentage
-const double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
-const double ROTATION_ERROR_TOLERANCE = 1.0;      // in degrees
+constexpr double INTRINSICS_TOLERANCE = 4.0;          // in percentage
+constexpr double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
+constexpr double ROTATION_ERROR_TOLERANCE = 1.0;      // in degrees
 
 double getTranslationError(cv::Mat a, cv::Mat b) {
   double dist = cv::norm(a, b, cv::NORM_L2);
