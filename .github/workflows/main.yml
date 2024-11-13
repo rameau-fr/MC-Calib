@@ -69,6 +69,34 @@ jobs:
             cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug ..
             run-clang-tidy
   
+  
+  test-charuco-boards-generation:
+    runs-on: ubuntu-latest
+    needs:
+      - clang-format-lint
+      - cppcheck
+      - clang-tidy
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run charuco boards generation app
+        uses: addnab/docker-run-action@v3
+        with:
+          image: ${{env.MC_CALIB_PROD_DOCKER_IMG}}
+          options: -v ${{ github.workspace }}:/home/MC-Calib:rw
+          run: |
+            mkdir MC-Calib/build && cd MC-Calib/build
+            cmake -DCMAKE_BUILD_TYPE=Release ..
+            make -j4
+            ./apps/create_charuco_boards/generate_charuco ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
+
+      - name: Archive results artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: results_blender_sequences
+          path: ${{ github.workspace }}/build/charuco_boards
+
 
   unit-tests-with-sanitizers:
     if: ${{ false }}  # TODO: disable for now until understand how to suppress leaks from external libraries like OpenCV
