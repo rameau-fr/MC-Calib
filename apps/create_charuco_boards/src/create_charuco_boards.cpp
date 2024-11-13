@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   fs["number_board"] >> NbBoard;
   assert(NbBoard > 0);
-  const unsigned int num_board = static_cast<int>(NbBoard);
+  const unsigned int num_board = static_cast<unsigned int>(NbBoard);
 
   fs["square_size_per_board"] >> square_size_per_board;
   fs["number_x_square_per_board"] >> number_x_square_per_board;
