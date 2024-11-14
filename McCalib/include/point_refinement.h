@@ -1,13 +1,15 @@
-#include "opencv2/core/core.hpp"
+#include <cmath>
 #include <iostream>
-#include <opencv2/opencv.hpp>
 #include <stdio.h>
+
+#include "opencv2/core/core.hpp"
+#include <opencv2/opencv.hpp>
 
 namespace McCalib {
 
 /****** ******/
 
-float step_threshold = 0.001;
+double step_threshold = 0.001;
 
 /**
  * @struct SaddlePoint
@@ -36,7 +38,7 @@ void initSaddlePointRefinement(const int half_kernel_size,
   int cnt = 0;
   for (int y = -half_kernel_size; y <= half_kernel_size; y++)
     for (int x = -half_kernel_size; x <= half_kernel_size; x++) {
-      *w = maxVal - sqrt(x * x + y * y);
+      *w = maxVal - std::sqrt(x * x + y * y);
       if (*w > 0)
         cnt++;
       else
@@ -138,22 +140,23 @@ void saddleSubpixelRefinement(const cv::Mat &smooth_input,
                     pt.det; //       k3 * k1 - 2 * k5 * k2
         pt.x += dx;
         pt.y += dy;
-        dx = fabs(dx);
-        dy = fabs(dy);
+        dx = std::fabs(dx);
+        dy = std::fabs(dy);
         // iterations++;
 
         if (it == max_iterations ||
             (step_threshold > dx && step_threshold > dy)) {
           // converged
           double k4mk5 = r[1] - r[0];
-          pt.s = sqrt(r[2] * r[2] + k4mk5 * k4mk5);
-          pt.a1 = atan2(-r[2], k4mk5) / 2.0;
-          pt.a2 = acos((r[1] + r[0]) / pt.s) / 2.0;
+          pt.s = std::sqrt(r[2] * r[2] + k4mk5 * k4mk5);
+          pt.a1 = std::atan2(-r[2], k4mk5) / 2.0;
+          pt.a2 = std::acos((r[1] + r[0]) / pt.s) / 2.0;
           break;
         } else {
           // check for divergence
-          if (pt.det > 0 || fabs(pt.x - initial[idx].x) > window_half_size ||
-              fabs(pt.y - initial[idx].y) > window_half_size) {
+          if (pt.det > 0 ||
+              std::fabs(pt.x - initial[idx].x) > window_half_size ||
+              std::fabs(pt.y - initial[idx].y) > window_half_size) {
             pt.x = pt.y = std::numeric_limits<double>::infinity();
             // diverged++;
             break;

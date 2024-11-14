@@ -1,6 +1,8 @@
 #include "opencv2/core/core.hpp"
+#include <algorithm>
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <random>
 #include <stdio.h>
 
 #include "geometrytools.hpp"
@@ -169,7 +171,9 @@ void ransacTriangulation(const std::vector<cv::Point2f> &point2d,
   // Ransac iterations
   while (N > trialcount && countit < it) {
     // pick 2 points
-    std::random_shuffle(myvector.begin(), myvector.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(myvector.begin(), myvector.end(), g);
     std::array<int, 4> idx = {myvector[0], myvector[1], myvector[2],
                               myvector[3]};
 
@@ -249,9 +253,10 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> &scenePoints,
 
   // Ransac iterations
   while (N > trialcount && countit < it) {
-
     // pick 4 points
-    std::random_shuffle(myvector.begin(), myvector.end());
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(myvector.begin(), myvector.end(), g);
     std::array<int, 4> idx = {myvector[0], myvector[1], myvector[2],
                               myvector[3]};
 

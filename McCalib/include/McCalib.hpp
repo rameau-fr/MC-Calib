@@ -36,11 +36,22 @@ class Calibration final {
 public:
   // Parameters
   unsigned int nb_camera_, nb_board_;
+
+#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
+     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
   cv::Ptr<cv::aruco::Dictionary> dict_ = cv::aruco::getPredefinedDictionary(
       cv::aruco::DICT_6X6_1000); // load the dictionary that correspond to the
                                  // charuco board
   cv::Ptr<cv::aruco::DetectorParameters> charuco_params_ =
       cv::aruco::DetectorParameters::create(); // parameters for detection
+#else
+  cv::aruco::Dictionary dict_ = cv::aruco::getPredefinedDictionary(
+      cv::aruco::DICT_6X6_1000); // load the dictionary that correspond to the
+                                 // charuco board
+  cv::aruco::DetectorParameters charuco_params_ =
+      cv::aruco::DetectorParameters(); // parameters for detection
+#endif
+
   float min_perc_pts_;
 
   // images path

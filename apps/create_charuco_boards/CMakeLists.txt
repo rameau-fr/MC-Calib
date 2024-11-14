@@ -3,4 +3,4 @@ set(SOURCES
 )
 
 add_executable(generate_charuco ${SOURCES})
-target_link_libraries(generate_charuco -L/usr/local/lib ${OpenCV_LIBS})
+target_link_libraries(generate_charuco -L/usr/local/lib ${OpenCV_LIBS} McCalib)

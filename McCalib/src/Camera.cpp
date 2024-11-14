@@ -1,8 +1,11 @@
-#include "opencv2/core/core.hpp"
+#include <algorithm>
 #include <iostream>
+#include <random>
+#include <stdio.h>
+
+#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
 
 #include "Camera.hpp"
 #include "OptimizationCeres.h"
@@ -169,7 +172,9 @@ void Camera::initializeCalibration() {
   std::srand(unsigned(std::time(0)));
   std::vector<int> shuffled_board_ind(indbv.size());
   std::iota(shuffled_board_ind.begin(), shuffled_board_ind.end(), 0);
-  random_shuffle(shuffled_board_ind.begin(), shuffled_board_ind.end());
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(shuffled_board_ind.begin(), shuffled_board_ind.end(), g);
 
   // nb of boards used for the initial estimation of intrinsic parameters
   //(at least 50 boards for perspective)

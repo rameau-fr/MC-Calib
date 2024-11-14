@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as prod
+FROM ubuntu:24.04 as prod
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt update && apt install -y --no-install-recommends apt-utils && \
@@ -15,14 +15,14 @@ WORKDIR /home
 #------------------------------	#
 #     INSTALL OPENCV 4		    #
 #------------------------------	#
-RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.2.0.zip && \
-	wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.2.0.zip && \
+RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.10.0.zip && \
+	wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.10.0.zip && \
 	unzip opencv.zip && unzip opencv_contrib.zip && \
 	mkdir -p build && cd build && \
-	cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.2.0/modules ../opencv-4.2.0 && \
+	cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.10.0/modules ../opencv-4.10.0 && \
 	cmake --build . --target install -- -j4 && \
 	cd /home && rm opencv.zip && rm opencv_contrib.zip && \ 
-	rm -rf opencv-4.2.0 && rm -rf opencv_contrib-4.2.0 && rm -rf build && \
+	rm -rf opencv-4.10.0 && rm -rf opencv_contrib-4.10.0 && rm -rf build && \
 	rm -rf /var/lib/apt/lists/*
 
 #------------------------------	#
@@ -49,8 +49,8 @@ RUN git clone --branch 2.2.0 --single-branch https://github.com/ceres-solver/cer
 
 # Install python requirements for python_utils scripts
 RUN --mount=type=bind,source=python_utils/requirements_prod.txt,target=/tmp/requirements.txt \
-    apt update && apt install -y libgl1 && \
-    python -m pip install --requirement /tmp/requirements.txt && \
+	apt update && apt install -y libgl1 libglib2.0-0 && \    
+	python -m pip install --requirement /tmp/requirements.txt --break-system-packages && \
 	rm -rf /var/lib/apt/lists/*
 
 FROM prod as dev
@@ -75,5 +75,5 @@ RUN apt update && apt install -y cppcheck clang-tidy valgrind lcov && \
 
 # Install python requirements for python_utils scripts
 RUN --mount=type=bind,source=python_utils/requirements_dev.txt,target=/tmp/requirements.txt \
-    python -m pip install --requirement /tmp/requirements.txt && \
+    python -m pip install --requirement /tmp/requirements.txt --break-system-packages && \
 	rm -rf /var/lib/apt/lists/*

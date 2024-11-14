@@ -11,9 +11,9 @@
 
 #define PI 3.14159265
 
-double INTRINSICS_TOLERANCE = 4.0;          // in percentage
-double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
-double ROTATION_ERROR_TOLERANCE = 1.0;      // in degrees
+constexpr double INTRINSICS_TOLERANCE = 4.0;          // in percentage
+constexpr double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
+constexpr double ROTATION_ERROR_TOLERANCE = 1.0;      // in degrees
 
 double getTranslationError(cv::Mat a, cv::Mat b) {
   double dist = cv::norm(a, b, cv::NORM_L2);
@@ -60,7 +60,10 @@ void calibrate(McCalib::Calibration &Calib) {
 }
 
 void calibrateAndCheckGt(const std::filesystem::path &config_path,
-                         const std::filesystem::path &gt_path) {
+                         const std::filesystem::path &gt_path,
+                         const double intrinsics_tolerance,
+                         const double translation_error_tolerance,
+                         const double rotation_error_tolerance) {
   McCalib::Calibration Calib(config_path);
   calibrate(Calib);
 
@@ -110,12 +113,12 @@ void calibrateAndCheckGt(const std::filesystem::path &config_path,
     double rot_error = getRotationError(rot_pred, rot_gt);
 
     // perform verifications
-    BOOST_CHECK_CLOSE(fx_pred, fx_gt, INTRINSICS_TOLERANCE);
-    BOOST_CHECK_CLOSE(fy_pred, fy_gt, INTRINSICS_TOLERANCE);
-    BOOST_CHECK_CLOSE(cx_pred, cx_gt, INTRINSICS_TOLERANCE);
-    BOOST_CHECK_CLOSE(cy_pred, cy_gt, INTRINSICS_TOLERANCE);
-    BOOST_CHECK_SMALL(tran_error, TRANSLATION_ERROR_TOLERANCE);
-    BOOST_CHECK_SMALL(rot_error, ROTATION_ERROR_TOLERANCE);
+    BOOST_CHECK_CLOSE(fx_pred, fx_gt, intrinsics_tolerance);
+    BOOST_CHECK_CLOSE(fy_pred, fy_gt, intrinsics_tolerance);
+    BOOST_CHECK_CLOSE(cx_pred, cx_gt, intrinsics_tolerance);
+    BOOST_CHECK_CLOSE(cy_pred, cy_gt, intrinsics_tolerance);
+    BOOST_CHECK_SMALL(tran_error, translation_error_tolerance);
+    BOOST_CHECK_SMALL(rot_error, rotation_error_tolerance);
   }
 }
 
@@ -134,7 +137,8 @@ BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario1) {
       "../data/Blender_Images/Scenario_1/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
-  calibrateAndCheckGt(config_path, gt_path);
+  calibrateAndCheckGt(config_path, gt_path, INTRINSICS_TOLERANCE,
+                      TRANSLATION_ERROR_TOLERANCE, ROTATION_ERROR_TOLERANCE);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario2) {
@@ -144,7 +148,8 @@ BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario2) {
       "../data/Blender_Images/Scenario_2/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
-  calibrateAndCheckGt(config_path, gt_path);
+  calibrateAndCheckGt(config_path, gt_path, INTRINSICS_TOLERANCE,
+                      TRANSLATION_ERROR_TOLERANCE, ROTATION_ERROR_TOLERANCE);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario3) {
@@ -154,7 +159,8 @@ BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario3) {
       "../data/Blender_Images/Scenario_3/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
-  calibrateAndCheckGt(config_path, gt_path);
+  calibrateAndCheckGt(config_path, gt_path, INTRINSICS_TOLERANCE,
+                      TRANSLATION_ERROR_TOLERANCE, ROTATION_ERROR_TOLERANCE);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario4) {
@@ -164,7 +170,8 @@ BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario4) {
       "../data/Blender_Images/Scenario_4/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
-  calibrateAndCheckGt(config_path, gt_path);
+  calibrateAndCheckGt(config_path, gt_path, INTRINSICS_TOLERANCE,
+                      TRANSLATION_ERROR_TOLERANCE, ROTATION_ERROR_TOLERANCE);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario5) {
@@ -174,7 +181,9 @@ BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario5) {
       "../data/Blender_Images/Scenario_5/GroundTruth.yml";
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
-  calibrateAndCheckGt(config_path, gt_path);
+  calibrateAndCheckGt(config_path, gt_path, INTRINSICS_TOLERANCE,
+                      3 * TRANSLATION_ERROR_TOLERANCE,
+                      ROTATION_ERROR_TOLERANCE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

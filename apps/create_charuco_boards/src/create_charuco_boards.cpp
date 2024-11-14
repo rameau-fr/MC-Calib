@@ -2,8 +2,29 @@
 #include <iomanip>
 #include <stdio.h>
 
-#include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
+
+#include "McCalib.hpp"
+#include "utilities.hpp"
+
+void saveBoards(const std::vector<cv::Mat> boards) {
+  std::filesystem::path charuco_boards_path = "charuco_boards";
+  std::string char_name = "charuco_board_";
+  std::string ext_name = ".bmp";
+  if (!std::filesystem::exists(charuco_boards_path)) {
+    std::filesystem::create_directories(charuco_boards_path);
+  }
+  for (std::size_t board_idx = 0u; board_idx < boards.size(); ++board_idx) {
+    // Save the markers
+    std::ostringstream ss;
+    ss << std::setw(3) << std::setfill('0') << board_idx;
+    std::string s1 = ss.str();
+    std::string save_name = char_name + s1 + ext_name;
+    std::filesystem::path save_path = charuco_boards_path / save_name;
+    std::cout << "save_name: " << save_path << std::endl;
+    cv::imwrite(save_path, boards[board_idx]);
+  }
+}
 
 int main(int argc, char *argv[]) {
 
@@ -39,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   fs["number_board"] >> NbBoard;
   assert(NbBoard > 0);
-  unsigned int num_board = static_cast<int>(NbBoard);
+  const unsigned int num_board = static_cast<unsigned int>(NbBoard);
 
   fs["square_size_per_board"] >> square_size_per_board;
   fs["number_x_square_per_board"] >> number_x_square_per_board;
@@ -59,44 +80,12 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  // Create the charuco
-  cv::Ptr<cv::aruco::Dictionary> dict =
-      cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
-  std::vector<cv::Ptr<cv::aruco::CharucoBoard>> charucoBoards;
-  int offset_count = 0;
-  for (std::size_t i = 0; i < num_board; i++) {
-    // declare the board
-    cv::Ptr<cv::aruco::CharucoBoard> charuco = cv::aruco::CharucoBoard::create(
-        number_x_square_per_board[i], number_y_square_per_board[i],
-        length_square, length_marker, dict);
-    // If it is the first board then just use the standard idx
-    if (i != 0) {
-      int id_offset = charucoBoards[i - 1]->ids.size() + offset_count;
-      offset_count = id_offset;
-      for (auto &id : charuco->ids) {
-        id += id_offset;
-      }
-    }
-    // create the charuco board
-    charucoBoards.push_back(charuco);
-    cv::Mat boardImage;
-    charucoBoards[i]->draw(
-        cv::Size(resolution_x_per_board[i], resolution_y_per_board[i]),
-        boardImage, 10, 1);
-    // Display marker
-    // cv::imshow("My Charuco", boardImage);
-    // cv::waitKey(1);
-    // Save the marker
-    std::ostringstream ss;
-    ss << std::setw(3) << std::setfill('0') << i;
-    std::string s1 = ss.str();
-    std::string charname = "charuco_board_";
-    std::string extname = ".bmp";
-    std::string savename = charname + s1;
-    savename += extname;
-    std::cout << "save_name " << savename << std::endl;
-    cv::imwrite(savename, boardImage);
-  }
+  const std::vector<cv::Mat> charuco_boards_images =
+      McCalib::createCharucoBoardsImages(
+          num_board, number_x_square_per_board, number_y_square_per_board,
+          length_square, length_marker, resolution_x_per_board,
+          resolution_y_per_board);
+  saveBoards(charuco_boards_images);
 
   return 0;
 }
