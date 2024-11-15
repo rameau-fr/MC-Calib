@@ -7,50 +7,33 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 # Installation
 
+For Windows users, follow [this installation guide](/docs/Windows.md).
+
 Requirements: Ceres, Boost, OpenCV {4.2.0, 4.5.5, 4.10.0}, c++17 
 
-For Windows users, follow [this installation guide](/docs/Windows.md)
+- [Install](https://docs.docker.com/engine/install/) docker
 
-There are several ways to get the environment ready. Choose any of them:
-
-1. The easiest way to get the environment is to pull it from the Docker Hub:
-
-   - [Install](https://docs.docker.com/engine/install/) docker.
-
-   - Pull the image:
-
-     ```bash
-     docker pull bailool/mc-calib-prod:opencv4100 # production environment
-     docker pull bailool/mc-calib-dev:opencv4100  # development environment
-     ```
-
-   - Run pulled image (set `PATH_TO_REPO_ROOT` and `PATH_TO_DATA` appropriately):
-   
-      ```bash
-      docker run \
-                  -ti --rm \
-                  --volume="$PATH_TO_REPO_ROOT:/home/MC-Calib" \
-                  --volume="$PATH_TO_DATA:/home/MC-Calib/data" \
-                  bailool/mc-calib-prod:opencv4100
-      ```
-      
-2. It is also possible to build the docker environment manually (see [instructions](/docs/Docker.md))
-
-3. Alternatively, every dependency can be installed independently without docker:
-
-   - [Install](https://docs.opencv.org/4.2.0/d7/d9f/tutorial_linux_install.html) OpenCV 4.2.0. Either instal system-wide with `sudo make install` or link to your `build` in `CmakeLists.txt`.
-
-   - Follow [installation guidelines](http://ceres-solver.org/installation.html#linux) to install Ceres.
-
-   - Install boost:
-
-      ```bash
-      sudo apt install libboost-all-dev
-      ```
-
-Then the following should do the job of compiling the code inside the `MC-Calib` root:
+- Pull the image:
 
    ```bash
+   docker pull bailool/mc-calib-prod:opencv4100 # production environment
+   docker pull bailool/mc-calib-dev:opencv4100  # development environment
+   ```
+
+- Run pulled image (set `PATH_TO_REPO_ROOT` and `PATH_TO_DATA` appropriately):
+
+   ```bash
+   docker run \
+               -ti --rm \
+               --volume="$PATH_TO_REPO_ROOT:/home/MC-Calib" \
+               --volume="$PATH_TO_DATA:/home/MC-Calib/data" \
+               bailool/mc-calib-prod:opencv4100
+   ```
+      
+Compiling the code:
+
+   ```bash
+   cd MC-Calib
    mkdir build
    cd build
    cmake -DCMAKE_BUILD_TYPE=Release ..

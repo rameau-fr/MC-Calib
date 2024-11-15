@@ -1,3 +1,13 @@
+/**
+ * @brief Saddle Point Refinement
+ *
+ * Adapted from
+ * https://github.com/facebookarchive/deltille/blob/master/include/deltille/PolynomialFit.h
+ *
+ * Reference: "Deltille Grids for Geometric Camera Calibration", H Ha, M
+ * Perdoch, H Alismail, I So Kweon, Y Sheikh (ICCV 2017)
+ */
+
 #include <cmath>
 #include <iostream>
 #include <stdio.h>
@@ -7,58 +17,51 @@
 
 namespace McCalib {
 
-/****** ******/
-
-double step_threshold = 0.001;
-
-/**
- * @struct SaddlePoint
- *
- * @brief Saddle Point Refinement
- *
- * Reference: "Deltille Grids for Geometric Camera Calibration", H Ha, M
- * Perdoch, H Alismail, I So Kweon, Y Sheikh (ICCV 2017)
- */
 struct SaddlePoint {
-  double x, y;
-  double a1, a2;
-  double s, det;
+  double x;
+  double y;
+  double a1;
+  double a2;
+  double s;
+  double det;
   SaddlePoint() {}
   SaddlePoint(double x, double y) : x(x), y(y) {}
 };
 
-void initSaddlePointRefinement(const int half_kernel_size,
-                               cv::Mat &saddleKernel, cv::Mat &invAtAAt,
-                               cv::Mat &valid) {
-  int window_size = half_kernel_size * 2 + 1;
-  saddleKernel.create(window_size, window_size, CV_64FC1);
-  double maxVal = half_kernel_size + 1, sum = 0;
-  double *w = saddleKernel.ptr<double>(0);
-  // circular kernel
-  int cnt = 0;
-  for (int y = -half_kernel_size; y <= half_kernel_size; y++)
-    for (int x = -half_kernel_size; x <= half_kernel_size; x++) {
-      *w = maxVal - std::sqrt(x * x + y * y);
+void initConeSmoothingKernel(const int window_half_size,
+                             cv::Mat &smoothingKernel, cv::Mat &mask,
+                             int &nnz) {
+  int window_size = window_half_size * 2 + 1;
+  smoothingKernel.create(window_size, window_size, cv::DataType<float>::depth);
+  mask.create(window_size, window_size, CV_8UC1);
+  double maxVal = window_half_size + 1, sum = 0;
+  float *w = smoothingKernel.ptr<float>(0);
+  // cone kernel
+  for (int y = -window_half_size; y <= window_half_size; y++)
+    for (int x = -window_half_size; x <= window_half_size; x++) {
+      *w = float(maxVal - std::sqrt(x * x + y * y));
       if (*w > 0)
-        cnt++;
+        nnz++;
       else
         *w = 0;
       sum += *w;
       w++;
     }
   // scale kernel
-  saddleKernel /= sum;
+  smoothingKernel /= sum;
+}
 
-  cv::Mat A(cnt, 6, CV_64FC1);
+void initSaddleFitting(const int half_kernel_size, const int nnz,
+                       cv::Mat &smoothingKernel, cv::Mat &mask,
+                       cv::Mat &invAtAAt) {
+  cv::Mat A(nnz, 6, CV_64FC1);
   double *a = A.ptr<double>(0);
-  w = saddleKernel.ptr<double>(0);
-  valid.create(window_size, window_size, CV_8UC1);
-  uint8_t *v = valid.ptr<uint8_t>(0);
-
+  float *w = smoothingKernel.ptr<float>(0);
+  uint8_t *m = mask.ptr<uint8_t>(0);
   for (int y = -half_kernel_size; y <= half_kernel_size; y++)
     for (int x = -half_kernel_size; x <= half_kernel_size; x++) {
       if (*w > 0) {
-        *v = 255;
+        *m = 255;
         a[0] = x * x;
         a[1] = y * y;
         a[2] = x * y;
@@ -66,113 +69,131 @@ void initSaddlePointRefinement(const int half_kernel_size,
         a[4] = x;
         a[5] = 1;
         a += 6;
-      } else {
-        *v = 0;
-      }
+      } else
+        *m = 0;
       w++;
-      v++;
+      m++;
     }
   // compute pseudoinverse of AtA
   cv::invert(A.t() * A, invAtAAt, cv::DECOMP_SVD);
   invAtAAt *= A.t();
 }
 
-template <typename PointType>
-void saddleSubpixelRefinement(const cv::Mat &smooth_input,
-                              const std::vector<PointType> &initial, cv::Mat &A,
-                              cv::Mat &valid, std::vector<SaddlePoint> &refined,
-                              const int window_half_size = 3,
-                              const int max_iterations = 3) {
-  cv::Mat b(A.cols, 1, CV_64FC1);
+template <typename ImageType>
+bool interpolatePatch(double x, double y, int window_half_size,
+                      const cv::Mat &input, const cv::Mat &mask,
+                      cv::Mat &b_vec) {
+  if (x > window_half_size + 1 && x < input.cols - (window_half_size + 2) &&
+      y > window_half_size + 1 && y < input.rows - (window_half_size + 2)) {
+    int x0 = int(x);
+    int y0 = int(y);
+    double xw = x - x0;
+    double yw = y - y0;
+
+    // precompute bilinear interpolation weights
+    double w00 = (1.0 - xw) * (1.0 - yw), w01 = xw * (1.0 - yw),
+           w10 = (1.0 - xw) * yw, w11 = xw * yw;
+
+    // fit to local neighborhood = b vector...
+    const uint8_t *v = mask.ptr<const uint8_t>(0);
+    double *m = b_vec.ptr<double>(0);
+    double mn = DBL_MAX;
+    double mx = DBL_MIN;
+    for (int wy = -window_half_size; wy <= window_half_size; wy++) {
+      const ImageType *im00 = input.ptr<ImageType>(y0 + wy),
+                      *im10 = input.ptr<ImageType>(y0 + wy + 1);
+      for (int wx = -window_half_size; wx <= window_half_size; wx++) {
+        if (*v > 0) {
+          const int col0 = x0 + wx;
+          const int col1 = col0 + 1;
+          double val = im00[col0] * w00 + im00[col1] * w01 + im10[col0] * w10 +
+                       im10[col1] * w11;
+          *(m++) = val;
+          if (mn > val)
+            mn = val;
+          if (mx < val)
+            mx = val;
+        }
+        v++;
+      }
+    }
+    if (mx - mn > 1.0 / 255)
+      return true;
+  }
+  return false;
+}
+
+template <typename LocationsPointType, typename SmoothedImageType = double>
+void saddleSubpixelRefinement(
+    const cv::Mat &smoothed_input,
+    const std::vector<LocationsPointType> &initial, const cv::Mat &invAtAAt,
+    const cv::Mat &mask, const int window_half_size,
+    std::vector<SaddlePoint> &refined, const int max_iterations = 3,
+    const bool tight_convergence = true,
+    const double spatial_convergence_threshold = 0.001) {
+  cv::Mat b(invAtAAt.cols, 1, CV_64FC1);
+
+  double convergence_region = window_half_size;
+  if (tight_convergence) {
+    convergence_region = 1.0;
+  }
 
   refined.resize(initial.size());
   for (size_t idx = 0; idx < initial.size(); idx++)
     refined[idx] = SaddlePoint(initial[idx].x, initial[idx].y);
 
-  // int diverged = 0, iterations = 0;
-  int width = smooth_input.cols, height = smooth_input.rows;
   for (size_t idx = 0; idx < refined.size(); idx++) {
     SaddlePoint &pt = refined[idx];
-    // printf("initial: %.3f, %.3f: ", pt.x, pt.y);
-    cv::Mat p;
+    bool point_diverged = true;
     for (int it = 0; it < max_iterations; it++) {
-      if (pt.x > window_half_size + 1 &&
-          pt.x < width - (window_half_size + 2) &&
-          pt.y > window_half_size + 1 &&
-          pt.y < height - (window_half_size + 2)) {
-        int x0 = int(pt.x);
-        int y0 = int(pt.y);
-        double xw = pt.x - x0;
-        double yw = pt.y - y0;
-
-        // precompute bilinear interpolation weights
-        double w00 = (1.0 - xw) * (1.0 - yw), w01 = xw * (1.0 - yw),
-               w10 = (1.0 - xw) * yw, w11 = xw * yw;
-
-        // fit to local neighborhood = b vector...
-        double *m = b.ptr<double>(0);
-        uint8_t *v = valid.ptr<uint8_t>(0);
-
-        for (int y = -window_half_size; y <= window_half_size; y++) {
-          const double *im00 = smooth_input.ptr<double>(y0 + y),
-                       *im10 = smooth_input.ptr<double>(y0 + y + 1);
-          for (int x = -window_half_size; x <= window_half_size; x++) {
-            if (*v > 0) {
-              const int col0 = x0 + x;
-              const int col1 = col0 + 1;
-              *(m++) = im00[col0] * w00 + im00[col1] * w01 + im10[col0] * w10 +
-                       im10[col1] * w11;
-            }
-            v++;
-          }
-        }
+      if (interpolatePatch<SmoothedImageType>(pt.x, pt.y, window_half_size,
+                                              smoothed_input, mask, b)) {
         // fit quadric to surface by solving LSQ
-        p = A * b;
+        cv::Mat p = invAtAAt * b;
 
         // k5, k4, k3, k2, k1, k0
         // 0 , 1 , 2 , 3 , 4 , 5
         double *r = p.ptr<double>(0);
-        pt.det = 4.0 * r[0] * r[1] - r[2] * r[2]; // 4.0 * k5 * k4 - k3 * k3
-                                                  // compute the new location
-        double dx = (-2 * r[1] * r[4] + r[2] * r[3]) /
-                    pt.det; // - 2 * k4 * k1 +     k3 * k2
-        double dy = (r[2] * r[4] - 2 * r[0] * r[3]) /
-                    pt.det; //       k3 * k1 - 2 * k5 * k2
+        // 4.0 * k5 * k4 - k3 * k3
+        pt.det = 4.0 * r[0] * r[1] - r[2] * r[2];
+
+        // check if it is still a saddle point
+        if (pt.det > 0) {
+          break;
+        }
+
+        // compute the new location
+        // - 2 * k4 * k1 +     k3 * k2
+        double dx = (-2.0 * r[1] * r[4] + r[2] * r[3]) / pt.det;
+        // k3 * k1 - 2 * k5 * k2
+        double dy = (r[2] * r[4] - 2.0 * r[0] * r[3]) / pt.det;
         pt.x += dx;
         pt.y += dy;
-        dx = std::fabs(dx);
-        dy = std::fabs(dy);
-        // iterations++;
 
-        if (it == max_iterations ||
-            (step_threshold > dx && step_threshold > dy)) {
-          // converged
+        if (spatial_convergence_threshold > std::fabs(dx) &&
+            spatial_convergence_threshold > std::fabs(dy)) {
           double k4mk5 = r[1] - r[0];
           pt.s = std::sqrt(r[2] * r[2] + k4mk5 * k4mk5);
           pt.a1 = std::atan2(-r[2], k4mk5) / 2.0;
           pt.a2 = std::acos((r[1] + r[0]) / pt.s) / 2.0;
+          // converged
+          point_diverged = false;
           break;
-        } else {
-          // check for divergence
-          if (pt.det > 0 ||
-              std::fabs(pt.x - initial[idx].x) > window_half_size ||
-              std::fabs(pt.y - initial[idx].y) > window_half_size) {
-            pt.x = pt.y = std::numeric_limits<double>::infinity();
-            // diverged++;
-            break;
-          }
+        }
+        // check for divergence due to departure out of convergence region or
+        // point type change
+        if (std::fabs(pt.x - initial[idx].x) > convergence_region ||
+            std::fabs(pt.y - initial[idx].y) > convergence_region) {
+          break;
         }
       } else {
-        // too close to border...
-        pt.x = pt.y = std::numeric_limits<double>::infinity();
-        // diverged++;
         break;
       }
     }
-    // printf(" [%.3f, %.3f]\n", pt.x, pt.y);
+    if (point_diverged) {
+      pt.x = pt.y = std::numeric_limits<double>::infinity();
+    }
   }
-  // printf("Total: %zd, diverged: %d, iterations: %d\n", initial.size(),
-  // diverged, iterations);
 }
 
 template <typename PointType>
@@ -181,15 +202,20 @@ void saddleSubpixelRefinement(const cv::Mat &input,
                               std::vector<SaddlePoint> &refined,
                               const int window_half_size = 2,
                               const int max_iterations = 20) {
-  cv::Mat weights, A, valid;
-  initSaddlePointRefinement(window_half_size, weights, A, valid);
 
-  // circular filter smoothing
-  cv::Mat smooth;
-  cv::filter2D(input, smooth, CV_64FC1, weights);
+  cv::Mat smoothingKernel;
+  cv::Mat mask;
+  int nnz;
+  initConeSmoothingKernel(window_half_size, smoothingKernel, mask, nnz);
 
-  saddleSubpixelRefinement(smooth, initial, A, valid, refined, window_half_size,
-                           max_iterations);
+  cv::Mat invAtAAt;
+  initSaddleFitting(window_half_size, nnz, smoothingKernel, mask, invAtAAt);
+
+  cv::Mat smooth_input;
+  cv::filter2D(input, smooth_input, CV_64FC1, smoothingKernel);
+
+  saddleSubpixelRefinement(smooth_input, initial, invAtAAt, mask,
+                           window_half_size, refined, max_iterations);
 }
 
 } // namespace McCalib
