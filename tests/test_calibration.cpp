@@ -182,8 +182,7 @@ BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario5) {
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(config_path), true);
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
   calibrateAndCheckGt(config_path, gt_path, INTRINSICS_TOLERANCE,
-                      TRANSLATION_ERROR_TOLERANCE,
-                      ROTATION_ERROR_TOLERANCE);
+                      TRANSLATION_ERROR_TOLERANCE, ROTATION_ERROR_TOLERANCE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
