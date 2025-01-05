@@ -320,6 +320,7 @@ void Calibration::detectBoardsInImageWithCamera(const std::string &frame_path,
     if (charuco_corners[i].size() >
         static_cast<std::size_t>(
             std::round(min_perc_pts_ * boards_3d_[i]->nb_pts_))) {
+      LOG_INFO << "Number of detected corners :: " << charuco_corners[i].size();
       // Refine the detected corners
       if (refine_corner_ == true) {
         std::vector<SaddlePoint> refined;
