@@ -203,27 +203,19 @@ void saddleSubpixelRefinement(const cv::Mat &input,
                               const int window_half_size = 2,
                               const int max_iterations = 20) {
 
-  // LOG_INFO << "Saddle point refinement";
-
   cv::Mat smoothingKernel;
   cv::Mat mask;
   int nnz;
   initConeSmoothingKernel(window_half_size, smoothingKernel, mask, nnz);
 
-  // LOG_INFO << "initConeSmoothingKernel() done";
-
   cv::Mat invAtAAt;
   initSaddleFitting(window_half_size, nnz, smoothingKernel, mask, invAtAAt);
-
-  // LOG_INFO << "initSaddleFitting() done";
 
   cv::Mat smooth_input;
   cv::filter2D(input, smooth_input, CV_64FC1, smoothingKernel);
 
   saddleSubpixelRefinement(smooth_input, initial, invAtAAt, mask,
                            window_half_size, refined, max_iterations);
-
-  // LOG_INFO << "saddleSubpixelRefinement() done";
 }
 
 } // namespace McCalib
