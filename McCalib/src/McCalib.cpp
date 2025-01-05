@@ -122,13 +122,14 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
       max_board_idx + 1, number_x_square_per_board_, number_y_square_per_board_,
       length_square, length_marker, dict_);
 
-  LOG_INFO << "Number of boards : " << charuco_boards.size();
+  LOG_INFO << "Number of boards :: " << charuco_boards.size();
 
   unsigned int cur_board_idx = 0u;
   // Initialize the 3D boards
   for (auto const &[charuco_board_idx, charuco_board] : charuco_boards) {
-    if (std::count(boards_index.begin(), boards_index.end(),
-                   charuco_board_idx)) {
+    if (boards_index.size() == 0u ||
+        std::count(boards_index.begin(), boards_index.end(),
+                   charuco_board_idx) > 0) {
       // Initialize board
       std::shared_ptr<Board> new_board =
           std::make_shared<Board>(config_path, cur_board_idx);
@@ -139,6 +140,7 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
       boards_3d_[cur_board_idx]->charuco_board_ = charuco_board;
       boards_3d_[cur_board_idx]->pts_3d_.reserve(
           boards_3d_[cur_board_idx]->nb_pts_);
+
       // Prepare the 3D pts of the boards
       for (int y = 0; y < boards_3d_[cur_board_idx]->nb_y_square_ - 1; y++) {
         for (int x = 0; x < boards_3d_[cur_board_idx]->nb_x_square_ - 1; x++) {
@@ -338,6 +340,7 @@ void Calibration::detectBoardsInImageWithCamera(const std::string &frame_path,
     if (charuco_corners[i].size() >
         static_cast<std::size_t>(
             std::round(min_perc_pts_ * boards_3d_[i]->nb_pts_))) {
+      LOG_INFO << "Number of detected corners :: " << charuco_corners[i].size();
       // Refine the detected corners
       if (refine_corner_ == true) {
         std::vector<SaddlePoint> refined;
