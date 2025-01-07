@@ -119,25 +119,18 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
   }
 
   const auto charuco_boards = createCharucoBoards(
-      nb_board_, number_x_square_per_board_, number_y_square_per_board_,
+      max_board_idx + 1, number_x_square_per_board_, number_y_square_per_board_,
       length_square, length_marker, dict_);
 
-  // Initialize the 3D boards
-  for (auto const &[i, charuco_board] : charuco_boards) {
-    // Initialize board
-    std::shared_ptr<Board> new_board = std::make_shared<Board>(config_path, i);
-    boards_3d_[i] = new_board;
-    boards_3d_[i]->nb_pts_ =
-        (boards_3d_[i]->nb_x_square_ - 1) * (boards_3d_[i]->nb_y_square_ - 1);
-    boards_3d_[i]->charuco_board_ = charuco_board;
-    boards_3d_[i]->pts_3d_.reserve(boards_3d_[i]->nb_pts_);
-    // Prepare the 3D pts of the boards
-    for (int y = 0; y < boards_3d_[i]->nb_y_square_ - 1; y++) {
-      for (int x = 0; x < boards_3d_[i]->nb_x_square_ - 1; x++) {
-        boards_3d_[i]->pts_3d_.emplace_back(x * boards_3d_[i]->square_size_,
-                                            y * boards_3d_[i]->square_size_, 0);
-      }
-    }
+  for (unsigned int board_idx = 0u; board_idx < nb_board_; ++board_idx) {
+    const int charuco_board_idx =
+        boards_index.size() > 0 ? boards_index[board_idx] : board_idx;
+    assert(charuco_boards.count(charuco_board_idx) > 0);
+    const cv::Ptr<cv::aruco::CharucoBoard> charuco_board =
+        charuco_boards.at(charuco_board_idx);
+
+    boards_3d_[board_idx] =
+        std::make_shared<Board>(config_path, board_idx, charuco_board);
   }
 }
 

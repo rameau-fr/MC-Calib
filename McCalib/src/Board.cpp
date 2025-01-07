@@ -19,7 +19,8 @@ namespace McCalib {
  * @param config_path path to the configuration file
  * @param board_idx index of the board
  */
-Board::Board(const std::filesystem::path &config_path, const int board_idx) {
+Board::Board(const std::filesystem::path &config_path, const int board_idx,
+             const cv::Ptr<cv::aruco::CharucoBoard> charuco_board) {
   std::vector<int> number_x_square_per_board, number_y_square_per_board;
   std::vector<double> square_size_per_board;
   std::vector<int> boards_index;
@@ -59,6 +60,19 @@ Board::Board(const std::filesystem::path &config_path, const int board_idx) {
   }
 
   fs.release(); // close the input file
+
+  nb_pts_ = (nb_x_square_ - 1) * (nb_y_square_ - 1);
+
+  // Prepare the 3D pts of the boards
+  pts_3d_.reserve(nb_pts_);
+  for (int y = 0; y < nb_y_square_ - 1; y++) {
+    for (int x = 0; x < nb_x_square_ - 1; x++) {
+      pts_3d_.emplace_back(x * square_size_, y * square_size_, 0);
+    }
+  }
+
+  charuco_board_ = charuco_board;
+
   board_id_ = board_idx;
 
   // initialize color of the board

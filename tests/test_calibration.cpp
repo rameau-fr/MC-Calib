@@ -11,9 +11,15 @@
 
 #define PI 3.14159265
 
-constexpr double INTRINSICS_TOLERANCE = 4.0;          // in percentage
+constexpr double INTRINSICS_TOLERANCE = 4.0;     // in percentage
+constexpr double ROTATION_ERROR_TOLERANCE = 1.0; // in degrees
+
+#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
+     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
 constexpr double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
-constexpr double ROTATION_ERROR_TOLERANCE = 1.0;      // in degrees
+#else
+constexpr double TRANSLATION_ERROR_TOLERANCE = 0.01; // in meters
+#endif
 
 double getTranslationError(cv::Mat a, cv::Mat b) {
   double dist = cv::norm(a, b, cv::NORM_L2);

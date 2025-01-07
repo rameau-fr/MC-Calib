@@ -49,7 +49,8 @@ public:
   // Functions
   Board() = delete;
   ~Board(){};
-  Board(const std::filesystem::path &config, const int board_idx);
+  Board(const std::filesystem::path &config, const int board_idx,
+        const cv::Ptr<cv::aruco::CharucoBoard> charuco_board);
   void insertNewBoard(const std::shared_ptr<BoardObs> new_board);
   void insertNewFrame(const std::shared_ptr<Frame> new_frame);
 };
