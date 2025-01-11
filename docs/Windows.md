@@ -28,8 +28,8 @@ This documentation is meant to guide the installation of the MC-Calib toolbox, s
    Then pull the docker image using either one of the commands given below.
 
 ```bash
-docker pull bailool/mc-calib-prod:opencv4100 # production environment
-docker pull bailool/mc-calib-dev:opencv4100 # development environment
+docker pull bailool/mc-calib-prod:opencv4110 # production environment
+docker pull bailool/mc-calib-dev:opencv4110 # development environment
 ```
 
 4. **Running Pulled Image using Docker**  
@@ -41,7 +41,7 @@ Docker run `
     -ti --rm `
     --volume=”$PATH_TO_REPO_ROOT:/home/MC-Calib” `
     --volume=”$PATH_TO_DATA:/home/MC-Calib/data” `
-    bailool/mc-calib-prod:opencv4100
+    bailool/mc-calib-prod:opencv4110
 ```
 
 ### User Personalization

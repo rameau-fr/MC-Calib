@@ -15,14 +15,14 @@ WORKDIR /home
 #------------------------------	#
 #     INSTALL OPENCV 4		    #
 #------------------------------	#
-RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.10.0.zip && \
-	wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.10.0.zip && \
+RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.11.0.zip && \
+	wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.11.0.zip && \
 	unzip opencv.zip && unzip opencv_contrib.zip && \
 	mkdir -p build && cd build && \
-	cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.10.0/modules ../opencv-4.10.0 && \
+	cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.11.0/modules ../opencv-4.11.0 && \
 	cmake --build . --target install -- -j4 && \
 	cd /home && rm opencv.zip && rm opencv_contrib.zip && \ 
-	rm -rf opencv-4.10.0 && rm -rf opencv_contrib-4.10.0 && rm -rf build && \
+	rm -rf opencv-4.11.0 && rm -rf opencv_contrib-4.11.0 && rm -rf build && \
 	rm -rf /var/lib/apt/lists/*
 
 #------------------------------	#
