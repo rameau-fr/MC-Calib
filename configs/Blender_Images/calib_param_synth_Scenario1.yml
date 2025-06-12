@@ -17,19 +17,19 @@ number_y_square_per_board: []
 square_size_per_board: []
 
 ######################################## Camera Parameters ###################################################
-distortion_model: 0             # 0:Brown (perspective) // 1: Kannala (fisheye)
-distortion_per_camera : []         # specify the model per camera, #leave "distortion_per_camera" empty [] if they all follow the same model (make sure that the vector is as long as cameras nb)
+distortion_model: 0        # 0:Brown (perspective) // 1: Kannala (fisheye)
+distortion_per_camera : [] # specify the model per camera, #leave "distortion_per_camera" empty [] if they all follow the same model (make sure that the vector is as long as cameras nb)
 number_camera: 2           # number of cameras in the rig to calibrate
 refine_corner: 1           # activate or deactivate the corner refinement
-min_perc_pts: 0.5           # min percentage of points visible to assume a good detection
+min_perc_pts: 0.5          # min percentage of points visible to assume a good detection
 
-cam_params_path: "../data/Blender_Images/Scenario_1/initial_values.yml"   # file with cameras intrinsics to initialize the intrinsic, write "None" if no initialization available 
-fix_intrinsic: 0 #if 1 then the intrinsic parameters will not be estimated nor refined (initial value needed)
+cam_params_path: "None"    # "../data/Blender_Images/Scenario_1/initial_values.yml"   # file with cameras intrinsics to initialize the intrinsic, write "None" if no initialization available 
+fix_intrinsic: 0           # if 1 then the intrinsic parameters will not be estimated nor refined (initial value needed)
 
 ######################################## Images Parameters ###################################################
 root_path: "../data/Blender_Images/Scenario_1/Images"
 cam_prefix: "Cam_"
-keypoints_path: "../data/Blender_Images/Scenario_1/Results/detected_keypoints_data.yml" # "None" #
+keypoints_path: "None"     # "../data/Blender_Images/Scenario_1/Results/detected_keypoints_data.yml" # "None" #
 
 ######################################## Optimization Parameters #############################################
 quaternion_averaging: 1    # use Quaternion Averaging or median for average rotation
