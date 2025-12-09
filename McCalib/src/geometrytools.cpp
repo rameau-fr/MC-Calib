@@ -747,6 +747,63 @@ cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
                         refine);
   }
 
+  // P3P for Double Sphere
+  if (distortion_type == 2) {
+    // Undistort points to normalized coordinates then reproject to pinhole
+    std::vector<cv::Point2f> imagePointsUndis;
+    imagePointsUndis.reserve(image_points.size());
+
+    double fx = intrinsic.at<double>(0, 0);
+    double fy = intrinsic.at<double>(1, 1);
+    double cx = intrinsic.at<double>(0, 2);
+    double cy = intrinsic.at<double>(1, 2);
+    double xi = distortion_vector.at<double>(0);
+    double alpha = distortion_vector.at<double>(1);
+
+    for (const auto &pt : image_points) {
+      double mx = (pt.x - cx) / fx;
+      double my = (pt.y - cy) / fy;
+      double r2 = mx * mx + my * my;
+
+      // Unproject (DS to Unit Sphere)
+      // We need to solve for mz.
+      // This is complex. Let's look at Camera::dsUnproject logic.
+      // It computes mz based on alpha and r2.
+      
+      // Validity check
+      double s = 1.0 - (2.0 * alpha - 1.0) * r2;
+      if (s < 0) s = 0; // Clamp
+
+      double mz = (1.0 - alpha * alpha * r2) /
+                  (alpha * std::sqrt(s) + (1.0 - alpha));
+      
+      double mz2 = mz * mz;
+      double k = (mz * xi + std::sqrt(mz2 + (1.0 - xi * xi) * r2)) /
+                 (mz2 + r2);
+
+      double ray_x = k * mx;
+      double ray_y = k * my;
+      double ray_z = k * mz - xi;
+
+      // Project to Pinhole (normalized)
+      double pin_x = ray_x / ray_z;
+      double pin_y = ray_y / ray_z;
+
+      // Project to Pixel (using K)
+      double u_pin = fx * pin_x + cx;
+      double v_pin = fy * pin_y + cy;
+
+      imagePointsUndis.emplace_back(float(u_pin), float(v_pin));
+    }
+
+    // Run p3p with zero distortion (as points are now pinhole)
+    const cv::Mat zero_distortion_vector =
+        (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
+    Inliers = ransacP3P(scene_points, imagePointsUndis, intrinsic,
+                        zero_distortion_vector, best_R, best_T, thresh, it, p,
+                        refine);
+  }
+
   return Inliers;
 }
 
@@ -767,6 +824,43 @@ void projectPointsWithDistortion(const std::vector<cv::Point3f> &object_pts,
   {
     cv::fisheye::projectPoints(object_pts, repro_pts, rot, trans, camera_matrix,
                                distortion_vector, 0.0);
+  }
+  if (distortion_type == 2) // Double Sphere
+  {
+    cv::Mat R;
+    cv::Rodrigues(rot, R);
+    double fx = camera_matrix.at<double>(0, 0);
+    double fy = camera_matrix.at<double>(1, 1);
+    double cx = camera_matrix.at<double>(0, 2);
+    double cy = camera_matrix.at<double>(1, 2);
+    double xi = distortion_vector.at<double>(0);
+    double alpha = distortion_vector.at<double>(1);
+
+    double tx = trans.at<double>(0);
+    double ty = trans.at<double>(1);
+    double tz = trans.at<double>(2);
+
+    repro_pts.reserve(object_pts.size());
+    for (const auto &pt : object_pts) {
+      // Transform 3D point to camera frame
+      double X = R.at<double>(0, 0) * pt.x + R.at<double>(0, 1) * pt.y + R.at<double>(0, 2) * pt.z + tx;
+      double Y = R.at<double>(1, 0) * pt.x + R.at<double>(1, 1) * pt.y + R.at<double>(1, 2) * pt.z + ty;
+      double Z = R.at<double>(2, 0) * pt.x + R.at<double>(2, 1) * pt.y + R.at<double>(2, 2) * pt.z + tz;
+
+      // Project
+      double d1 = std::sqrt(X * X + Y * Y + Z * Z);
+      double z1 = Z + xi * d1;
+      double d2 = std::sqrt(X * X + Y * Y + z1 * z1);
+      double den = alpha * d2 + (1.0 - alpha) * z1;
+
+      if (den != 0) {
+        double u = fx * X / den + cx;
+        double v = fy * Y / den + cy;
+        repro_pts.emplace_back(float(u), float(v));
+      } else {
+        repro_pts.emplace_back(0, 0); // Should handle better?
+      }
+    }
   }
 }
 

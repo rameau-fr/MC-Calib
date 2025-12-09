@@ -60,6 +60,45 @@ struct ReprojectionError {
       residuals[1] = vp - T(v);
     }
 
+    if (distortion_type == 2) // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = p[0] * p[2];
+      T y = p[1] * p[2];
+      T z = p[2];
+
+      const T fx = Intrinsics[0];
+      const T fy = Intrinsics[1];
+      const T cx = Intrinsics[2];
+      const T cy = Intrinsics[3];
+      const T xi = Intrinsics[4];
+      const T alpha = Intrinsics[5];
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+          residuals[0] = T(10000.0);
+          residuals[1] = T(10000.0);
+          return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
+    }
+
     if (distortion_type == 1) // fisheye
     {
       // apply distorsion
@@ -179,6 +218,45 @@ struct ReprojectionError_3DObjRef {
       // position.
       residuals[0] = up - T(u);
       residuals[1] = vp - T(v);
+    }
+
+    if (distortion_type == 2) // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = p[0] * p[2];
+      T y = p[1] * p[2];
+      T z = p[2];
+
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);    // Mapping k1 to xi
+      T alpha = T(k2); // Mapping k2 to alpha
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+          residuals[0] = T(10000.0);
+          residuals[1] = T(10000.0);
+          return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
     }
 
     if (distortion_type == 1) // fisheye
@@ -309,6 +387,45 @@ struct ReprojectionError_CameraGroupRef {
       // position.
       residuals[0] = up - T(u);
       residuals[1] = vp - T(v);
+    }
+
+    if (distortion_type == 2) // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = pobj[0] * pobj[2];
+      T y = pobj[1] * pobj[2];
+      T z = pobj[2];
+
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);
+      T alpha = T(k2);
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+          residuals[0] = T(10000.0);
+          residuals[1] = T(10000.0);
+          return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
     }
 
     if (distortion_type == 1) // fisheye
@@ -450,6 +567,45 @@ struct ReprojectionError_CameraGroupAndObjectRef {
       // position.
       residuals[0] = up - T(u);
       residuals[1] = vp - T(v);
+    }
+
+    if (distortion_type == 2) // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = pobj[0] * pobj[2];
+      T y = pobj[1] * pobj[2];
+      T z = pobj[2];
+
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);
+      T alpha = T(k2);
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+          residuals[0] = T(10000.0);
+          residuals[1] = T(10000.0);
+          return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
     }
 
     if (distortion_type == 1) // fisheye
@@ -601,6 +757,45 @@ struct ReprojectionError_CameraGroupAndObjectRefAndIntrinsics {
       // position.
       residuals[0] = up - T(u);
       residuals[1] = vp - T(v);
+    }
+
+    if (distortion_type == 2) // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = pobj[0] * pobj[2];
+      T y = pobj[1] * pobj[2];
+      T z = pobj[2];
+
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);
+      T alpha = T(k2);
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+          residuals[0] = T(10000.0);
+          residuals[1] = T(10000.0);
+          return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
     }
 
     if (distortion_type == 1) // fisheye

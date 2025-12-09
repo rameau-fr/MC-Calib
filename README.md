@@ -134,7 +134,7 @@ number_y_square_per_board: []
 square_size_per_board: []
 
 ######################################## Camera Parameters ###################################################
-distortion_model: 0         # 0:Brown (perspective) // 1: Kannala (fisheye)
+distortion_model: 0         # 0:Brown (perspective) // 1: Kannala (fisheye) // 2: Double Sphere (wide-angle/fisheye)
 distortion_per_camera : []  # specify the model per camera, #leave "distortion_per_camera" empty [] if they all follow the same model (make sure that the vector is as long as cameras nb)
 number_camera: 2            # number of cameras in the rig to calibrate
 refine_corner: 1            # activate or deactivate the corner refinement

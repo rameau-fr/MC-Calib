@@ -65,6 +65,8 @@ public:
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
   void setIntrinsics(const cv::Mat &K, const cv::Mat &distortion_vector);
   bool checkBorderToleranceFisheye(const std::shared_ptr<BoardObs> board_obs);
+  void dsUnproject(const std::vector<cv::Point2f> &pts_2d,
+                   std::vector<cv::Point3f> &rays) const;
 };
 
 } // namespace McCalib

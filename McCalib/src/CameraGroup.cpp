@@ -558,6 +558,25 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                               ->relative_board_pose_[board_id_pts_id.first]
                               .data(),
                           cam_ptr->intrinsics_.data());
+
+                      // Set bounds for Double Sphere
+                      if (cam_ptr->distortion_model_ == 2) {
+                          double* intrinsics = cam_ptr->intrinsics_.data();
+                          problem.SetParameterLowerBound(intrinsics, 0, 500.0); // fx
+                          problem.SetParameterUpperBound(intrinsics, 0, 4000.0);
+                          problem.SetParameterLowerBound(intrinsics, 1, 500.0); // fy
+                          problem.SetParameterUpperBound(intrinsics, 1, 4000.0);
+                          
+                          problem.SetParameterLowerBound(intrinsics, 2, 0.0); // cx
+                          problem.SetParameterUpperBound(intrinsics, 2, double(cam_ptr->im_cols_));
+                          problem.SetParameterLowerBound(intrinsics, 3, 0.0); // cy
+                          problem.SetParameterUpperBound(intrinsics, 3, double(cam_ptr->im_rows_));
+                          
+                          problem.SetParameterLowerBound(intrinsics, 4, -1.0); // xi
+                          problem.SetParameterUpperBound(intrinsics, 4, 1.0);
+                          problem.SetParameterLowerBound(intrinsics, 5, 0.0); // alpha
+                          problem.SetParameterUpperBound(intrinsics, 5, 1.0);
+                      }
                     }
                   }
                 }
