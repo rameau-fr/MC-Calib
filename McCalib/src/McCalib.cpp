@@ -75,6 +75,12 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
   fs["resolution_y_per_board"] >> resolution_y_per_board_;
   fs["he_approach"] >> he_approach_;
   fs["fix_intrinsic"] >> fix_intrinsic_;
+  
+  std::string optimization_strategy = "original";
+  if (!fs["optimization_strategy"].empty()) {
+      fs["optimization_strategy"] >> optimization_strategy;
+  }
+  optimization_strategy_ = optimization_strategy;
 
   fs.release(); // close the input file
 
@@ -94,7 +100,8 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
   LOG_INFO << "Nb of cameras : " << nb_camera_
            << "   Nb of Boards : " << nb_board_
            << "   Refined Corners : " << refine_corner_
-           << "   Distortion mode : " << distortion_model;
+           << "   Distortion mode : " << distortion_model
+           << "   Optimization Strategy : " << optimization_strategy_;
 
   // check if the save dir exist and create it if it does not
   if (!std::filesystem::exists(save_path_) && save_path_.has_filename()) {
@@ -108,7 +115,7 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
   // Initialize Cameras
   for (std::size_t i = 0; i < nb_camera_; i++) {
     std::shared_ptr<Camera> new_cam =
-        std::make_shared<Camera>(i, distortion_per_camera[i]);
+        std::make_shared<Camera>(i, 0, 0, distortion_per_camera[i], optimization_strategy_);
     cams_[i] = new_cam;
   }
 
@@ -1106,7 +1113,7 @@ void Calibration::initCameraGroup() {
 
     // Declare a new camera group
     std::shared_ptr<CameraGroup> new_camera_group =
-        std::make_shared<CameraGroup>(id_ref_cam, i);
+        std::make_shared<CameraGroup>(id_ref_cam, i, optimization_strategy_);
 
     // Compute the shortest path between the reference and the other cams
     for (std::size_t j = 0; j < connect_comp[i].size(); j++) {
@@ -1575,7 +1582,7 @@ void Calibration::mergeCameraGroup() {
 
     // initialize the camera group
     std::shared_ptr<CameraGroup> new_camera_group =
-        std::make_shared<CameraGroup>(id_ref_cam, i);
+        std::make_shared<CameraGroup>(id_ref_cam, i, optimization_strategy_);
     // Iterate through the camera groups and add all the cameras individually in
     // the new group
     for (const auto &it_group : cam_group_) {

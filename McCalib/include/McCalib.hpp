@@ -87,7 +87,11 @@ public:
   int he_approach_ = 0;
 
   // fix intrinsic parameters
+  // fix intrinsic parameters
   int fix_intrinsic_ = 0;
+
+  // Optimization strategy
+  std::string optimization_strategy_ = "original";
 
   // Data structures
   std::map<int, std::shared_ptr<BoardObs>>

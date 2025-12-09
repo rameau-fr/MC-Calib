@@ -13,8 +13,9 @@
 
 namespace McCalib {
 
-Camera::Camera(const int cam_idx, const int distortion_model)
-    : cam_idx_(cam_idx), distortion_model_(distortion_model) {}
+Camera::Camera(int cam_idx, int width, int height, int distortion_model, std::string optimization_strategy)
+    : cam_idx_(cam_idx), distortion_model_(distortion_model), optimization_strategy_(optimization_strategy), im_cols_(width), im_rows_(height) {
+}
 
 /**
  * @brief Get camera matrix (K)
@@ -221,13 +222,6 @@ void Camera::initializeCalibration() {
         cv::solvePnP(obj_pts, norm_pts, cv::Mat::eye(3, 3, CV_64F), cv::Mat(),
                      rvec, tvec);
         
-        // Store pose
-        cv::Mat R;
-        cv::Rodrigues(rvec, R);
-        // board_obs->setPose(R, tvec); // Assuming setPose exists or direct access
-        // Direct access based on BoardObs struct (usually stores rvec/tvec in pose_ vector)
-        // Check BoardObs.hpp: std::array<double, 6> pose_; // rx,ry,rz, tx,ty,tz
-        
         board_obs->pose_[0] = rvec.at<double>(0);
         board_obs->pose_[1] = rvec.at<double>(1);
         board_obs->pose_[2] = rvec.at<double>(2);
@@ -237,6 +231,52 @@ void Camera::initializeCalibration() {
         board_obs->valid_ = true;
       }
     }
+
+    // 3. Optimization Step: Refine intrinsics and extrinsics jointly
+    LOG_INFO << "Refining Single Camera Calibration (Initialization)...";
+    refineIntrinsicCalibration(100); 
+
+    // 4. PnP Refinement: Re-estimate poses with optimized intrinsics
+    LOG_INFO << "Refining Poses with Optimized Intrinsics...";
+    for (auto &it : board_observations_) {
+      std::shared_ptr<BoardObs> board_obs = it.second.lock();
+      if (!board_obs || !board_obs->valid_) continue;
+
+      std::shared_ptr<Board> board_3d = board_obs->board_3d_.lock();
+      if (!board_3d) continue;
+
+      std::vector<cv::Point3f> obj_pts;
+      for (int idx : board_obs->charuco_id_) {
+        obj_pts.push_back(board_3d->pts_3d_[idx]);
+      }
+
+      std::vector<cv::Point3f> rays;
+      dsUnproject(board_obs->pts_2d_, rays); // Uses optimized xi, alpha
+
+      std::vector<cv::Point2f> norm_pts;
+      for (const auto &ray : rays) {
+        if (ray.z > 1e-6)
+          norm_pts.emplace_back(ray.x / ray.z, ray.y / ray.z);
+        else
+          norm_pts.emplace_back(0, 0);
+      }
+
+      cv::Mat rvec, tvec;
+      if (norm_pts.size() >= 4) {
+        // Use previous pose as initial guess if possible, but solvePnP generic doesn't take guess easily without iterative flag
+        // We stick to standard solvePnP for robustness
+        cv::solvePnP(obj_pts, norm_pts, cv::Mat::eye(3, 3, CV_64F), cv::Mat(),
+                     rvec, tvec);
+        
+        board_obs->pose_[0] = rvec.at<double>(0);
+        board_obs->pose_[1] = rvec.at<double>(1);
+        board_obs->pose_[2] = rvec.at<double>(2);
+        board_obs->pose_[3] = tvec.at<double>(0);
+        board_obs->pose_[4] = tvec.at<double>(1);
+        board_obs->pose_[5] = tvec.at<double>(2);
+      }
+    }
+
     return; // Done with initialization
   }
 
@@ -376,59 +416,136 @@ bool Camera::checkBorderToleranceFisheye(
  *
  */
 void Camera::refineIntrinsicCalibration(const int nb_iterations) {
-  ceres::Problem problem;
   LOG_INFO << "Parameters before optimization :: " << this->getCameraMat();
   LOG_INFO << "distortion vector :: " << getDistortionVectorVector();
-  for (const auto &it : board_observations_) {
-    std::shared_ptr<BoardObs> board_obs_ptr = it.second.lock();
-    if (board_obs_ptr && board_obs_ptr->valid_ == true) {
-      std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
-      if (board_3d_ptr) {
-        const std::vector<cv::Point3f> &board_pts_3d = board_3d_ptr->pts_3d_;
-        const std::vector<int> &board_pts_idx = board_obs_ptr->charuco_id_;
-        const std::vector<cv::Point2f> &board_pts_2d = board_obs_ptr->pts_2d_;
-        for (std::size_t i = 0; i < board_pts_idx.size(); i++) {
-          cv::Point3f current_pts_3d =
-              board_pts_3d[board_pts_idx[i]];           // Current 3D pts
-          cv::Point2f current_pts_2d = board_pts_2d[i]; // Current 2D pts
-          ceres::CostFunction *reprojection_error = ReprojectionError::Create(
-              double(current_pts_2d.x), double(current_pts_2d.y),
-              double(current_pts_3d.x), double(current_pts_3d.y),
-              double(current_pts_3d.z), distortion_model_);
-          problem.AddResidualBlock(
-              reprojection_error, new ceres::HuberLoss(1.0),
-              board_obs_ptr->pose_.data(), intrinsics_.data());
+
+  // Outlier rejection loop
+  int max_outer_iterations = (optimization_strategy_ == "kalibr") ? 3 : 1;
+  
+  for (int outer_iter = 0; outer_iter < max_outer_iterations; ++outer_iter) {
+    ceres::Problem problem;
+    
+    // Add residual blocks
+    for (const auto &it : board_observations_) {
+      std::shared_ptr<BoardObs> board_obs_ptr = it.second.lock();
+      if (board_obs_ptr && board_obs_ptr->valid_ == true) {
+        std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
+        if (board_3d_ptr) {
+          const std::vector<cv::Point3f> &board_pts_3d = board_3d_ptr->pts_3d_;
+          const std::vector<int> &board_pts_idx = board_obs_ptr->charuco_id_;
+          const std::vector<cv::Point2f> &board_pts_2d = board_obs_ptr->pts_2d_;
+          for (std::size_t i = 0; i < board_pts_idx.size(); i++) {
+            cv::Point3f current_pts_3d = board_pts_3d[board_pts_idx[i]];
+            cv::Point2f current_pts_2d = board_pts_2d[i];
+            
+            ceres::CostFunction *reprojection_error = ReprojectionError::Create(
+                double(current_pts_2d.x), double(current_pts_2d.y),
+                double(current_pts_3d.x), double(current_pts_3d.y),
+                double(current_pts_3d.z), distortion_model_);
+            
+            // Create new loss function for each residual block
+            ceres::LossFunction* loss_func = nullptr;
+            if (optimization_strategy_ == "kalibr") {
+              loss_func = new ceres::CauchyLoss(1.0);
+            } else {
+              loss_func = new ceres::HuberLoss(1.0);
+            }
+            
+            problem.AddResidualBlock(
+                reprojection_error, loss_func,
+                board_obs_ptr->pose_.data(), intrinsics_.data());
+          }
         }
       }
     }
-  }
-  
-  // Set bounds for Double Sphere
-  if (distortion_model_ == 2) {
-      // intrinsics_: fx, fy, cx, cy, xi, alpha
-      problem.SetParameterLowerBound(intrinsics_.data(), 0, 500.0); // fx
-      problem.SetParameterUpperBound(intrinsics_.data(), 0, 4000.0);
-      problem.SetParameterLowerBound(intrinsics_.data(), 1, 500.0); // fy
-      problem.SetParameterUpperBound(intrinsics_.data(), 1, 4000.0);
-      
-      problem.SetParameterLowerBound(intrinsics_.data(), 2, 0.0); // cx
-      problem.SetParameterUpperBound(intrinsics_.data(), 2, double(im_cols_));
-      problem.SetParameterLowerBound(intrinsics_.data(), 3, 0.0); // cy
-      problem.SetParameterUpperBound(intrinsics_.data(), 3, double(im_rows_));
-      
-      problem.SetParameterLowerBound(intrinsics_.data(), 4, -1.0); // xi
-      problem.SetParameterUpperBound(intrinsics_.data(), 4, 1.0);
-      problem.SetParameterLowerBound(intrinsics_.data(), 5, 0.0); // alpha
-      problem.SetParameterUpperBound(intrinsics_.data(), 5, 1.0);
-  }
 
-  // Run the optimization
-  ceres::Solver::Options options;
-  options.linear_solver_type = ceres::SPARSE_SCHUR;
-  options.max_num_iterations = nb_iterations;
-  options.minimizer_progress_to_stdout = true;
-  ceres::Solver::Summary summary;
-  ceres::Solve(options, &problem, &summary);
+    // Set bounds for Double Sphere
+    if (distortion_model_ == 2) {
+        // intrinsics_: fx, fy, cx, cy, xi, alpha
+        problem.SetParameterLowerBound(intrinsics_.data(), 0, 500.0); // fx
+        problem.SetParameterUpperBound(intrinsics_.data(), 0, 4000.0);
+        problem.SetParameterLowerBound(intrinsics_.data(), 1, 500.0); // fy
+        problem.SetParameterUpperBound(intrinsics_.data(), 1, 4000.0);
+        problem.SetParameterLowerBound(intrinsics_.data(), 2, 0.0);   // cx
+        problem.SetParameterUpperBound(intrinsics_.data(), 2, 2000.0);
+        problem.SetParameterLowerBound(intrinsics_.data(), 3, 0.0);   // cy
+        problem.SetParameterUpperBound(intrinsics_.data(), 3, 2000.0);
+        problem.SetParameterLowerBound(intrinsics_.data(), 4, -1.0);  // xi
+        problem.SetParameterUpperBound(intrinsics_.data(), 4, 1.0);
+        problem.SetParameterLowerBound(intrinsics_.data(), 5, 0.0);   // alpha
+        problem.SetParameterUpperBound(intrinsics_.data(), 5, 1.0);
+    }
+
+    ceres::Solver::Options options;
+    options.linear_solver_type = ceres::DENSE_SCHUR;
+    options.minimizer_progress_to_stdout = true;
+    options.max_num_iterations = nb_iterations;
+    ceres::Solver::Summary summary;
+    ceres::Solve(options, &problem, &summary);
+    LOG_INFO << summary.BriefReport();
+
+    // If not Kalibr strategy, break after one pass
+    if (optimization_strategy_ != "kalibr") break;
+
+    // Post-optimization outlier rejection (Kalibr strategy)
+    if (outer_iter < max_outer_iterations - 1) {
+      int removed_outliers = 0;
+      double squared_threshold = 16.0; // 4 pixels threshold (squared)
+      
+      // Re-evaluate residuals to find outliers
+      // Note: This is a simplified check. Ideally we should use the problem residuals but accessing them map-wise is tricky.
+      // We will re-project using current optimized parameters.
+      
+      for (auto &it : board_observations_) {
+        std::shared_ptr<BoardObs> board_obs_ptr = it.second.lock();
+        if (board_obs_ptr && board_obs_ptr->valid_ == true) {
+           std::shared_ptr<Board> board_3d_ptr = board_obs_ptr->board_3d_.lock();
+           if (board_3d_ptr) {
+             // Create temporary vectors to store valid points
+             std::vector<int> new_charuco_id;
+             std::vector<cv::Point2f> new_pts_2d;
+             
+             const std::vector<cv::Point3f> &board_pts_3d = board_3d_ptr->pts_3d_;
+             const std::vector<int> &board_pts_idx = board_obs_ptr->charuco_id_;
+             const std::vector<cv::Point2f> &board_pts_2d = board_obs_ptr->pts_2d_;
+             
+             for (std::size_t i = 0; i < board_pts_idx.size(); i++) {
+                cv::Point3f pt3d = board_pts_3d[board_pts_idx[i]];
+                cv::Point2f pt2d = board_pts_2d[i];
+                
+                double residuals[2];
+                double* params_intrinsics = intrinsics_.data();
+                double* params_pose = board_obs_ptr->pose_.data();
+                
+                // Create a temp functor to evaluate
+                 ceres::CostFunction *cost_func = ReprojectionError::Create(
+                    double(pt2d.x), double(pt2d.y),
+                    double(pt3d.x), double(pt3d.y),
+                    double(pt3d.z), distortion_model_);
+                 
+                 // Evaluate
+                 const double* parameters[2] = {params_pose, params_intrinsics};
+                 cost_func->Evaluate(parameters, residuals, nullptr);
+                 
+                 double error_sq = residuals[0]*residuals[0] + residuals[1]*residuals[1];
+                 if (error_sq > squared_threshold) {
+                     removed_outliers++;
+                 } else {
+                     new_charuco_id.push_back(board_pts_idx[i]);
+                     new_pts_2d.push_back(board_pts_2d[i]);
+                 }
+                 delete cost_func; 
+             }
+             // Update the board_obs_ptr with filtered points
+             board_obs_ptr->charuco_id_ = new_charuco_id;
+             board_obs_ptr->pts_2d_ = new_pts_2d;
+           }
+        }
+      }
+      LOG_INFO << "Kalibr Strategy: Removed " << removed_outliers << " outliers in iteration " << outer_iter;
+      if (removed_outliers == 0) break; // Converged
+    }
+  }
   LOG_INFO << "Parameters after optimization :: " << this->getCameraMat();
   LOG_INFO << "distortion vector after optimization :: "
            << getDistortionVectorVector();

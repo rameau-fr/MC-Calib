@@ -44,11 +44,12 @@ public:
 
   // camera group index
   int cam_group_idx_;
+  std::string optimization_strategy_;
 
   // Functions
   CameraGroup() = delete;
   ~CameraGroup();
-  CameraGroup(const int id_ref_cam, const int cam_group_idx);
+  CameraGroup(int id_ref_cam, int cam_group_idx, std::string optimization_strategy = "original");
   void insertCamera(const std::shared_ptr<Camera> new_camera);
   void insertNewObjectObservation(
       const std::shared_ptr<Object3DObs> new_object_observation);

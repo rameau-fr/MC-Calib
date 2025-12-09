@@ -46,12 +46,26 @@ public:
   std::array<double, 9> intrinsics_;
 
   int cam_idx_ = 0; // camera index
-  int distortion_model_ = 0;
+  int distortion_model_;
+  std::string optimization_strategy_;
   int im_cols_, im_rows_;
 
   // Functions
   Camera() = delete;
-  Camera(const int cam_idx, const int distortion_model);
+  Camera(int cam_idx, std::vector<double> intrinsics,
+         std::vector<double> distortion, int width, int height,
+         int distortion_model, std::string optimization_strategy = "original");
+
+  /**
+   * @brief Construct a new Camera object
+   *
+   * @param cam_idx
+   * @param width
+   * @param height
+   * @param distortion_model
+   * @param optimization_strategy
+   */
+  Camera(int cam_idx, int width, int height, int distortion_model, std::string optimization_strategy = "original");
   ~Camera(){};
   void insertNewBoard(const std::shared_ptr<BoardObs> newBoard);
   void insertNewFrame(const std::shared_ptr<Frame> newFrame);
