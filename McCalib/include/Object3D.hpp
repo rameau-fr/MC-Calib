@@ -1,10 +1,10 @@
 #pragma once
 
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "opencv2/core/core.hpp"
 
 namespace McCalib {
 
@@ -25,23 +25,23 @@ class Camera;
  * - frames where these 3D objects are observed
  */
 class Object3D final {
-public:
+ public:
   // Parameters
-  int nb_boards_;    // number of boards constituting the 3D object
-  int ref_board_id_; // the id of the reference board (which will take the pose
-                     // // I|0)
-  int obj_id_;       // id of the 3D object
-  unsigned int nb_pts_;      // Number of points in the 3D object
-  std::array<int, 3> color_; // color of the 3D object
+  int nb_boards_;     // number of boards constituting the 3D object
+  int ref_board_id_;  // the id of the reference board (which will take the pose
+                      // // I|0)
+  int obj_id_;        // id of the 3D object
+  unsigned int nb_pts_;       // Number of points in the 3D object
+  std::array<int, 3> color_;  // color of the 3D object
 
   // 3D points
-  std::vector<cv::Point3f> pts_3d_; // 3D points in the object
+  std::vector<cv::Point3f> pts_3d_;  // 3D points in the object
 
   // Indexing (from pts board to pts 3D obj and vice-versa)
   std::map<std::pair<int, int>, int>
-      pts_board_2_obj_; // key(board_ind,pts_ind) --> pts_ind_obj
+      pts_board_2_obj_;  // key(board_ind,pts_ind) --> pts_ind_obj
   std::vector<std::pair<int, int>>
-      pts_obj_2_board_; // key(boardid//ptsid)-->pts_ind_board
+      pts_obj_2_board_;  // key(boardid//ptsid)-->pts_ind_board
 
   // Boards composing the object
   std::map<int, std::weak_ptr<Board>> boards_;
@@ -72,4 +72,4 @@ public:
   void updateObjectPts();
 };
 
-} // namespace McCalib
+}  // namespace McCalib

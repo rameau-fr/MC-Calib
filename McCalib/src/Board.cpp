@@ -1,11 +1,11 @@
 
+#include <stdio.h>
 #include <iostream>
 #include <numeric>
-#include <stdio.h>
 
-#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
+#include "opencv2/core/core.hpp"
 
 #include "Board.hpp"
 #include "Frame.hpp"
@@ -25,7 +25,8 @@ Board::Board(const std::filesystem::path &config_path, const int board_idx,
   std::vector<double> square_size_per_board;
   std::vector<int> boards_index;
   int nb_board;
-  cv::FileStorage fs; // FileStorage object to read calibration params from file
+  cv::FileStorage
+      fs;  // FileStorage object to read calibration params from file
   const bool is_file_available = std::filesystem::exists(config_path) &&
                                  config_path.has_filename() &&
                                  config_path.extension() == ".yml";
@@ -59,7 +60,7 @@ Board::Board(const std::filesystem::path &config_path, const int board_idx,
     square_size_ = square_size_per_board[boards_index[board_idx]];
   }
 
-  fs.release(); // close the input file
+  fs.release();  // close the input file
 
   nb_pts_ = (nb_x_square_ - 1) * (nb_y_square_ - 1);
 
@@ -103,4 +104,4 @@ void Board::insertNewFrame(const std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
 }
 
-} // namespace McCalib
+}  // namespace McCalib

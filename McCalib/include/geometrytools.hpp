@@ -1,10 +1,10 @@
 #pragma once
 
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <random>
-#include <stdio.h>
+#include "opencv2/core/core.hpp"
 
 namespace McCalib {
 
@@ -17,11 +17,10 @@ std::array<float, 6> ProjToVec(const cv::Mat &Proj);
 void invertRvecT(const cv::Mat &Rvec, const cv::Mat &T, cv::Mat &iR,
                  cv::Mat &iT);
 void invertRvecT(cv::Mat &Rvec, cv::Mat &T);
-cv::Point3f
-triangulateNViewLinearEigen(const std::vector<cv::Point2f> &Pts2D,
-                            const std::vector<cv::Mat> &RotationVec,
-                            const std::vector<cv::Mat> &TranslationVec,
-                            const cv::Mat &Intrinsic);
+cv::Point3f triangulateNViewLinearEigen(
+    const std::vector<cv::Point2f> &Pts2D,
+    const std::vector<cv::Mat> &RotationVec,
+    const std::vector<cv::Mat> &TranslationVec, const cv::Mat &Intrinsic);
 void calcLinePara(const std::vector<cv::Point2f> &pts, double &a, double &b,
                   double &c, double &res);
 void ransacTriangulation(const std::vector<cv::Point2f> &point2d,
@@ -42,11 +41,10 @@ std::vector<cv::Point3f> transform3DPts(const std::vector<cv::Point3f> &pts3D,
                                         const cv::Mat &trans);
 cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
                            const std::vector<cv::Mat> &pose_abs_2);
-cv::Mat
-handeyeBootstraptTranslationCalibration(const unsigned int nb_cluster,
-                                        const unsigned int nb_it,
-                                        const std::vector<cv::Mat> &pose_abs_1,
-                                        const std::vector<cv::Mat> &pose_abs_2);
+cv::Mat handeyeBootstraptTranslationCalibration(
+    const unsigned int nb_cluster, const unsigned int nb_it,
+    const std::vector<cv::Mat> &pose_abs_1,
+    const std::vector<cv::Mat> &pose_abs_2);
 double median(std::vector<double> &v);
 cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
                             const std::vector<cv::Point2f> &image_points,
@@ -67,4 +65,4 @@ cv::Mat getAverageRotation(std::vector<double> &r1, std::vector<double> &r2,
                            std::vector<double> &r3,
                            const bool use_quaternion_averaging = true);
 
-} // namespace McCalib
+}  // namespace McCalib

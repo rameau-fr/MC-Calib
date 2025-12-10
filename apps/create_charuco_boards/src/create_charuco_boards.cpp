@@ -1,6 +1,6 @@
+#include <stdio.h>
 #include <filesystem>
 #include <iomanip>
-#include <stdio.h>
 
 #include <opencv2/opencv.hpp>
 
@@ -27,7 +27,6 @@ void saveBoards(const std::vector<cv::Mat> boards) {
 }
 
 int main(int argc, char *argv[]) {
-
   if (argc != 2) {
     std::cout << "You need to provide the absolute path to the calibration file"
               << std::endl;
@@ -42,7 +41,7 @@ int main(int argc, char *argv[]) {
   std::vector<int> number_x_square_per_board, number_y_square_per_board;
   std::vector<int> resolution_x_per_board, resolution_y_per_board;
   std::vector<double> square_size_per_board;
-  cv::FileStorage fs; // FileStorage to read calibration params from file
+  cv::FileStorage fs;  // FileStorage to read calibration params from file
   const bool is_file_available = std::filesystem::exists(pathInt) &&
                                  pathInt.has_filename() &&
                                  pathInt.extension() == ".yml";
@@ -68,7 +67,7 @@ int main(int argc, char *argv[]) {
   fs["resolution_x_per_board"] >> resolution_x_per_board;
   fs["resolution_y_per_board"] >> resolution_y_per_board;
 
-  fs.release(); // close the input file
+  fs.release();  // close the input file
 
   // Check if multi-size boards are used or not
   if (square_size_per_board.size() == 0) {

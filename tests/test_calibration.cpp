@@ -1,7 +1,7 @@
-#include <filesystem>
-#include <iomanip>
 #include <math.h>
 #include <stdio.h>
+#include <filesystem>
+#include <iomanip>
 
 #include <boost/test/unit_test.hpp>
 #include <opencv2/aruco/charuco.hpp>
@@ -11,14 +11,14 @@
 
 #define PI 3.14159265
 
-constexpr double INTRINSICS_TOLERANCE = 4.0;     // in percentage
-constexpr double ROTATION_ERROR_TOLERANCE = 1.0; // in degrees
+constexpr double INTRINSICS_TOLERANCE = 4.0;      // in percentage
+constexpr double ROTATION_ERROR_TOLERANCE = 1.0;  // in degrees
 
-#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
+#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 && \
      defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
-constexpr double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
+constexpr double TRANSLATION_ERROR_TOLERANCE = 0.005;  // in meters
 #else
-constexpr double TRANSLATION_ERROR_TOLERANCE = 0.01; // in meters
+constexpr double TRANSLATION_ERROR_TOLERANCE = 0.01;  // in meters
 #endif
 
 double getTranslationError(cv::Mat a, cv::Mat b) {
@@ -101,7 +101,7 @@ void calibrateAndCheckGt(const std::filesystem::path &config_path,
 
     // get calibrated values
     std::shared_ptr<McCalib::Camera> cur_cam = Calib.cams_[camera_idx - 1];
-    int camera_group_idx = 0; // specific to the setup with single camera group
+    int camera_group_idx = 0;  // specific to the setup with single camera group
     cv::Mat camera_matrix_pred = cur_cam->getCameraMat();
     cv::Mat camera_pose_matrix_pred =
         Calib.cam_group_[camera_group_idx]->getCameraPoseMat(camera_idx - 1);

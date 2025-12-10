@@ -1,11 +1,11 @@
 #pragma once
 
-#include "Board.hpp"
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "Board.hpp"
+#include "opencv2/core/core.hpp"
 
 namespace McCalib {
 
@@ -23,7 +23,7 @@ class Board;
  *
  */
 class BoardObs final {
-public:
+ public:
   // Indexing
   int frame_id_;
   int camera_id_;
@@ -64,4 +64,4 @@ public:
   cv::Mat getTransVec() const;
 };
 
-} // namespace McCalib
+}  // namespace McCalib

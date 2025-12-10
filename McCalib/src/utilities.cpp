@@ -9,8 +9,8 @@ std::filesystem::path convertStrToPath(const std::string &item_name) {
   return path;
 }
 
-std::vector<std::filesystem::path>
-convertVecStrToVecPath(const std::vector<std::string> &input) {
+std::vector<std::filesystem::path> convertVecStrToVecPath(
+    const std::vector<std::string> &input) {
   std::vector<std::filesystem::path> out;
   out.reserve(input.size());
   for (const std::string &item : input) {
@@ -20,15 +20,15 @@ convertVecStrToVecPath(const std::vector<std::string> &input) {
   return out;
 }
 
-#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
+#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 && \
      defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
 
-std::map<int, cv::Ptr<cv::aruco::CharucoBoard>>
-createCharucoBoards(const unsigned int num_board,
-                    const std::vector<int> &number_x_square_per_board,
-                    const std::vector<int> &number_y_square_per_board,
-                    const float length_square, const float length_marker,
-                    const cv::Ptr<cv::aruco::Dictionary> dict) {
+std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> createCharucoBoards(
+    const unsigned int num_board,
+    const std::vector<int> &number_x_square_per_board,
+    const std::vector<int> &number_y_square_per_board,
+    const float length_square, const float length_marker,
+    const cv::Ptr<cv::aruco::Dictionary> dict) {
   std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
   int offset_count = 0;
   for (std::size_t i = 0; i < num_board; i++) {
@@ -50,13 +50,13 @@ createCharucoBoards(const unsigned int num_board,
   return charuco_boards;
 }
 
-std::vector<cv::Mat>
-createCharucoBoardsImages(const unsigned int num_board,
-                          const std::vector<int> &number_x_square_per_board,
-                          const std::vector<int> &number_y_square_per_board,
-                          const float length_square, const float length_marker,
-                          const std::vector<int> &resolution_x_per_board,
-                          const std::vector<int> &resolution_y_per_board) {
+std::vector<cv::Mat> createCharucoBoardsImages(
+    const unsigned int num_board,
+    const std::vector<int> &number_x_square_per_board,
+    const std::vector<int> &number_y_square_per_board,
+    const float length_square, const float length_marker,
+    const std::vector<int> &resolution_x_per_board,
+    const std::vector<int> &resolution_y_per_board) {
   cv::Ptr<cv::aruco::Dictionary> dict =
       cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
   const std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards =
@@ -78,12 +78,12 @@ createCharucoBoardsImages(const unsigned int num_board,
 
 #else
 
-std::map<int, cv::Ptr<cv::aruco::CharucoBoard>>
-createCharucoBoards(const unsigned int num_board,
-                    const std::vector<int> &number_x_square_per_board,
-                    const std::vector<int> &number_y_square_per_board,
-                    const float length_square, const float length_marker,
-                    const cv::aruco::Dictionary &dict) {
+std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> createCharucoBoards(
+    const unsigned int num_board,
+    const std::vector<int> &number_x_square_per_board,
+    const std::vector<int> &number_y_square_per_board,
+    const float length_square, const float length_marker,
+    const cv::aruco::Dictionary &dict) {
   std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards;
   int offset_count = 0;
   for (std::size_t i = 0; i < num_board; i++) {
@@ -111,13 +111,13 @@ createCharucoBoards(const unsigned int num_board,
   return charuco_boards;
 }
 
-std::vector<cv::Mat>
-createCharucoBoardsImages(const unsigned int num_board,
-                          const std::vector<int> &number_x_square_per_board,
-                          const std::vector<int> &number_y_square_per_board,
-                          const float length_square, const float length_marker,
-                          const std::vector<int> &resolution_x_per_board,
-                          const std::vector<int> &resolution_y_per_board) {
+std::vector<cv::Mat> createCharucoBoardsImages(
+    const unsigned int num_board,
+    const std::vector<int> &number_x_square_per_board,
+    const std::vector<int> &number_y_square_per_board,
+    const float length_square, const float length_marker,
+    const std::vector<int> &resolution_x_per_board,
+    const std::vector<int> &resolution_y_per_board) {
   const cv::aruco::Dictionary dict =
       cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_1000);
   const std::map<int, cv::Ptr<cv::aruco::CharucoBoard>> charuco_boards =
@@ -140,4 +140,4 @@ createCharucoBoardsImages(const unsigned int num_board,
 
 #endif
 
-} // namespace McCalib
+}  // namespace McCalib

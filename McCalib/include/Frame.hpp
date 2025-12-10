@@ -1,12 +1,12 @@
 #pragma once
 
+#include <stdio.h>
 #include <filesystem>
 #include <iostream>
-#include <stdio.h>
 
-#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
+#include "opencv2/core/core.hpp"
 
 #include "BoardObs.hpp"
 #include "CameraGroupObs.hpp"
@@ -24,31 +24,31 @@ namespace McCalib {
  * time.
  */
 class Frame final {
-public:
+ public:
   int frame_idx_;
 
   // Cameras
-  std::vector<int> cam_idx_; // the camera index which can see at least one
-                             // board in the frame
+  std::vector<int> cam_idx_;  // the camera index which can see at least one
+                              // board in the frame
   std::map<int, std::weak_ptr<CameraObs>>
-      cam_obs_; // List of Camera Observation
+      cam_obs_;  // List of Camera Observation
 
   // Boards
-  std::vector<int> boards_idx_; // index of the visible boards
-  std::map<int, std::weak_ptr<BoardObs>> board_observations_; // Boards stored
+  std::vector<int> boards_idx_;  // index of the visible boards
+  std::map<int, std::weak_ptr<BoardObs>> board_observations_;  // Boards stored
 
   // Objects
-  std::vector<int> objects_idx_; // index of the visible object
+  std::vector<int> objects_idx_;  // index of the visible object
   std::map<int, std::weak_ptr<Object3DObs>>
-      object_observations_; // object stored
+      object_observations_;  // object stored
 
   // Camera Group obs
-  std::vector<int> cam_group_idx_; // index of the cam group for this frame
+  std::vector<int> cam_group_idx_;  // index of the cam group for this frame
   std::map<int, std::weak_ptr<CameraGroupObs>>
-      cam_group_observations_; // cam group stored
+      cam_group_observations_;  // cam group stored
 
   // Image
-  std::map<int, std::filesystem::path> frame_path_; // camera_id // path
+  std::map<int, std::filesystem::path> frame_path_;  // camera_id // path
 
   // Functions
   Frame() = delete;
@@ -63,4 +63,4 @@ public:
       const int camera_group_idx);
 };
 
-} // namespace McCalib
+}  // namespace McCalib

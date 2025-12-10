@@ -1,9 +1,9 @@
-#include <iostream>
 #include <stdio.h>
+#include <iostream>
 
-#include "opencv2/core/core.hpp"
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
+#include "opencv2/core/core.hpp"
 
 #include "Frame.hpp"
 
@@ -58,4 +58,4 @@ void Frame::insertNewCameraGroupObs(
   cam_group_observations_[cam_group_observations_.size()] = new_cam_group_obs;
 }
 
-} // namespace McCalib
+}  // namespace McCalib

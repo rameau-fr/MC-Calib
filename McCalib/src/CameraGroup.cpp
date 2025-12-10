@@ -1,10 +1,10 @@
-#include "OptimizationCeres.h"
-#include "geometrytools.hpp"
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "OptimizationCeres.h"
+#include "geometrytools.hpp"
+#include "opencv2/core/core.hpp"
 
 #include "CameraGroup.hpp"
 #include "logger.h"
@@ -19,8 +19,11 @@ namespace McCalib {
  * @param id_ref_cam index of the reference camera
  * @param cam_group_idx index of the camera group
  */
-CameraGroup::CameraGroup(int id_ref_cam, int cam_group_idx, std::string optimization_strategy)
-    : id_ref_cam_(id_ref_cam), cam_group_idx_(cam_group_idx), optimization_strategy_(optimization_strategy) {}
+CameraGroup::CameraGroup(int id_ref_cam, int cam_group_idx,
+                         std::string optimization_strategy)
+    : id_ref_cam_(id_ref_cam),
+      cam_group_idx_(cam_group_idx),
+      optimization_strategy_(optimization_strategy) {}
 
 /**
  * @brief Insert a new camera in the group
@@ -236,9 +239,9 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
                       refine_cam = false;
                     for (std::size_t i = 0; i < obj_pts_idx.size(); i++) {
                       cv::Point3f current_pts_3d =
-                          obj_pts_3d[obj_pts_idx[i]]; // Current 3D pts
+                          obj_pts_3d[obj_pts_idx[i]];  // Current 3D pts
                       cv::Point2f current_pts_2d =
-                          obj_pts_2d[i]; // Current 2D pts
+                          obj_pts_2d[i];  // Current 2D pts
                       ceres::CostFunction *reprojection_error =
                           ReprojectionError_CameraGroupRef::Create(
                               double(current_pts_2d.x),
@@ -283,7 +286,6 @@ void CameraGroup::refineCameraGroup(const int nb_iterations) {
  *
  */
 void CameraGroup::reproErrorCameraGroup() {
-
   // Iterate through frames
   for (const auto &it_frame : frames_) {
     auto frame_ptr = it_frame.second.lock();
@@ -410,7 +412,7 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
                   }
                   for (std::size_t i = 0; i < obj_pts_idx.size(); i++) {
                     cv::Point2f current_pts_2d =
-                        obj_pts_2d[i]; // Current 2D pts
+                        obj_pts_2d[i];  // Current 2D pts
 
                     // find the board and pts corresponding to the 3D point
                     // object
@@ -441,7 +443,7 @@ void CameraGroup::refineCameraGroupAndObjects(const int nb_iterations) {
                               cam_ptr->distortion_model_);
                       problem.AddResidualBlock(
                           reprojection_error,
-                          new ceres::HuberLoss(1.0), // nullptr,
+                          new ceres::HuberLoss(1.0),  // nullptr,
                           relative_camera_pose_[current_cam_id].data(),
                           cam_group_obs_ptr
                               ->object_pose_[it_obj3d_ptr->object_3d_id_]
@@ -505,7 +507,8 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
             std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
                 cam_group_obs_ptr->object_observations_;
             for (const auto &it_obj3d : current_obj3d_obs_vec) {
-              std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d.second.lock();
+              std::shared_ptr<Object3DObs> it_obj3d_ptr =
+                  it_obj3d.second.lock();
               if (it_obj3d_ptr) {
                 int current_cam_id = it_obj3d_ptr->camera_id_;
                 std::shared_ptr<Object3D> object_3d_ptr =
@@ -523,7 +526,7 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                     }
                     for (std::size_t i = 0; i < obj_pts_idx.size(); i++) {
                       cv::Point2f current_pts_2d =
-                          obj_pts_2d[i]; // Current 2D pts
+                          obj_pts_2d[i];  // Current 2D pts
 
                       // find the board and pts corresponding to the 3D point
                       // object
@@ -549,20 +552,20 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                                        double(current_pts_2d.y),
                                        double(current_pts3D_board.x),
                                        double(current_pts3D_board.y),
-                                       double(current_pts3D_board.z), refine_cam,
-                                       refine_board, cam_ptr->distortion_model_);
-                        
+                                       double(current_pts3D_board.z),
+                                       refine_cam, refine_board,
+                                       cam_ptr->distortion_model_);
+
                         // Create new loss function for each residual block
-                        ceres::LossFunction* loss_func = nullptr;
+                        ceres::LossFunction *loss_func = nullptr;
                         if (optimization_strategy_ == "kalibr") {
                           loss_func = new ceres::CauchyLoss(1.0);
                         } else {
                           loss_func = new ceres::HuberLoss(1.0);
                         }
-                        
+
                         problem.AddResidualBlock(
-                            reprojection_error,
-                            loss_func,
+                            reprojection_error, loss_func,
                             relative_camera_pose_[current_cam_id].data(),
                             cam_group_obs_ptr
                                 ->object_pose_[it_obj3d_ptr->object_3d_id_]
@@ -574,21 +577,29 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
 
                         // Set bounds for Double Sphere
                         if (cam_ptr->distortion_model_ == 2) {
-                            double* intrinsics = cam_ptr->intrinsics_.data();
-                            problem.SetParameterLowerBound(intrinsics, 0, 500.0); // fx
-                            problem.SetParameterUpperBound(intrinsics, 0, 4000.0);
-                            problem.SetParameterLowerBound(intrinsics, 1, 500.0); // fy
-                            problem.SetParameterUpperBound(intrinsics, 1, 4000.0);
-                            
-                            problem.SetParameterLowerBound(intrinsics, 2, 0.0); // cx
-                            problem.SetParameterUpperBound(intrinsics, 2, double(cam_ptr->im_cols_));
-                            problem.SetParameterLowerBound(intrinsics, 3, 0.0); // cy
-                            problem.SetParameterUpperBound(intrinsics, 3, double(cam_ptr->im_rows_));
-                            
-                            problem.SetParameterLowerBound(intrinsics, 4, -1.0); // xi
-                            problem.SetParameterUpperBound(intrinsics, 4, 1.0);
-                            problem.SetParameterLowerBound(intrinsics, 5, 0.0); // alpha
-                            problem.SetParameterUpperBound(intrinsics, 5, 1.0);
+                          double *intrinsics = cam_ptr->intrinsics_.data();
+                          problem.SetParameterLowerBound(intrinsics, 0,
+                                                         500.0);  // fx
+                          problem.SetParameterUpperBound(intrinsics, 0, 4000.0);
+                          problem.SetParameterLowerBound(intrinsics, 1,
+                                                         500.0);  // fy
+                          problem.SetParameterUpperBound(intrinsics, 1, 4000.0);
+
+                          problem.SetParameterLowerBound(intrinsics, 2,
+                                                         0.0);  // cx
+                          problem.SetParameterUpperBound(
+                              intrinsics, 2, double(cam_ptr->im_cols_));
+                          problem.SetParameterLowerBound(intrinsics, 3,
+                                                         0.0);  // cy
+                          problem.SetParameterUpperBound(
+                              intrinsics, 3, double(cam_ptr->im_rows_));
+
+                          problem.SetParameterLowerBound(intrinsics, 4,
+                                                         -1.0);  // xi
+                          problem.SetParameterUpperBound(intrinsics, 4, 1.0);
+                          problem.SetParameterLowerBound(intrinsics, 5,
+                                                         0.0);  // alpha
+                          problem.SetParameterUpperBound(intrinsics, 5, 1.0);
                         }
                       }
                     }
@@ -614,14 +625,14 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
     // Post-optimization outlier rejection (Kalibr strategy)
     if (outer_iter < max_outer_iterations - 1) {
       int removed_outliers = 0;
-      double squared_threshold = 16.0; // 4 pixels threshold (squared)
-      
+      double squared_threshold = 16.0;  // 4 pixels threshold (squared)
+
       // Re-evaluate residuals to find outliers
       for (const auto &it_frame : frames_) {
         auto frame_ptr = it_frame.second.lock();
         if (frame_ptr) {
-          std::map<int, std::weak_ptr<CameraGroupObs>> current_cam_group_obs_vec =
-              frame_ptr->cam_group_observations_;
+          std::map<int, std::weak_ptr<CameraGroupObs>>
+              current_cam_group_obs_vec = frame_ptr->cam_group_observations_;
           for (const auto &it_cam_group_obs : current_cam_group_obs_vec) {
             auto cam_group_obs_ptr = it_cam_group_obs.second.lock();
             if (cam_group_obs_ptr &&
@@ -629,7 +640,8 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
               std::map<int, std::weak_ptr<Object3DObs>> current_obj3d_obs_vec =
                   cam_group_obs_ptr->object_observations_;
               for (const auto &it_obj3d : current_obj3d_obs_vec) {
-                std::shared_ptr<Object3DObs> it_obj3d_ptr = it_obj3d.second.lock();
+                std::shared_ptr<Object3DObs> it_obj3d_ptr =
+                    it_obj3d.second.lock();
                 if (it_obj3d_ptr) {
                   int current_cam_id = it_obj3d_ptr->camera_id_;
                   std::shared_ptr<Object3D> object_3d_ptr =
@@ -640,8 +652,9 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                         it_obj3d_ptr->pts_2d_;
                     std::shared_ptr<Camera> cam_ptr = it_obj3d_ptr->cam_.lock();
                     if (cam_ptr) {
-                      bool refine_cam = (this->id_ref_cam_ != cam_ptr->cam_idx_);
-                      
+                      bool refine_cam =
+                          (this->id_ref_cam_ != cam_ptr->cam_idx_);
+
                       std::vector<int> new_pts_id;
                       std::vector<cv::Point2f> new_pts_2d;
 
@@ -650,13 +663,15 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                         std::pair<int, int> board_id_pts_id =
                             object_3d_ptr->pts_obj_2_board_[obj_pts_idx[i]];
                         auto cur_board_pts_idx_ptr =
-                            object_3d_ptr->boards_[board_id_pts_id.first].lock();
+                            object_3d_ptr->boards_[board_id_pts_id.first]
+                                .lock();
                         if (cur_board_pts_idx_ptr) {
                           cv::Point3f current_pts3D_board =
                               cur_board_pts_idx_ptr
                                   ->pts_3d_[board_id_pts_id.second];
                           int ref_board_id = object_3d_ptr->ref_board_id_;
-                          bool refine_board = (ref_board_id != board_id_pts_id.first);
+                          bool refine_board =
+                              (ref_board_id != board_id_pts_id.first);
 
                           double residuals[2];
                           ceres::CostFunction *cost_func =
@@ -665,24 +680,29 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
                                          double(current_pts_2d.y),
                                          double(current_pts3D_board.x),
                                          double(current_pts3D_board.y),
-                                         double(current_pts3D_board.z), refine_cam,
-                                         refine_board, cam_ptr->distortion_model_);
-                          
-                          const double* parameters[4] = {
+                                         double(current_pts3D_board.z),
+                                         refine_cam, refine_board,
+                                         cam_ptr->distortion_model_);
+
+                          const double *parameters[4] = {
                               relative_camera_pose_[current_cam_id].data(),
-                              cam_group_obs_ptr->object_pose_[it_obj3d_ptr->object_3d_id_].data(),
-                              object_3d_ptr->relative_board_pose_[board_id_pts_id.first].data(),
-                              cam_ptr->intrinsics_.data()
-                          };
-                          
+                              cam_group_obs_ptr
+                                  ->object_pose_[it_obj3d_ptr->object_3d_id_]
+                                  .data(),
+                              object_3d_ptr
+                                  ->relative_board_pose_[board_id_pts_id.first]
+                                  .data(),
+                              cam_ptr->intrinsics_.data()};
+
                           cost_func->Evaluate(parameters, residuals, nullptr);
-                          double error_sq = residuals[0]*residuals[0] + residuals[1]*residuals[1];
-                          
+                          double error_sq = residuals[0] * residuals[0] +
+                                            residuals[1] * residuals[1];
+
                           if (error_sq > squared_threshold) {
-                              removed_outliers++;
+                            removed_outliers++;
                           } else {
-                              new_pts_id.push_back(obj_pts_idx[i]);
-                              new_pts_2d.push_back(obj_pts_2d[i]);
+                            new_pts_id.push_back(obj_pts_idx[i]);
+                            new_pts_2d.push_back(obj_pts_2d[i]);
                           }
                           delete cost_func;
                         }
@@ -697,7 +717,8 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
           }
         }
       }
-      LOG_INFO << "Kalibr Strategy: Removed " << removed_outliers << " outliers in iteration " << outer_iter;
+      LOG_INFO << "Kalibr Strategy: Removed " << removed_outliers
+               << " outliers in iteration " << outer_iter;
       if (removed_outliers == 0) break;
     }
   }
@@ -708,4 +729,4 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
   }
 }
 
-} // namespace McCalib
+}  // namespace McCalib

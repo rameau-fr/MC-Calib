@@ -1,7 +1,7 @@
+#include <stdio.h>
 #include <chrono>
 #include <filesystem>
 #include <iomanip>
-#include <stdio.h>
 
 #include "McCalib.hpp"
 #include "logger.h"
@@ -67,10 +67,8 @@ void runCalibrationWorkflow(const std::filesystem::path &config_path) {
   LOG_INFO << "Final refinement done";
 
   // Save images reprojection
-  if (Calib.save_detect_ == 1)
-    Calib.saveDetectionImagesAllCam();
-  if (Calib.save_repro_ == 1)
-    Calib.saveReprojectionImagesAllCam();
+  if (Calib.save_detect_ == 1) Calib.saveDetectionImagesAllCam();
+  if (Calib.save_repro_ == 1) Calib.saveReprojectionImagesAllCam();
 
   // Save camera parameters
   LOG_INFO << "Save parameters";
@@ -85,7 +83,7 @@ void runCalibrationWorkflow(const std::filesystem::path &config_path) {
 }
 
 int main(int argc, char *argv[]) {
-  (void)argc; // casting to fix -Werror=unused-parameter
+  (void)argc;  // casting to fix -Werror=unused-parameter
   const std::filesystem::path config_path = argv[1];
   const bool is_file_available = std::filesystem::exists(config_path) &&
                                  config_path.has_filename() &&

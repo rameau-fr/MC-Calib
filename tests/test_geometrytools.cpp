@@ -4,7 +4,7 @@
 
 BOOST_AUTO_TEST_SUITE(CheckGeometryTools)
 
-double INTRINSICS_TOLERANCE = 1.0; // in percentage
+double INTRINSICS_TOLERANCE = 1.0;  // in percentage
 
 BOOST_AUTO_TEST_CASE(CheckRotationMatrixToQuaternionConversion1) {
   std::array<double, 9> rot_matrix_data = {1, 0, 0, 0, 1, 0, 0, 0, 1};
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(CheckRotationMatrixToQuaternionConversion2) {
       McCalib::convertRotationMatrixToQuaternion(rot_matrix);
 
   std::array<double, 4> quaternion_gt_data = {0, 0.8944, -0.4472,
-                                              -0.2234}; // x y z w
+                                              -0.2234};  // x y z w
   const cv::Mat quaternion_gt =
       cv::Mat(1, 4, CV_64F, quaternion_gt_data.data());
 
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(CheckRotationMatrixToQuaternionConversion2) {
 
 BOOST_AUTO_TEST_CASE(CheckQuaternionToRotationMatrixConversion) {
   std::array<double, 4> quaternion_data = {0.2809946, 0.8377387, -0.4188693,
-                                           -0.2092473}; // x y z w
+                                           -0.2092473};  // x y z w
   const cv::Mat quaternion = cv::Mat(1, 4, CV_64F, quaternion_data.data());
 
   cv::Mat rot_matrix_pred =
