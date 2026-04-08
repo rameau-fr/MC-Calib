@@ -66,6 +66,10 @@ void Camera::setDistortionVector(const cv::Mat &distortion_vector) {
       intrinsics_[intrinIdx] = distortion_vector.at<double>(distIdx);
     }
   }
+  if (distortion_model_ == 2) {                       // Double Sphere
+    intrinsics_[4] = distortion_vector.at<double>(0); // xi
+    intrinsics_[5] = distortion_vector.at<double>(1); // alpha
+  }
 }
 
 /**
@@ -91,6 +95,13 @@ cv::Mat Camera::getDistortionVectorVector() const {
       std::size_t distIdx = intrinIdx - 4u;
       distortion_vector.at<double>(distIdx) = intrinsics_[intrinIdx];
     }
+    return distortion_vector;
+  }
+
+  else if (distortion_model_ == 2) { // Double Sphere
+    cv::Mat distortion_vector = cv::Mat(1, 2, CV_64F, cv::Scalar(0));
+    distortion_vector.at<double>(0) = intrinsics_[4]; // xi
+    distortion_vector.at<double>(1) = intrinsics_[5]; // alpha
     return distortion_vector;
   }
 
@@ -302,6 +313,58 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
   LOG_INFO << "Parameters after optimization :: " << this->getCameraMat();
   LOG_INFO << "distortion vector after optimization :: "
            << getDistortionVectorVector();
+}
+
+/**
+ * @brief Unproject 2D points to 3D rays using Double Sphere model
+ *
+ * @param pts_2d input 2D pixel coordinates
+ * @param rays output 3D ray directions (unit vectors)
+ */
+void Camera::dsUnproject(const std::vector<cv::Point2f> &pts_2d,
+                         std::vector<cv::Point3f> &rays) const {
+  rays.clear();
+  rays.reserve(pts_2d.size());
+
+  const double fx = intrinsics_[0];
+  const double fy = intrinsics_[1];
+  const double cx = intrinsics_[2];
+  const double cy = intrinsics_[3];
+  const double xi = intrinsics_[4];
+  const double alpha = intrinsics_[5];
+
+  for (const auto &pt : pts_2d) {
+    double mx = (pt.x - cx) / fx;
+    double my = (pt.y - cy) / fy;
+    double r2 = mx * mx + my * my;
+
+    // Validity check
+    double s = 1.0 - (2.0 * alpha - 1.0) * r2;
+    if (s < 0)
+      s = 0; // Clamp
+
+    double mz =
+        (1.0 - alpha * alpha * r2) / (alpha * std::sqrt(s) + (1.0 - alpha));
+
+    double mz2 = mz * mz;
+    double denom = mz2 + r2;
+    if (denom < 1e-10)
+      denom = 1e-10;
+    double k = (mz * xi + std::sqrt(mz2 + (1.0 - xi * xi) * r2)) / denom;
+
+    double ray_x = k * mx;
+    double ray_y = k * my;
+    double ray_z = k * mz - xi;
+
+    // Normalize to unit vector
+    double norm = std::sqrt(ray_x * ray_x + ray_y * ray_y + ray_z * ray_z);
+    if (norm > 1e-10) {
+      rays.emplace_back(float(ray_x / norm), float(ray_y / norm),
+                        float(ray_z / norm));
+    } else {
+      rays.emplace_back(0.f, 0.f, 1.f);
+    }
+  }
 }
 
 } // namespace McCalib
