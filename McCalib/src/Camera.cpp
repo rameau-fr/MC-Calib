@@ -406,6 +406,14 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
       }
     }
   }
+  // Set parameter bounds for Double Sphere model
+  if (distortion_model_ == 2) {
+    problem.SetParameterLowerBound(intrinsics_.data(), 4, -1.0); // xi
+    problem.SetParameterUpperBound(intrinsics_.data(), 4, 1.0);
+    problem.SetParameterLowerBound(intrinsics_.data(), 5, 0.0); // alpha
+    problem.SetParameterUpperBound(intrinsics_.data(), 5, 1.0);
+  }
+
   // Run the optimization
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
