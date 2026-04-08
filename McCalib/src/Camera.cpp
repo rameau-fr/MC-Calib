@@ -176,6 +176,109 @@ void Camera::initializeCalibration() {
   LOG_INFO << "NB of frames where this camera saw a board :: "
            << frames_.size();
 
+  if (distortion_model_ == 2) { // Double Sphere Initialization
+    LOG_INFO << "Initializing Double Sphere Camera...";
+
+    // 1. Initialize Intrinsics (Heuristic)
+    double max_dim = std::max(im_cols_, im_rows_);
+    intrinsics_[0] = 0.8 * max_dim;  // fx
+    intrinsics_[1] = 0.8 * max_dim;  // fy
+    intrinsics_[2] = im_cols_ / 2.0; // cx
+    intrinsics_[3] = im_rows_ / 2.0; // cy
+    intrinsics_[4] = 0.5;            // xi
+    intrinsics_[5] = 0.5;            // alpha
+
+    // 2. Initialize Extrinsics (PnP on unprojected rays)
+    for (auto &it : board_observations_) {
+      std::shared_ptr<BoardObs> board_obs = it.second.lock();
+      if (!board_obs)
+        continue;
+
+      std::shared_ptr<Board> board_3d = board_obs->board_3d_.lock();
+      if (!board_3d)
+        continue;
+
+      // Get 3D object points
+      std::vector<cv::Point3f> obj_pts;
+      for (int idx : board_obs->charuco_id_) {
+        obj_pts.push_back(board_3d->pts_3d_[idx]);
+      }
+
+      // Unproject 2D points to 3D rays
+      std::vector<cv::Point3f> rays;
+      dsUnproject(board_obs->pts_2d_, rays);
+
+      // Convert rays to normalized 2D points (x/z, y/z) for PnP
+      std::vector<cv::Point2f> norm_pts;
+      for (const auto &ray : rays) {
+        if (ray.z > 1e-6f)
+          norm_pts.emplace_back(ray.x / ray.z, ray.y / ray.z);
+        else
+          norm_pts.emplace_back(0, 0);
+      }
+
+      // Solve PnP
+      cv::Mat rvec, tvec;
+      if (norm_pts.size() >= 4) {
+        cv::solvePnP(obj_pts, norm_pts, cv::Mat::eye(3, 3, CV_64F), cv::Mat(),
+                     rvec, tvec);
+        board_obs->pose_[0] = rvec.at<double>(0);
+        board_obs->pose_[1] = rvec.at<double>(1);
+        board_obs->pose_[2] = rvec.at<double>(2);
+        board_obs->pose_[3] = tvec.at<double>(0);
+        board_obs->pose_[4] = tvec.at<double>(1);
+        board_obs->pose_[5] = tvec.at<double>(2);
+        board_obs->valid_ = true;
+      }
+    }
+
+    // 3. Optimization Step: Refine intrinsics and extrinsics jointly
+    LOG_INFO << "Refining Single Camera Calibration (Initialization)...";
+    refineIntrinsicCalibration(100);
+
+    // 4. PnP Refinement: Re-estimate poses with optimized intrinsics
+    LOG_INFO << "Refining Poses with Optimized Intrinsics...";
+    for (auto &it : board_observations_) {
+      std::shared_ptr<BoardObs> board_obs = it.second.lock();
+      if (!board_obs || !board_obs->valid_)
+        continue;
+
+      std::shared_ptr<Board> board_3d = board_obs->board_3d_.lock();
+      if (!board_3d)
+        continue;
+
+      std::vector<cv::Point3f> obj_pts;
+      for (int idx : board_obs->charuco_id_) {
+        obj_pts.push_back(board_3d->pts_3d_[idx]);
+      }
+
+      std::vector<cv::Point3f> rays;
+      dsUnproject(board_obs->pts_2d_, rays);
+
+      std::vector<cv::Point2f> norm_pts;
+      for (const auto &ray : rays) {
+        if (ray.z > 1e-6f)
+          norm_pts.emplace_back(ray.x / ray.z, ray.y / ray.z);
+        else
+          norm_pts.emplace_back(0, 0);
+      }
+
+      cv::Mat rvec, tvec;
+      if (norm_pts.size() >= 4) {
+        cv::solvePnP(obj_pts, norm_pts, cv::Mat::eye(3, 3, CV_64F), cv::Mat(),
+                     rvec, tvec);
+        board_obs->pose_[0] = rvec.at<double>(0);
+        board_obs->pose_[1] = rvec.at<double>(1);
+        board_obs->pose_[2] = rvec.at<double>(2);
+        board_obs->pose_[3] = tvec.at<double>(0);
+        board_obs->pose_[4] = tvec.at<double>(1);
+        board_obs->pose_[5] = tvec.at<double>(2);
+      }
+    }
+
+    return; // Done with DS initialization
+  }
+
   // Subsample the total number of images (because the OpenCV function is
   // significantly too slow...)
   std::vector<int> indbv(board_observations_.size());
