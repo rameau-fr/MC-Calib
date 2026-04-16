@@ -1,0 +1,45 @@
+%YAML:1.0
+---
+# Multi-camera calibration config: heterogeneous (Brown + DS + Brown)
+# cam_000: RealSense (Brown/Perspective, model 0)
+# cam_001: Telelian (Double Sphere, model 2)
+# cam_002: RealSense (Brown/Perspective, model 0)
+
+number_camera: 3
+number_board: 2
+boards_index: []
+
+refine_corner: 1
+min_perc_pts: 0.5
+
+number_x_square: 7
+number_y_square: 5
+length_square: 0.04
+length_marker: 0.03
+square_size: 54
+
+number_x_square_per_board: []
+number_y_square_per_board: []
+resolution_x_per_board: []
+resolution_y_per_board: []
+square_size_per_board: []
+
+root_path: "../../extrinsics_mccalib"
+cam_prefix: "cam_"
+keypoints_path: ""
+cam_params_path: "../../extrinsics_mccalib/precalibrated_intrinsics.yml"
+save_path: "../../extrinsics_mccalib/results"
+camera_params_file_name: "camera_params.yml"
+
+save_detection: 1
+save_reprojection: 1
+
+distortion_model: 0
+distortion_per_camera: [0, 2, 0]
+
+he_approach: 0
+fix_intrinsic: 1
+
+quaternion_averaging: 1
+ransac_threshold: 10
+number_iterations: 1000
