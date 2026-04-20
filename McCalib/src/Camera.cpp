@@ -9,7 +9,10 @@
 
 #include "Camera.hpp"
 #include "OptimizationCeres.h"
+#include "geometrytools.hpp"
 #include "logger.h"
+
+#include <cassert>
 
 namespace McCalib {
 
@@ -46,10 +49,15 @@ void Camera::setCameraMat(const cv::Mat &camera_matrix) {
 /**
  * @brief Set the distortion parameters in the intrinsics vector
  *
- * Two distortion models supported:
- *  - Brown: 1x5 distortion vector (radial_1, radial_2, tangential_1,
- * tangential_2, radial_3)
- *  - Kannala: 1x4 distortion vector
+ * Indices [0..3] of intrinsics_ (fx, fy, u0, v0) are expected to be set
+ * separately via setCameraMat(). This function only writes indices [4..].
+ *
+ * Supported distortion models:
+ *  - Brown (distortion_model_ == 0): 1x5 distortion vector
+ *    (radial_1, radial_2, tangential_1, tangential_2, radial_3)
+ *  - Kannala (distortion_model_ == 1): 1x4 distortion vector
+ *  - Double Sphere (distortion_model_ == 2): 1x2 distortion vector (xi, alpha),
+ *    written into intrinsics_[4] and intrinsics_[5]; trailing slots remain 0.
  *
  * @param distortion_vector
  */
@@ -75,7 +83,11 @@ void Camera::setDistortionVector(const cv::Mat &distortion_vector) {
 /**
  * @brief Get the distortion parameters
  *
- * @return distortion vector (Brown or Kannala) following OpenCV conventions
+ * Reads indices [4..] of intrinsics_. Indices [0..3] (fx, fy, u0, v0) are the
+ * camera matrix and are accessed separately via getCameraMat().
+ *
+ * @return distortion vector following OpenCV conventions for Brown / Kannala,
+ *         or a 1x2 (xi, alpha) vector for the Double Sphere model.
  *
  * @todo early exit, possible memory leak due to unsupported distorion model
  */
@@ -316,10 +328,14 @@ void Camera::refineIntrinsicCalibration(const int nb_iterations) {
 }
 
 /**
- * @brief Unproject 2D points to 3D rays using Double Sphere model
+ * @brief Unproject 2D points to 3D rays using the Double Sphere camera model
+ *
+ * Closed-form inverse of the Double Sphere projection from:
+ *   Usenko, Demmel, Cremers, "The Double Sphere Camera Model", 3DV 2018.
+ *   https://arxiv.org/abs/1807.08957 (Eq. 41).
  *
  * @param pts_2d input 2D pixel coordinates
- * @param rays output 3D ray directions (unit vectors)
+ * @param rays   output 3D ray directions (unit vectors)
  */
 void Camera::dsUnproject(const std::vector<cv::Point2f> &pts_2d,
                          std::vector<cv::Point3f> &rays) const {
@@ -332,35 +348,35 @@ void Camera::dsUnproject(const std::vector<cv::Point2f> &pts_2d,
   const double cy = intrinsics_[3];
   const double xi = intrinsics_[4];
   const double alpha = intrinsics_[5];
+  assert(fx != 0.0 && fy != 0.0 &&
+         "DS unprojection requires non-zero fx and fy");
 
   for (const auto &pt : pts_2d) {
-    double mx = (pt.x - cx) / fx;
-    double my = (pt.y - cy) / fy;
-    double r2 = mx * mx + my * my;
+    const double mx = (pt.x - cx) / fx;
+    const double my = (pt.y - cy) / fy;
+    const double r2 = mx * mx + my * my;
 
-    // Validity check
-    double s = 1.0 - (2.0 * alpha - 1.0) * r2;
-    if (s < 0)
-      s = 0; // Clamp
+    // Validity check from Usenko et al. 2018: term under sqrt must be >= 0.
+    const double s = std::max(1.0 - (2.0 * alpha - 1.0) * r2, 0.0);
 
-    double mz =
+    const double mz =
         (1.0 - alpha * alpha * r2) / (alpha * std::sqrt(s) + (1.0 - alpha));
 
-    double mz2 = mz * mz;
-    double denom = mz2 + r2;
-    if (denom < 1e-10)
-      denom = 1e-10;
-    double k = (mz * xi + std::sqrt(mz2 + (1.0 - xi * xi) * r2)) / denom;
+    const double mz2 = mz * mz;
+    const double denom = std::max(mz2 + r2, kProjectionEpsilon);
+    const double k = (mz * xi + std::sqrt(mz2 + (1.0 - xi * xi) * r2)) / denom;
 
-    double ray_x = k * mx;
-    double ray_y = k * my;
-    double ray_z = k * mz - xi;
+    const double ray_x = k * mx;
+    const double ray_y = k * my;
+    const double ray_z = k * mz - xi;
 
     // Normalize to unit vector
-    double norm = std::sqrt(ray_x * ray_x + ray_y * ray_y + ray_z * ray_z);
-    if (norm > 1e-10) {
-      rays.emplace_back(float(ray_x / norm), float(ray_y / norm),
-                        float(ray_z / norm));
+    const double norm =
+        std::sqrt(ray_x * ray_x + ray_y * ray_y + ray_z * ray_z);
+    if (norm > kProjectionEpsilon) {
+      rays.emplace_back(static_cast<float>(ray_x / norm),
+                        static_cast<float>(ray_y / norm),
+                        static_cast<float>(ray_z / norm));
     } else {
       rays.emplace_back(0.f, 0.f, 1.f);
     }
