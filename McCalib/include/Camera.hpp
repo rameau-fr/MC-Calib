@@ -41,9 +41,13 @@ public:
   std::vector<int> vis_object_idx_; // vector of index of the 3D object
 
   // intrinsics
-  // fx,fy,u0,v0,r1,r2,t1,t2,r3 (perspective)
-  // fx,fy,u0,v0,k1,k2,k3,k4 (Kannala)
-  std::array<double, 9> intrinsics_;
+  // Indices [0..3] always store fx, fy, u0, v0 (filled by setCameraMat).
+  // Indices [4..] store the distortion parameters, layout depends on model:
+  //   fx,fy,u0,v0,r1,r2,t1,t2,r3 (perspective / Brown, distortion_model_ == 0)
+  //   fx,fy,u0,v0,k1,k2,k3,k4    (Kannala,          distortion_model_ == 1)
+  //   fx,fy,u0,v0,xi,alpha       (Double Sphere,    distortion_model_ == 2)
+  // Unused trailing slots remain zero (zero-initialized).
+  std::array<double, 9> intrinsics_{};
 
   int cam_idx_ = 0; // camera index
   int distortion_model_ = 0;
@@ -65,6 +69,8 @@ public:
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
   void setIntrinsics(const cv::Mat &K, const cv::Mat &distortion_vector);
   bool checkBorderToleranceFisheye(const std::shared_ptr<BoardObs> board_obs);
+  void dsUnproject(const std::vector<cv::Point2f> &pts_2d,
+                   std::vector<cv::Point3f> &rays) const;
 };
 
 } // namespace McCalib

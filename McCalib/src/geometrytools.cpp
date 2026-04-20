@@ -768,6 +768,46 @@ void projectPointsWithDistortion(const std::vector<cv::Point3f> &object_pts,
     cv::fisheye::projectPoints(object_pts, repro_pts, rot, trans, camera_matrix,
                                distortion_vector, 0.0);
   }
+  if (distortion_type == 2) // Double Sphere (Usenko et al., 3DV 2018)
+  {
+    cv::Mat R;
+    cv::Rodrigues(rot, R);
+    const double fx = camera_matrix.at<double>(0, 0);
+    const double fy = camera_matrix.at<double>(1, 1);
+    const double cx = camera_matrix.at<double>(0, 2);
+    const double cy = camera_matrix.at<double>(1, 2);
+    const double xi = distortion_vector.at<double>(0);
+    const double alpha = distortion_vector.at<double>(1);
+
+    const double tx = trans.at<double>(0);
+    const double ty = trans.at<double>(1);
+    const double tz = trans.at<double>(2);
+
+    repro_pts.reserve(object_pts.size());
+    for (const auto &pt : object_pts) {
+      // Transform 3D point to camera frame
+      const double X = R.at<double>(0, 0) * pt.x + R.at<double>(0, 1) * pt.y +
+                       R.at<double>(0, 2) * pt.z + tx;
+      const double Y = R.at<double>(1, 0) * pt.x + R.at<double>(1, 1) * pt.y +
+                       R.at<double>(1, 2) * pt.z + ty;
+      const double Z = R.at<double>(2, 0) * pt.x + R.at<double>(2, 1) * pt.y +
+                       R.at<double>(2, 2) * pt.z + tz;
+
+      // DS Projection
+      const double d1 = std::sqrt(X * X + Y * Y + Z * Z);
+      const double z1 = Z + xi * d1;
+      const double d2 = std::sqrt(X * X + Y * Y + z1 * z1);
+      const double den = alpha * d2 + (1.0 - alpha) * z1;
+
+      if (std::abs(den) > kProjectionEpsilon) {
+        const double u = fx * X / den + cx;
+        const double v = fy * Y / den + cy;
+        repro_pts.emplace_back(static_cast<float>(u), static_cast<float>(v));
+      } else {
+        repro_pts.emplace_back(0.f, 0.f);
+      }
+    }
+  }
 }
 
 cv::Mat convertRotationMatrixToQuaternion(const cv::Mat &R) {

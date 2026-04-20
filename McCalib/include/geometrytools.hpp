@@ -8,6 +8,10 @@
 
 namespace McCalib {
 
+// Shared epsilon for guarding against near-zero denominators in projection /
+// unprojection math (Double Sphere model, and related geometric operations).
+inline constexpr double kProjectionEpsilon = 1e-10;
+
 cv::Mat RT2Proj(const cv::Mat &R, const cv::Mat &T);
 cv::Mat RVecT2Proj(const cv::Mat &RVec, const cv::Mat &T);
 cv::Mat RVecT2ProjInt(const cv::Mat &RVec, const cv::Mat &T, const cv::Mat &K);
