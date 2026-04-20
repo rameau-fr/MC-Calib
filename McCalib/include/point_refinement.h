@@ -8,12 +8,12 @@
  * Perdoch, H Alismail, I So Kweon, Y Sheikh (ICCV 2017)
  */
 
+#include <stdio.h>
 #include <cmath>
 #include <iostream>
-#include <stdio.h>
 
-#include "opencv2/core/core.hpp"
 #include <opencv2/opencv.hpp>
+#include "opencv2/core/core.hpp"
 
 namespace McCalib {
 
@@ -109,16 +109,13 @@ bool interpolatePatch(double x, double y, int window_half_size,
           double val = im00[col0] * w00 + im00[col1] * w01 + im10[col0] * w10 +
                        im10[col1] * w11;
           *(m++) = val;
-          if (mn > val)
-            mn = val;
-          if (mx < val)
-            mx = val;
+          if (mn > val) mn = val;
+          if (mx < val) mx = val;
         }
         v++;
       }
     }
-    if (mx - mn > 1.0 / 255)
-      return true;
+    if (mx - mn > 1.0 / 255) return true;
   }
   return false;
 }
@@ -202,7 +199,6 @@ void saddleSubpixelRefinement(const cv::Mat &input,
                               std::vector<SaddlePoint> &refined,
                               const int window_half_size = 2,
                               const int max_iterations = 20) {
-
   cv::Mat smoothingKernel;
   cv::Mat mask;
   int nnz;
@@ -218,4 +214,4 @@ void saddleSubpixelRefinement(const cv::Mat &input,
                            window_half_size, refined, max_iterations);
 }
 
-} // namespace McCalib
+}  // namespace McCalib

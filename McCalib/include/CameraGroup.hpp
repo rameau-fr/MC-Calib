@@ -1,10 +1,10 @@
 #pragma once
 
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "opencv2/core/core.hpp"
 
 #include "Board.hpp"
 #include "BoardObs.hpp"
@@ -26,29 +26,31 @@ namespace McCalib {
  * - reference camera in the group
  */
 class CameraGroup final {
-public:
+ public:
   // datastructure for this camera group
   std::map<int, std::weak_ptr<Object3DObs>>
-      object_observations_; // Observation of the 3D object (2d points)
+      object_observations_;  // Observation of the 3D object (2d points)
   std::map<int, std::weak_ptr<Frame>>
-      frames_; // Frames containing boards for this cameras
-  std::map<int, std::weak_ptr<Camera>> cameras_; // cameras in the camera group
-  int nb_cams_ = 0;                 // number of cameras in the group
-  std::vector<int> vis_object_idx_; // vector of index of the 3D object
+      frames_;  // Frames containing boards for this cameras
+  std::map<int, std::weak_ptr<Camera>> cameras_;  // cameras in the camera group
+  int nb_cams_ = 0;                  // number of cameras in the group
+  std::vector<int> vis_object_idx_;  // vector of index of the 3D object
 
   // extrinsic
   std::map<int, std::array<double, 6>>
-      relative_camera_pose_; // camera pose wrt. the ref. cam
+      relative_camera_pose_;  // camera pose wrt. the ref. cam
   int id_ref_cam_;
-  std::vector<int> cam_idx; // index of the cameras in the group
+  std::vector<int> cam_idx;  // index of the cameras in the group
 
   // camera group index
   int cam_group_idx_;
+  std::string optimization_strategy_;
 
   // Functions
   CameraGroup() = delete;
   ~CameraGroup();
-  CameraGroup(const int id_ref_cam, const int cam_group_idx);
+  CameraGroup(int id_ref_cam, int cam_group_idx,
+              std::string optimization_strategy = "original");
   void insertCamera(const std::shared_ptr<Camera> new_camera);
   void insertNewObjectObservation(
       const std::shared_ptr<Object3DObs> new_object_observation);
@@ -67,4 +69,4 @@ public:
   void refineCameraGroupAndObjectsAndIntrinsics(const int nb_iterations);
 };
 
-} // namespace McCalib
+}  // namespace McCalib

@@ -1,10 +1,10 @@
-#include "CameraGroup.hpp"
-#include "geometrytools.hpp"
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "CameraGroup.hpp"
+#include "geometrytools.hpp"
+#include "opencv2/core/core.hpp"
 
 #include "CameraGroupObs.hpp"
 
@@ -40,7 +40,6 @@ CameraGroupObs::~CameraGroupObs() {}
  *
  */
 void CameraGroupObs::computeObjectsPose() {
-
   // Find group of observation of the same object
   std::vector<int> object_unique_ind = object_idx_;
   std::vector<int>::iterator newEnd =
@@ -49,8 +48,8 @@ void CameraGroupObs::computeObjectsPose() {
 
   // Find indexes of object 3D obs with common index
   std::map<int, std::vector<int>>
-      obj_obs_group; // key: object index // value: index in
-                     // the vector of observation
+      obj_obs_group;  // key: object index // value: index in
+                      // the vector of observation
   for (std::size_t i = 0; i < object_unique_ind.size(); i++) {
     for (std::size_t j = 0; j < object_idx_.size(); j++) {
       if (object_idx_[j] == object_unique_ind[i]) {
@@ -216,4 +215,4 @@ void CameraGroupObs::updateObjObsPose() {
   }
 }
 
-} // namespace McCalib
+}  // namespace McCalib

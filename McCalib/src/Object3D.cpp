@@ -1,8 +1,8 @@
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "opencv2/core/core.hpp"
 
 #include "Camera.hpp"
 #include "Frame.hpp"
@@ -32,8 +32,11 @@ void Object3D::insertNewObject(std::shared_ptr<Object3DObs> new_object) {
  */
 Object3D::Object3D(const int nb_boards, const int ref_board_id,
                    const int obj_id, const std::array<int, 3> &color)
-    : nb_boards_(nb_boards), ref_board_id_(ref_board_id), obj_id_(obj_id),
-      nb_pts_(0), color_(color) {}
+    : nb_boards_(nb_boards),
+      ref_board_id_(ref_board_id),
+      obj_id_(obj_id),
+      nb_pts_(0),
+      color_(color) {}
 
 /**
  * @brief Insert a new board in the object
@@ -158,7 +161,6 @@ cv::Mat Object3D::getBoardTransVec(int board_id) {
  * objective function
  */
 void Object3D::refineObject(const int nb_iterations) {
-
   ceres::Problem problem;
 
   // Iterate through the object obs
@@ -194,9 +196,9 @@ void Object3D::refineObject(const int nb_iterations) {
 
               for (std::size_t i = 0; i < board_pts_idx.size(); i++) {
                 const cv::Point3f &current_pts_3d =
-                    board_pts_3d[board_pts_idx[i]]; // Current 3D pts
+                    board_pts_3d[board_pts_idx[i]];  // Current 3D pts
                 const cv::Point2f &current_pts_2d =
-                    board_pts_2d[i]; // Current 2D pts
+                    board_pts_2d[i];  // Current 2D pts
                 ceres::CostFunction *reprojection_error =
                     ReprojectionError_3DObjRef::Create(
                         double(current_pts_2d.x), double(current_pts_2d.y),
@@ -267,4 +269,4 @@ void Object3D::updateObjectPts() {
   }
 }
 
-} // namespace McCalib
+}  // namespace McCalib

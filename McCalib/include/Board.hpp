@@ -3,10 +3,10 @@
 #include <filesystem>
 #include <iostream>
 
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "opencv2/core/core.hpp"
 
 namespace McCalib {
 
@@ -24,18 +24,18 @@ class Frame;
  */
 
 class Board final {
-public:
+ public:
   // Parameters
   int nb_x_square_, nb_y_square_, res_x_, res_y_;
   float length_square_, length_marker_;
-  float square_size_;        // size of the squares in the calibration board
-  unsigned int nb_pts_;      // Number of points on the board
-  std::array<int, 3> color_; // color to display the board
+  float square_size_;         // size of the squares in the calibration board
+  unsigned int nb_pts_;       // Number of points on the board
+  std::array<int, 3> color_;  // color to display the board
 
   // 3D points
   std::vector<cv::Point3f> pts_3d_;
-  std::vector<int> pts_idx_; // indexing 0 to N
-  int board_id_;             // index of the board
+  std::vector<int> pts_idx_;  // indexing 0 to N
+  int board_id_;              // index of the board
 
   // List of board observation for this board
   std::map<int, std::weak_ptr<BoardObs>> board_observations_;
@@ -55,4 +55,4 @@ public:
   void insertNewFrame(const std::shared_ptr<Frame> new_frame);
 };
 
-} // namespace McCalib
+}  // namespace McCalib

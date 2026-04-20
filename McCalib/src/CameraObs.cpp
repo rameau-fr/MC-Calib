@@ -1,8 +1,8 @@
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "opencv2/core/core.hpp"
 
 #include "CameraObs.hpp"
 
@@ -33,4 +33,4 @@ void CameraObs::insertNewObject(const std::shared_ptr<Object3DObs> new_object) {
   object_idx_.push_back(new_object->object_3d_id_);
 }
 
-} // namespace McCalib
+}  // namespace McCalib

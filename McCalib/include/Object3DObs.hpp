@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Board.hpp"
-#include "Object3D.hpp"
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "Board.hpp"
+#include "Object3D.hpp"
+#include "opencv2/core/core.hpp"
 
 namespace McCalib {
 
@@ -30,7 +30,7 @@ class Object3D;
  * - object 3D index
  */
 class Object3DObs final {
-public:
+ public:
   // Indexing
   int frame_id_;
   int camera_id_;
@@ -44,7 +44,7 @@ public:
 
   // points
   std::vector<cv::Point2f> pts_2d_;
-  std::vector<int> pts_id_; // index in the object
+  std::vector<int> pts_id_;  // index in the object
 
   // Camera corresponding to this Observation
   std::weak_ptr<Camera> cam_;
@@ -85,4 +85,4 @@ public:
   cv::Mat getTransInGroupVec() const;
 };
 
-} // namespace McCalib
+}  // namespace McCalib

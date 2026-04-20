@@ -68,15 +68,13 @@ std::vector<std::vector<int>> Graph::connectedComponents() {
 
   int num_vertices = boost::num_vertices(graph_);
 
-  if (num_vertices == 0)
-    return all_components;
+  if (num_vertices == 0) return all_components;
 
   // get connected components with boost
   std::vector<int> component(num_vertices);
   int num_components = boost::connected_components(graph_, &component[0]);
 
   for (int component_idx = 0; component_idx < num_components; ++component_idx) {
-
     std::vector<int> cur_component;
     for (int vert_idx = 0; vert_idx < num_vertices; ++vert_idx) {
       if (component[vert_idx] == component_idx) {
@@ -148,6 +146,6 @@ std::vector<int> Graph::getPath(const std::vector<Vertex> &p_map,
   }
   path.push_back(std::stoi(boost::get(boost::vertex_name, graph_, source)));
 
-  std::reverse(path.begin(), path.end()); // return in v1->v2 order
+  std::reverse(path.begin(), path.end());  // return in v1->v2 order
   return path;
 }

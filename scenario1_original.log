@@ -1,0 +1,5 @@
+0000001 | 2025-12-09, 12:53:41.871081 [info] - Nb of cameras : 2   Nb of Boards : 3   Refined Corners : true   Distortion mode : 2   Optimization Strategy : original
+0000002 | 2025-12-09, 12:53:41.872276 [info] - Extraction camera 001
+terminate called after throwing an instance of 'cv::Exception'
+  what():  OpenCV(4.5.4) ./modules/core/src/glob.cpp:279: error: (-204:Requested object was not found) could not open directory: ../data/Blender_Images/Scenario_1/Images/Cam_001 in function 'glob_rec'
+

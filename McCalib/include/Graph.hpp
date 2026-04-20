@@ -15,7 +15,7 @@
  * https://www.boost.org/doc/libs/1_75_0/libs/graph/example/dijkstra-example.cpp
  */
 class Graph final {
-public:
+ public:
   // edge weight
   typedef boost::property<boost::edge_weight_t, double> EdgeWeightProperty;
   // vertex descriptor
@@ -37,7 +37,7 @@ public:
   std::vector<int> shortestPathBetween(const int v1, const int v2);
   void clearGraph();
 
-private:
+ private:
   // map vertex index (supplied by a user) and actual vertex in the graph
   std::unordered_map<int, Vertex> idx_to_vertex_;
 

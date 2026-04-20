@@ -1,11 +1,11 @@
 #ifndef OPTIMIZATIONCERES_H
 #define OPTIMIZATIONCERES_H
 
-#endif // OPTIMIZATIONCERES_H
+#endif  // OPTIMIZATIONCERES_H
 
+#include <eigen3/Eigen/Dense>
 #include "ceres/ceres.h"
 #include "ceres/rotation.h"
-#include <eigen3/Eigen/Dense>
 
 // Intrinsic and board pose refinement
 struct ReprojectionError {
@@ -16,7 +16,6 @@ struct ReprojectionError {
   template <typename T>
   bool operator()(const T *const camera, const T *const Intrinsics,
                   T *residuals) const {
-
     // camera[0,1,2] are the angle-axis rotation.
     T p[3];
     const T point[3] = {T(x), T(y), T(z)};
@@ -31,14 +30,14 @@ struct ReprojectionError {
     p[0] /= p[2];
     p[1] /= p[2];
 
-    if (distortion_type == 0) // perspective brown
+    if (distortion_type == 0)  // perspective brown
     {
       // apply distorsion
-      const T k1 = Intrinsics[4]; // radial 1
-      const T k2 = Intrinsics[5]; // radial 2
-      const T k3 = Intrinsics[8]; // radial 3
-      const T p1 = Intrinsics[6]; // tangential 1
-      const T p2 = Intrinsics[7]; // tangential 2
+      const T k1 = Intrinsics[4];  // radial 1
+      const T k2 = Intrinsics[5];  // radial 2
+      const T k3 = Intrinsics[8];  // radial 3
+      const T p1 = Intrinsics[6];  // tangential 1
+      const T p2 = Intrinsics[7];  // tangential 2
       T r2 = p[0] * p[0] + p[1] * p[1];
       T r4 = r2 * r2;
       T r6 = r4 * r2;
@@ -50,8 +49,8 @@ struct ReprojectionError {
 
       // Project on the image plane
       T up = Intrinsics[0] * xd +
-             Intrinsics[2]; // Intrinsic[0] = fx, Intrinsic[1]=fy,
-                            // Intrinsic[2]=u0...
+             Intrinsics[2];  // Intrinsic[0] = fx, Intrinsic[1]=fy,
+                             // Intrinsic[2]=u0...
       T vp = Intrinsics[1] * yd + Intrinsics[3];
 
       // The error is the difference between the predicted and observed
@@ -60,14 +59,54 @@ struct ReprojectionError {
       residuals[1] = vp - T(v);
     }
 
-    if (distortion_type == 1) // fisheye
+    if (distortion_type == 2)  // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = p[0] * p[2];
+      T y = p[1] * p[2];
+      T z = p[2];
+
+      const T fx = Intrinsics[0];
+      const T fy = Intrinsics[1];
+      const T cx = Intrinsics[2];
+      const T cy = Intrinsics[3];
+      const T xi = Intrinsics[4];
+      const T alpha = Intrinsics[5];
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha
+                              : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+        residuals[0] = T(10000.0);
+        residuals[1] = T(10000.0);
+        return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
+    }
+
+    if (distortion_type == 1)  // fisheye
     {
       // apply distorsion
       // (source : https://www.programmersought.com/article/72251092167/)
-      const T k1 = Intrinsics[4]; //
-      const T k2 = Intrinsics[5]; //
-      const T k3 = Intrinsics[6]; //
-      const T k4 = Intrinsics[7]; //
+      const T k1 = Intrinsics[4];  //
+      const T k2 = Intrinsics[5];  //
+      const T k3 = Intrinsics[6];  //
+      const T k4 = Intrinsics[7];  //
       T r2 = p[0] * p[0] + p[1] * p[1];
       using std::atan;
       using std::sqrt;
@@ -89,8 +128,8 @@ struct ReprojectionError {
 
       // Project on the image plane
       T up = Intrinsics[0] * xd +
-             Intrinsics[2]; // Intrinsic[0] = fx, Intrinsic[1]=fy,
-                            // Intrinsic[2]=u0...
+             Intrinsics[2];  // Intrinsic[0] = fx, Intrinsic[1]=fy,
+                             // Intrinsic[2]=u0...
       T vp = Intrinsics[1] * yd + Intrinsics[3];
 
       // The error is the difference between the predicted and observed
@@ -123,14 +162,26 @@ struct ReprojectionError_3DObjRef {
                              double v0, double k1, double k2, double k3,
                              double p1, double p2, bool refine_board,
                              int distortion_type)
-      : u(u), v(v), x(x), y(y), z(z), focal_x(focal_x), focal_y(focal_y),
-        u0(u0), v0(v0), k1(k1), k2(k2), k3(k3), p1(p1), p2(p2),
-        refine_board(refine_board), distortion_type(distortion_type) {}
+      : u(u),
+        v(v),
+        x(x),
+        y(y),
+        z(z),
+        focal_x(focal_x),
+        focal_y(focal_y),
+        u0(u0),
+        v0(v0),
+        k1(k1),
+        k2(k2),
+        k3(k3),
+        p1(p1),
+        p2(p2),
+        refine_board(refine_board),
+        distortion_type(distortion_type) {}
 
   template <typename T>
   bool operator()(const T *const camera, const T *const boardtrans,
                   T *residuals) const {
-
     // apply transformation to the board
     T pboard[3];
     const T point[3] = {T(x), T(y), T(z)};
@@ -159,7 +210,7 @@ struct ReprojectionError_3DObjRef {
     p[0] /= p[2];
     p[1] /= p[2];
 
-    if (distortion_type == 0) // perspective brown
+    if (distortion_type == 0)  // perspective brown
     {
       // apply distorsion
       T r2 = p[0] * p[0] + p[1] * p[1];
@@ -181,7 +232,47 @@ struct ReprojectionError_3DObjRef {
       residuals[1] = vp - T(v);
     }
 
-    if (distortion_type == 1) // fisheye
+    if (distortion_type == 2)  // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = p[0] * p[2];
+      T y = p[1] * p[2];
+      T z = p[2];
+
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);     // Mapping k1 to xi
+      T alpha = T(k2);  // Mapping k2 to alpha
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha
+                              : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+        residuals[0] = T(10000.0);
+        residuals[1] = T(10000.0);
+        return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
+    }
+
+    if (distortion_type == 1)  // fisheye
     {
       // apply distorsion
       // (source : https://www.programmersought.com/article/72251092167/)
@@ -220,12 +311,12 @@ struct ReprojectionError_3DObjRef {
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
-  static ceres::CostFunction *
-  Create(const double u, const double v, const double x, const double y,
-         const double z, const double focal_x, const double focal_y,
-         const double u0, const double v0, const double k1, const double k2,
-         const double k3, const double p1, const double p2,
-         const bool refine_board, const int distortion_type) {
+  static ceres::CostFunction *Create(
+      const double u, const double v, const double x, const double y,
+      const double z, const double focal_x, const double focal_y,
+      const double u0, const double v0, const double k1, const double k2,
+      const double k3, const double p1, const double p2,
+      const bool refine_board, const int distortion_type) {
     return (
         new ceres::AutoDiffCostFunction<ReprojectionError_3DObjRef, 2, 6, 6>(
             new ReprojectionError_3DObjRef(u, v, x, y, z, focal_x, focal_y, u0,
@@ -258,14 +349,26 @@ struct ReprojectionError_CameraGroupRef {
                                    double u0, double v0, double k1, double k2,
                                    double k3, double p1, double p2,
                                    bool refine_camera, int distortion_type)
-      : u(u), v(v), x(x), y(y), z(z), focal_x(focal_x), focal_y(focal_y),
-        u0(u0), v0(v0), k1(k1), k2(k2), k3(k3), p1(p1), p2(p2),
-        refine_camera(refine_camera), distortion_type(distortion_type) {}
+      : u(u),
+        v(v),
+        x(x),
+        y(y),
+        z(z),
+        focal_x(focal_x),
+        focal_y(focal_y),
+        u0(u0),
+        v0(v0),
+        k1(k1),
+        k2(k2),
+        k3(k3),
+        p1(p1),
+        p2(p2),
+        refine_camera(refine_camera),
+        distortion_type(distortion_type) {}
 
   template <typename T>
   bool operator()(const T *const camera, const T *const object_pose,
                   T *residuals) const {
-
     // 1. apply transformation to the object (to expressed in the current
     // camera)
     T pobj[3];
@@ -289,7 +392,7 @@ struct ReprojectionError_CameraGroupRef {
     pobj[0] /= pobj[2];
     pobj[1] /= pobj[2];
 
-    if (distortion_type == 0) // perspective brown
+    if (distortion_type == 0)  // perspective brown
     {
       // apply distorsion
       T r2 = pobj[0] * pobj[0] + pobj[1] * pobj[1];
@@ -311,7 +414,47 @@ struct ReprojectionError_CameraGroupRef {
       residuals[1] = vp - T(v);
     }
 
-    if (distortion_type == 1) // fisheye
+    if (distortion_type == 2)  // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = pobj[0] * pobj[2];
+      T y = pobj[1] * pobj[2];
+      T z = pobj[2];
+
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);
+      T alpha = T(k2);
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha
+                              : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+        residuals[0] = T(10000.0);
+        residuals[1] = T(10000.0);
+        return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
+    }
+
+    if (distortion_type == 1)  // fisheye
     {
       // apply distorsion
       // (source : https://www.programmersought.com/article/72251092167/)
@@ -351,17 +494,17 @@ struct ReprojectionError_CameraGroupRef {
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
-  static ceres::CostFunction *
-  Create(const double u, const double v, const double x, const double y,
-         const double z, const double focal_x, const double focal_y,
-         const double u0, const double v0, const double k1, const double k2,
-         const double k3, const double p1, const double p2,
-         const bool refine_camera, const int distortion_type) {
-    return (new ceres::AutoDiffCostFunction<ReprojectionError_CameraGroupRef, 2,
-                                            6, 6>(
-        new ReprojectionError_CameraGroupRef(u, v, x, y, z, focal_x, focal_y,
-                                             u0, v0, k1, k2, k3, p1, p2,
-                                             refine_camera, distortion_type)));
+  static ceres::CostFunction *Create(
+      const double u, const double v, const double x, const double y,
+      const double z, const double focal_x, const double focal_y,
+      const double u0, const double v0, const double k1, const double k2,
+      const double k3, const double p1, const double p2,
+      const bool refine_camera, const int distortion_type) {
+    return (
+        new ceres::AutoDiffCostFunction<ReprojectionError_CameraGroupRef, 2, 6,
+                                        6>(new ReprojectionError_CameraGroupRef(
+            u, v, x, y, z, focal_x, focal_y, u0, v0, k1, k2, k3, p1, p2,
+            refine_camera, distortion_type)));
   }
 
   double u, v;
@@ -388,15 +531,27 @@ struct ReprojectionError_CameraGroupAndObjectRef {
       double focal_y, double u0, double v0, double k1, double k2, double k3,
       double p1, double p2, bool refine_camera, bool refine_board,
       int distortion_type)
-      : u(u), v(v), x(x), y(y), z(z), focal_x(focal_x), focal_y(focal_y),
-        u0(u0), v0(v0), k1(k1), k2(k2), k3(k3), p1(p1), p2(p2),
-        refine_camera(refine_camera), refine_board(refine_board),
+      : u(u),
+        v(v),
+        x(x),
+        y(y),
+        z(z),
+        focal_x(focal_x),
+        focal_y(focal_y),
+        u0(u0),
+        v0(v0),
+        k1(k1),
+        k2(k2),
+        k3(k3),
+        p1(p1),
+        p2(p2),
+        refine_camera(refine_camera),
+        refine_board(refine_board),
         distortion_type(distortion_type) {}
 
   template <typename T>
   bool operator()(const T *const camera, const T *const object_pose,
                   const T *const board_pose, T *residuals) const {
-
     // 1. Apply the board transformation in teh object
     T point[3] = {T(x), T(y), T(z)};
     if (refine_board != 0) {
@@ -430,7 +585,7 @@ struct ReprojectionError_CameraGroupAndObjectRef {
     pobj[0] /= pobj[2];
     pobj[1] /= pobj[2];
 
-    if (distortion_type == 0) // perspective brown
+    if (distortion_type == 0)  // perspective brown
     {
       // apply distorsion
       T r2 = pobj[0] * pobj[0] + pobj[1] * pobj[1];
@@ -452,7 +607,47 @@ struct ReprojectionError_CameraGroupAndObjectRef {
       residuals[1] = vp - T(v);
     }
 
-    if (distortion_type == 1) // fisheye
+    if (distortion_type == 2)  // Double Sphere
+    {
+      // Recover unnormalized coordinates
+      T x = pobj[0] * pobj[2];
+      T y = pobj[1] * pobj[2];
+      T z = pobj[2];
+
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);
+      T alpha = T(k2);
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha
+                              : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+        residuals[0] = T(10000.0);
+        residuals[1] = T(10000.0);
+        return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
+    }
+
+    if (distortion_type == 1)  // fisheye
     {
       // apply distorsion
       // (source : https://www.programmersought.com/article/72251092167/)
@@ -492,13 +687,13 @@ struct ReprojectionError_CameraGroupAndObjectRef {
 
   // Factory to hide the construction of the CostFunction object from
   // the client code.
-  static ceres::CostFunction *
-  Create(const double u, const double v, const double x, const double y,
-         const double z, const double focal_x, const double focal_y,
-         const double u0, const double v0, const double k1, const double k2,
-         const double k3, const double p1, const double p2,
-         const bool refine_camera, const bool refine_board,
-         const int distortion_type) {
+  static ceres::CostFunction *Create(
+      const double u, const double v, const double x, const double y,
+      const double z, const double focal_x, const double focal_y,
+      const double u0, const double v0, const double k1, const double k2,
+      const double k3, const double p1, const double p2,
+      const bool refine_camera, const bool refine_board,
+      const int distortion_type) {
     return (new ceres::AutoDiffCostFunction<
             ReprojectionError_CameraGroupAndObjectRef, 2, 6, 6, 6>(
         new ReprojectionError_CameraGroupAndObjectRef(
@@ -529,14 +724,19 @@ struct ReprojectionError_CameraGroupAndObjectRefAndIntrinsics {
   ReprojectionError_CameraGroupAndObjectRefAndIntrinsics(
       double u, double v, double x, double y, double z, bool refine_camera,
       bool refine_board, int distortion_type)
-      : u(u), v(v), x(x), y(y), z(z), refine_camera(refine_camera),
-        refine_board(refine_board), distortion_type(distortion_type) {}
+      : u(u),
+        v(v),
+        x(x),
+        y(y),
+        z(z),
+        refine_camera(refine_camera),
+        refine_board(refine_board),
+        distortion_type(distortion_type) {}
 
   template <typename T>
   bool operator()(const T *const camera, const T *const object_pose,
                   const T *const board_pose, const T *const cam_int,
                   T *residuals) const {
-
     // 0. prepare intrinsics
     T focal_x = cam_int[0];
     T focal_y = cam_int[1];
@@ -581,7 +781,7 @@ struct ReprojectionError_CameraGroupAndObjectRefAndIntrinsics {
     pobj[0] /= pobj[2];
     pobj[1] /= pobj[2];
 
-    if (distortion_type == 0) // perspective brown
+    if (distortion_type == 0)  // perspective brown
     {
       // apply distorsion
       T r2 = pobj[0] * pobj[0] + pobj[1] * pobj[1];
@@ -603,9 +803,48 @@ struct ReprojectionError_CameraGroupAndObjectRefAndIntrinsics {
       residuals[1] = vp - T(v);
     }
 
-    if (distortion_type == 1) // fisheye
+    if (distortion_type == 2)  // Double Sphere
     {
+      // Recover unnormalized coordinates
+      T x = pobj[0] * pobj[2];
+      T y = pobj[1] * pobj[2];
+      T z = pobj[2];
 
+      T fx = T(focal_x);
+      T fy = T(focal_y);
+      T cx = T(u0);
+      T cy = T(v0);
+      T xi = T(k1);
+      T alpha = T(k2);
+
+      T d1 = sqrt(x * x + y * y + z * z);
+
+      // Basalt validity check
+      T w1 = (alpha > T(0.5)) ? (T(1.0) - alpha) / alpha
+                              : alpha / (T(1.0) - alpha);
+      T w2 = (w1 + xi) / sqrt(T(2.0) * w1 * xi + xi * xi + T(1.0));
+      if (z <= -w2 * d1) {
+        residuals[0] = T(10000.0);
+        residuals[1] = T(10000.0);
+        return true;
+      }
+
+      T z1 = z + xi * d1;
+      T d2 = sqrt(x * x + y * y + z1 * z1);
+      T den = alpha * d2 + (T(1.0) - alpha) * z1;
+
+      // Numerical stability check
+      if (den < T(1e-8)) den = T(1e-8);
+
+      T u_proj = fx * x / den + cx;
+      T v_proj = fy * y / den + cy;
+
+      residuals[0] = u_proj - T(u);
+      residuals[1] = v_proj - T(v);
+    }
+
+    if (distortion_type == 1)  // fisheye
+    {
       // apply distorsion
       // (source : https://www.programmersought.com/article/72251092167/)
 

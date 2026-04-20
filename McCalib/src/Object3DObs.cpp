@@ -1,8 +1,8 @@
-#include "opencv2/core/core.hpp"
+#include <stdio.h>
 #include <iostream>
 #include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
-#include <stdio.h>
+#include "opencv2/core/core.hpp"
 
 #include "Camera.hpp"
 #include "Object3DObs.hpp"
@@ -289,4 +289,4 @@ float Object3DObs::computeReprojectionError() const {
                                      : sum_err_object;
 }
 
-} // namespace McCalib
+}  // namespace McCalib

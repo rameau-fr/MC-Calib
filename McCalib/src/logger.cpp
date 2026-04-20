@@ -31,9 +31,9 @@ BOOST_LOG_GLOBAL_LOGGER_INIT(logger, src::severity_logger_mt) {
 
   // add attributes
   logger.add_attribute("LineID", attrs::counter<unsigned int>(
-                                     1)); // lines are sequentially numbered
+                                     1));  // lines are sequentially numbered
   logger.add_attribute("TimeStamp",
-                       attrs::local_clock()); // each log line gets a timestamp
+                       attrs::local_clock());  // each log line gets a timestamp
 
   // add a text sink
   typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
