@@ -343,9 +343,9 @@ jobs:
         with:
           coverage-files: build/coverage.info
           minimum-coverage: 77
-          artifact-name: code-coverage-report-with-github-actions
           github-token: ${{ secrets.GITHUB_TOKEN }}
           update-comment: true
+          artifact-name: ""
 
 
   python-utils-linters:
