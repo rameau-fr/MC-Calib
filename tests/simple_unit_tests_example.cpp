@@ -8,8 +8,7 @@
 BOOST_AUTO_TEST_SUITE(CheckGeometryTools)
 
 BOOST_AUTO_TEST_CASE(ProjToVecAllZeros) {
-  cv::Mat proj_matrix = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0,
-                         1, 0, 0, 0, 0, 1);
+  cv::Mat proj_matrix = cv::Mat::eye(4, 4, CV_64F);
   std::array<float, 6> output = McCalib::ProjToVec(proj_matrix);
 
   std::array<float, 6> answer = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};

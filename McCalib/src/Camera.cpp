@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "opencv2/core/core.hpp"
-#include <opencv2/aruco/charuco.hpp>
+#include <opencv_compat.hpp>
 #include <opencv2/opencv.hpp>
 
 #include "Camera.hpp"

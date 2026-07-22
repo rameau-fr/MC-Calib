@@ -7,7 +7,6 @@
 #include <stdio.h>
 
 #include "opencv2/core/core.hpp"
-#include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -21,6 +20,7 @@
 #include "Graph.hpp"
 #include "Object3D.hpp"
 #include "Object3DObs.hpp"
+#include "opencv_compat.hpp"
 #include "geometrytools.hpp"
 
 namespace McCalib {
@@ -37,8 +37,7 @@ public:
   // Parameters
   unsigned int nb_camera_, nb_board_;
 
-#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
-     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
+#if MC_CALIB_USE_LEGACY_ARUCO_API
   cv::Ptr<cv::aruco::Dictionary> dict_ = cv::aruco::getPredefinedDictionary(
       cv::aruco::DICT_6X6_1000); // load the dictionary that correspond to the
                                  // charuco board

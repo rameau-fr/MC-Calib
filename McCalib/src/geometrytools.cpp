@@ -12,8 +12,7 @@ namespace McCalib {
 
 // Tools for rotation and projection matrix
 cv::Mat RT2Proj(const cv::Mat &R, const cv::Mat &T) {
-  cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-                  0, 0, 0, 1);
+  cv::Mat Proj = cv::Mat::eye(4, 4, CV_64F);
   R.copyTo(Proj(cv::Range(0, 3), cv::Range(0, 3)));
   T.copyTo(Proj(cv::Range(0, 3), cv::Range(3, 4)));
   return Proj;
@@ -22,8 +21,7 @@ cv::Mat RT2Proj(const cv::Mat &R, const cv::Mat &T) {
 cv::Mat RVecT2Proj(const cv::Mat &RVec, const cv::Mat &T) {
   cv::Mat R;
   cv::Rodrigues(RVec, R);
-  cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-                  0, 0, 0, 1);
+  cv::Mat Proj = cv::Mat::eye(4, 4, CV_64F);
   R.copyTo(Proj(cv::Range(0, 3), cv::Range(0, 3)));
   T.copyTo(Proj(cv::Range(0, 3), cv::Range(3, 4)));
   return Proj;
@@ -32,8 +30,7 @@ cv::Mat RVecT2Proj(const cv::Mat &RVec, const cv::Mat &T) {
 cv::Mat RVecT2ProjInt(const cv::Mat &RVec, const cv::Mat &T, const cv::Mat &K) {
   cv::Mat R;
   cv::Rodrigues(RVec, R);
-  cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-                  0, 0, 0, 1);
+  cv::Mat Proj = cv::Mat::eye(4, 4, CV_64F);
   cv::Mat KR = K * R;
   cv::Mat KT = K * T;
   KR.copyTo(Proj(cv::Range(0, 3), cv::Range(0, 3)));
@@ -60,8 +57,7 @@ cv::Mat vectorProj(const std::vector<float> &ProjV) // R Rodrigues | T vector
   TV.at<double>(0) = (double)ProjV[3];
   TV.at<double>(1) = (double)ProjV[4];
   TV.at<double>(2) = (double)ProjV[5];
-  cv::Mat Proj = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-                  0, 0, 0, 1);
+  cv::Mat Proj = cv::Mat::eye(4, 4, CV_64F);
   R.copyTo(Proj(cv::Range(0, 3), cv::Range(0, 3)));
   TV.copyTo(Proj(cv::Range(0, 3), cv::Range(3, 4)));
   return Proj;
@@ -133,7 +129,7 @@ void calcLinePara(const std::vector<cv::Point2f> &pts, double &a, double &b,
   for (const auto &pt : pts)
     ptsF.emplace_back(pt);
 
-  cv::fitLine(ptsF, line, cv::DistanceTypes::DIST_L2, 0, 1e-2, 1e-2);
+  cv::fitLine(ptsF, line, cv::DIST_L2, 0, 1e-2, 1e-2);
   a = line[1];
   b = -line[0];
   c = line[0] * line[3] - line[1] * line[2];
@@ -740,8 +736,7 @@ cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
           float(intrinsic.at<double>(1, 2));
     }
     // Run p3p
-    const cv::Mat zero_distortion_vector =
-        (cv::Mat_<double>(1, 5) << 0, 0, 0, 0, 0);
+    const cv::Mat zero_distortion_vector = cv::Mat::zeros(1, 5, CV_64F);
     Inliers = ransacP3P(scene_points, imagePointsUndis, New_Intrinsic,
                         zero_distortion_vector, best_R, best_T, thresh, it, p,
                         refine);
