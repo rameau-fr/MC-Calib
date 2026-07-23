@@ -20,8 +20,8 @@
 #include "Graph.hpp"
 #include "Object3D.hpp"
 #include "Object3DObs.hpp"
-#include "opencv_compat.hpp"
 #include "geometrytools.hpp"
+#include "opencv_compat.hpp"
 
 namespace McCalib {
 

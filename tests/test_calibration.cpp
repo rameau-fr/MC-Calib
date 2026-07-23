@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #include <boost/test/unit_test.hpp>
-#include <opencv_compat.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv_compat.hpp>
 
 #include <McCalib.hpp>
 

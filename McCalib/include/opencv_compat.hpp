@@ -15,7 +15,8 @@
 #include <opencv2/objdetect.hpp>
 #define MC_CALIB_HAS_LEGACY_CHARUCO_INTERPOLATE 0
 #else
-#error "Could not find OpenCV ArUco/ChArUco headers. Install OpenCV with contrib modules."
+#error                                                                         \
+    "Could not find OpenCV ArUco/ChArUco headers. Install OpenCV with contrib modules."
 #endif
 
 // Helper macro for version-based OpenCV API switches.
