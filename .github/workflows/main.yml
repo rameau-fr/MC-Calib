@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2  # required to mount the Github Workspace to a volume
+        uses: actions/checkout@v4  # required to mount the Github Workspace to a volume
 
       - name: Run clang-format-lint
         uses: DoozyX/clang-format-lint-action@v0.18.1
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run cppcheck
         uses: addnab/docker-run-action@v3
@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run clang-tidy
         uses: addnab/docker-run-action@v3
@@ -84,7 +84,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run charuco boards generation app on OpenCV 4.11
         uses: addnab/docker-run-action@v3
@@ -112,7 +112,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run charuco boards generation app on OpenCV 5
         uses: addnab/docker-run-action@v3
@@ -140,7 +140,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run charuco boards generation app on OpenCV 4.5.5
         uses: addnab/docker-run-action@v3
@@ -168,7 +168,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run charuco boards generation app on OpenCV 4.2.0
         uses: addnab/docker-run-action@v3
@@ -197,7 +197,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
@@ -229,7 +229,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
@@ -272,7 +272,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
@@ -334,7 +334,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
@@ -396,7 +396,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
@@ -427,7 +427,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
@@ -458,7 +458,7 @@ jobs:
       - clang-tidy
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Checkout MC-Calib-data
         uses: actions/checkout@v4
@@ -506,7 +506,7 @@ jobs:
       - unit-tests-in-release-mode-opencv500
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Run python linters
         uses: addnab/docker-run-action@v3
@@ -526,7 +526,7 @@ jobs:
       - unit-tests-in-release-mode-opencv500
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Download calibration results
         uses: actions/download-artifact@v4
