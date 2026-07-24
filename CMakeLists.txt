@@ -39,10 +39,10 @@ if(ENABLE_COVERAGE)
   # add coverage target
   add_custom_target(coverage
     # gather data
-    COMMAND ${LCOV} --directory . --capture --output-file coverage.info --exclude '/usr/*' 
+    COMMAND ${LCOV} --rc lcov_branch_coverage=1 --directory . --capture --output-file coverage.info --exclude '/usr/*' 
       --ignore-errors mismatch,negative
     # generate report
-    COMMAND ${GENHTML} --demangle-cpp -o coverage coverage.info
+    COMMAND ${GENHTML} --demangle-cpp --branch-coverage --rc genhtml_branch_coverage=1 -o coverage coverage.info
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 

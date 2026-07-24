@@ -325,4 +325,33 @@ BOOST_AUTO_TEST_CASE(CheckShortestPathSingleCC) {
                                   answer.end());
 }
 
+BOOST_AUTO_TEST_CASE(CheckShortestPathSameSourceDestination) {
+  Graph test_graph;
+
+  test_graph.addVertex(42);
+
+  std::vector<int> answer = {42};
+  std::vector<int> path = test_graph.shortestPathBetween(42, 42);
+
+  BOOST_REQUIRE_EQUAL(path.size(), answer.size());
+  BOOST_REQUIRE_EQUAL_COLLECTIONS(path.begin(), path.end(), answer.begin(),
+                                  answer.end());
+}
+
+BOOST_AUTO_TEST_CASE(CheckClearGraphRemovesVerticesAndEdges) {
+  Graph test_graph;
+
+  test_graph.addEdge(1, 2, 10);
+  test_graph.addEdge(2, 3, 3);
+
+  BOOST_REQUIRE_EQUAL(boost::num_vertices(test_graph.getGraph()), 3);
+  BOOST_REQUIRE_EQUAL(boost::num_edges(test_graph.getGraph()), 2);
+
+  test_graph.clearGraph();
+
+  BOOST_REQUIRE_EQUAL(boost::num_vertices(test_graph.getGraph()), 0);
+  BOOST_REQUIRE_EQUAL(boost::num_edges(test_graph.getGraph()), 0);
+  BOOST_REQUIRE_EQUAL(test_graph.connectedComponents().size(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
