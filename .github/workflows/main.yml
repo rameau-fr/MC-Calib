@@ -250,6 +250,26 @@ jobs:
             mkdir MC-Calib/build && cd MC-Calib/build
             cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZERS=OFF ..
             make -j4
+            subset_root=/tmp/valgrind_subset/Scenario_1
+            subset_images="$subset_root/Images"
+            mkdir -p "$subset_images"
+            for camera_dir in /home/MC-Calib/data/Blender_Images/Scenario_1/Images/Cam_*; do
+              camera_name="$(basename "$camera_dir")"
+              mkdir -p "$subset_images/$camera_name"
+              find "$camera_dir" -maxdepth 1 -type f | sort | head -n 12 | while read -r image_path; do
+                cp "$image_path" "$subset_images/$camera_name/"
+              done
+            done
+            cp /home/MC-Calib/data/Blender_Images/Scenario_1/GroundTruth.yml "$subset_root/"
+            cp ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml valgrind_scenario1.yml
+            python3 - <<'PY'
+from pathlib import Path
+path = Path("valgrind_scenario1.yml")
+text = path.read_text()
+text = text.replace("../data/Blender_Images/Scenario_1/Images", "/tmp/valgrind_subset/Scenario_1/Images")
+text = text.replace("../data/Blender_Images/Scenario_1/Results", "/tmp/valgrind_subset/Scenario_1/Results")
+path.write_text(text)
+PY
             valgrind --leak-check=full \
               --leak-check=full \
               --track-origins=yes \
@@ -261,7 +281,7 @@ jobs:
               --suppressions=../tests/valgrind_suppress/opencv_valgrind.supp \
               --suppressions=../tests/valgrind_suppress/opencv_valgrind_3rdparty.supp \
               --suppressions=../tests/valgrind_suppress/boost_valgrind.supp \
-              ./apps/calibrate/calibrate ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml
+              ./apps/calibrate/calibrate valgrind_scenario1.yml
 
 
   unit-tests-in-release-mode-opencv4110:
