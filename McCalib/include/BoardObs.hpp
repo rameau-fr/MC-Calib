@@ -3,8 +3,8 @@
 #include "Board.hpp"
 #include "opencv2/core/core.hpp"
 #include <iostream>
-#include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv_compat.hpp>
 #include <stdio.h>
 
 namespace McCalib {

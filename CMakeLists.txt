@@ -10,6 +10,11 @@ set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} CACHE STRING "" FORCE)
 
 find_package(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
+message(STATUS "Found OpenCV version: ${OpenCV_VERSION}")
+
+if(OpenCV_VERSION VERSION_LESS "4.2.0")
+  message(FATAL_ERROR "MC-Calib requires OpenCV >= 4.2.0")
+endif()
 
 find_package(Ceres REQUIRED)
 
@@ -50,7 +55,6 @@ endif()
 
 include_directories(
 	include
-	/usr/include/opencv
 	/usr/include/eigen3
 	/usr/local/lib
 )

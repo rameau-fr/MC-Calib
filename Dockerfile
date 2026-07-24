@@ -13,16 +13,16 @@ ENV NO_AT_BRIDGE 1
 WORKDIR /home
 
 #------------------------------	#
-#     INSTALL OPENCV 4		    #
+#     INSTALL OPENCV 5		    #
 #------------------------------	#
-RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/4.11.0.zip && \
-	wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/4.11.0.zip && \
+RUN wget -O opencv.zip https://github.com/opencv/opencv/archive/5.0.0.zip && \
+	wget -O opencv_contrib.zip https://github.com/opencv/opencv_contrib/archive/5.0.0.zip && \
 	unzip opencv.zip && unzip opencv_contrib.zip && \
 	mkdir -p build && cd build && \
-	cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-4.11.0/modules ../opencv-4.11.0 && \
+	cmake -DOPENCV_EXTRA_MODULES_PATH=../opencv_contrib-5.0.0/modules ../opencv-5.0.0 && \
 	cmake --build . --target install -- -j4 && \
-	cd /home && rm opencv.zip && rm opencv_contrib.zip && \ 
-	rm -rf opencv-4.11.0 && rm -rf opencv_contrib-4.11.0 && rm -rf build && \
+	cd /home && rm opencv.zip && rm opencv_contrib.zip && \
+	rm -rf opencv-5.0.0 && rm -rf opencv_contrib-5.0.0 && rm -rf build && \
 	rm -rf /var/lib/apt/lists/*
 
 #------------------------------	#
@@ -49,7 +49,7 @@ RUN git clone --branch 2.2.0 --single-branch https://github.com/ceres-solver/cer
 
 # Install python requirements for python_utils scripts
 RUN --mount=type=bind,source=python_utils/requirements_prod.txt,target=/tmp/requirements.txt \
-	apt update && apt install -y libgl1 libglib2.0-0 && \    
+	apt update && apt install -y libgl1 libglib2.0-0 && \
 	python -m pip install --requirement /tmp/requirements.txt --break-system-packages && \
 	rm -rf /var/lib/apt/lists/*
 
@@ -58,11 +58,11 @@ FROM prod as dev
 #------------------------------	#
 #     Doxygen				    #
 #------------------------------	#
-RUN apt update && apt install -y flex bison && \ 
+RUN apt update && apt install -y flex bison && \
 	git clone https://github.com/doxygen/doxygen.git && \
 	cd doxygen && mkdir build && cd build &&\
 	cmake -G 'Unix Makefiles' .. && \
-	make -j4 && \ 
+	make -j4 && \
 	make -j4 install && \
 	cd /home && rm -rf doxygen && \
 	rm -rf /var/lib/apt/lists/*

@@ -1,7 +1,7 @@
 #include "opencv2/core/core.hpp"
 #include <iostream>
-#include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv_compat.hpp>
 #include <random>
 #include <stdio.h>
 
@@ -290,8 +290,7 @@ void Calibration::detectBoardsInImageWithCamera(const std::string &frame_path,
   // key == board id, value == ID corners on checkerboard
   std::map<int, std::vector<int>> charuco_idx;
 
-#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
-     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
+#if MC_CALIB_USE_LEGACY_ARUCO_API
   charuco_params_->adaptiveThreshConstant = 1;
 #else
   charuco_params_.adaptiveThreshConstant = 1;
@@ -299,8 +298,7 @@ void Calibration::detectBoardsInImageWithCamera(const std::string &frame_path,
 
   for (std::size_t i = 0; i < nb_board_; i++) {
 
-#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
-     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
+#if MC_CALIB_USE_LEGACY_ARUCO_API
 
     cv::aruco::detectMarkers(image, boards_3d_[i]->charuco_board_->dictionary,
                              marker_corners[i], marker_idx[i], charuco_params_);
@@ -312,9 +310,15 @@ void Calibration::detectBoardsInImageWithCamera(const std::string &frame_path,
 #endif
 
     if (marker_corners[i].size() > 0) {
+#if MC_CALIB_HAS_LEGACY_CHARUCO_INTERPOLATE
       cv::aruco::interpolateCornersCharuco(marker_corners[i], marker_idx[i],
                                            image, boards_3d_[i]->charuco_board_,
                                            charuco_corners[i], charuco_idx[i]);
+#else
+      cv::aruco::CharucoDetector detector(*boards_3d_[i]->charuco_board_);
+      detector.detectBoard(image, charuco_corners[i], charuco_idx[i],
+                           marker_corners[i], marker_idx[i]);
+#endif
     }
 
     if (charuco_corners[i].size() >
@@ -885,9 +889,8 @@ void Calibration::init3DObjects() {
       std::vector<int> short_path = covis_boards_graph_.shortestPathBetween(
           ref_board_id, current_board_id);
       // Compute the transformation wrt. the reference board
-      cv::Mat transform = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0,
-                           0, 1, 0, 0, 0, 0,
-                           1); // initialize the transformation to identity
+      cv::Mat transform = cv::Mat::eye(
+          4, 4, CV_64F); // initialize the transformation to identity
 
       if (short_path.size() >= 1u) {
         for (std::size_t k = 0; k < short_path.size() - 1; k++) {
@@ -1118,9 +1121,8 @@ void Calibration::initCameraGroup() {
       std::vector<int> short_path = covis_camera_graph_.shortestPathBetween(
           id_ref_cam, current_camera_id);
       // Compute the transformation wrt. the reference camera
-      cv::Mat transform =
-          (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
-           0, 1); // initialize the transformation to identity
+      cv::Mat transform = cv::Mat::eye(
+          4, 4, CV_64F); // initialize the transformation to identity
 
       if (short_path.size() >= 1u) {
         for (std::size_t k = 0; k < short_path.size() - 1; k++) {
@@ -1553,9 +1555,8 @@ void Calibration::mergeCameraGroup() {
           no_overlap_camgroup_graph_.shortestPathBetween(id_ref_cam_group,
                                                          current_cam_group_id);
       // Compute the transformation wrt. the reference camera
-      cv::Mat transform =
-          (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
-           0, 1); // initialize the transformation to identity
+      cv::Mat transform = cv::Mat::eye(
+          4, 4, CV_64F); // initialize the transformation to identity
 
       if (short_path.size() >= 1u) {
         for (std::size_t k = 0; k < short_path.size() - 1; k++) {
@@ -1738,9 +1739,8 @@ void Calibration::mergeObjects() {
       std::vector<int> short_path = covis_objects_graph_.shortestPathBetween(
           id_ref_object, current_object_id);
       // Compute the transformation wrt. the reference object
-      cv::Mat transform =
-          (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
-           0, 1); // initialize the transformation to identity
+      cv::Mat transform = cv::Mat::eye(
+          4, 4, CV_64F); // initialize the transformation to identity
 
       if (short_path.size() >= 1u) {
         for (std::size_t k = 0; k < short_path.size() - 1; k++) {

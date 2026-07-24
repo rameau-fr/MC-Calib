@@ -9,15 +9,16 @@ Toolbox described in the paper ["MC-Calib: A generic and robust calibration tool
 
 For Windows users, follow [this installation guide](/docs/Windows.md).
 
-Requirements: Ceres, Boost, OpenCV {4.2.0, 4.5.5, 4.10.0, 4.11.0}, c++17 
+Requirements: Ceres, Boost, OpenCV {4.2.0, 4.5.5, 4.10.0, 4.11.0, 5.0.0}, c++17 
 
 - [Install](https://docs.docker.com/engine/install/) docker
 
 - Pull the image:
 
    ```bash
-   docker pull bailool/mc-calib-prod:opencv4110 # production environment
-   docker pull bailool/mc-calib-dev:opencv4110  # development environment
+   docker pull bailool/mc-calib-prod:opencv500 # production environment (recommended)
+   docker pull bailool/mc-calib-dev:opencv500  # development environment (recommended)
+   # legacy compatibility images are also available (opencv4110, opencv455, opencv420)
    ```
 
 - Run pulled image (set `PATH_TO_REPO_ROOT` and `PATH_TO_DATA` appropriately):
@@ -27,7 +28,7 @@ Requirements: Ceres, Boost, OpenCV {4.2.0, 4.5.5, 4.10.0, 4.11.0}, c++17
                -ti --rm \
                --volume="$PATH_TO_REPO_ROOT:/home/MC-Calib" \
                --volume="$PATH_TO_DATA:/home/MC-Calib/data" \
-               bailool/mc-calib-prod:opencv4110
+               bailool/mc-calib-prod:opencv500
    ```
       
 Compiling the code:

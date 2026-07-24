@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 #include <boost/test/unit_test.hpp>
-#include <opencv2/aruco/charuco.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv_compat.hpp>
 
 #include <McCalib.hpp>
 
@@ -14,8 +14,7 @@
 constexpr double INTRINSICS_TOLERANCE = 4.0;     // in percentage
 constexpr double ROTATION_ERROR_TOLERANCE = 1.0; // in degrees
 
-#if (defined(CV_VERSION_MAJOR) && CV_VERSION_MAJOR <= 4 &&                     \
-     defined(CV_VERSION_MINOR) && CV_VERSION_MINOR < 7)
+#if MC_CALIB_USE_LEGACY_ARUCO_API
 constexpr double TRANSLATION_ERROR_TOLERANCE = 0.005; // in meters
 #else
 constexpr double TRANSLATION_ERROR_TOLERANCE = 0.01; // in meters
@@ -86,8 +85,9 @@ void calibrateAndCheckGt(const std::filesystem::path &config_path,
     fs["P_" + std::to_string(camera_idx)] >> camera_pose_matrix_gt;
 
     // blender images has different axis orientation, correct to match opencv
-    cv::Mat transform = (cv::Mat_<double>(4, 4) << 1, 0, 0, 0, 0, -1, 0, 0, 0,
-                         0, -1, 0, 0, 0, 0, 1);
+    cv::Mat transform = cv::Mat::eye(4, 4, CV_64F);
+    transform.at<double>(1, 1) = -1.0;
+    transform.at<double>(2, 2) = -1.0;
     camera_pose_matrix_gt = transform * camera_pose_matrix_gt * transform;
 
     double fx_gt = camera_matrix_gt.at<double>(0, 0);
