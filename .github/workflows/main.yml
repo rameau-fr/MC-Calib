@@ -262,14 +262,7 @@ jobs:
             done
             cp /home/MC-Calib/data/Blender_Images/Scenario_1/GroundTruth.yml "$subset_root/"
             cp ../tests/configs_for_end2end_tests/calib_param_synth_Scenario1.yml valgrind_scenario1.yml
-            python3 - <<'PY'
-from pathlib import Path
-path = Path("valgrind_scenario1.yml")
-text = path.read_text()
-text = text.replace("../data/Blender_Images/Scenario_1/Images", "/tmp/valgrind_subset/Scenario_1/Images")
-text = text.replace("../data/Blender_Images/Scenario_1/Results", "/tmp/valgrind_subset/Scenario_1/Results")
-path.write_text(text)
-PY
+            python3 -c "from pathlib import Path; path = Path('valgrind_scenario1.yml'); text = path.read_text(); text = text.replace('../data/Blender_Images/Scenario_1/Images', '/tmp/valgrind_subset/Scenario_1/Images'); text = text.replace('../data/Blender_Images/Scenario_1/Results', '/tmp/valgrind_subset/Scenario_1/Results'); path.write_text(text)"
             valgrind --leak-check=full \
               --leak-check=full \
               --track-origins=yes \
