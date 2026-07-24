@@ -248,7 +248,7 @@ jobs:
           options: -v ${{ github.workspace }}:/home/MC-Calib
           run: |
             mkdir MC-Calib/build && cd MC-Calib/build
-            cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZERS=OFF ..
+            cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DUSE_SANITIZERS=OFF ..
             make -j4
             valgrind --leak-check=full \
               --leak-check=full \
