@@ -103,4 +103,23 @@ BOOST_AUTO_TEST_CASE(CheckComputeDistanceBetweenPointsNonEmptyAndEmpty) {
   BOOST_CHECK_EQUAL(empty_error_list.rows, 0);
 }
 
+BOOST_AUTO_TEST_CASE(CheckComputeAvgReprojectionErrorEmptyState) {
+  const std::filesystem::path cfg = makeMinimalConfigFile();
+  McCalib::Calibration calib(cfg);
+
+  BOOST_CHECK_SMALL(std::abs(calib.computeAvgReprojectionError()), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(CheckBoardExtractionWithNoImagesKeepsObservationsEmpty) {
+  const std::filesystem::path cfg = makeMinimalConfigFile();
+  std::filesystem::create_directories(std::filesystem::temp_directory_path() /
+                                      "cam_001");
+  McCalib::Calibration calib(cfg);
+
+  calib.boardExtraction();
+
+  BOOST_CHECK_EQUAL(calib.board_observations_.size(), 0);
+  BOOST_CHECK_EQUAL(calib.frames_.size(), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
