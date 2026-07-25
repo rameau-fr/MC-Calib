@@ -274,4 +274,117 @@ BOOST_AUTO_TEST_CASE(CheckProjectPointsWithDistortionFisheyeBranch) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(CheckVectorProjAndProjToVecRoundTrip) {
+  const std::vector<float> input = {0.05f, -0.1f, 0.2f, 1.2f, -2.3f, 3.4f};
+
+  const cv::Mat proj = McCalib::vectorProj(input);
+  const std::array<float, 6> output = McCalib::ProjToVec(proj);
+
+  for (std::size_t i = 0; i < output.size(); ++i) {
+    BOOST_CHECK_SMALL(static_cast<double>(std::abs(output[i] - input[i])),
+                      1e-4);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CheckGetAverageRotationQuaternionBranch) {
+  std::vector<double> r1 = {0.2, 0.2, 0.2, 0.2};
+  std::vector<double> r2 = {-0.1, -0.1, -0.1, -0.1};
+  std::vector<double> r3 = {0.05, 0.05, 0.05, 0.05};
+
+  const cv::Mat average_rotation =
+      McCalib::getAverageRotation(r1, r2, r3, true);
+
+  BOOST_REQUIRE_EQUAL(average_rotation.rows, 3);
+  BOOST_REQUIRE_EQUAL(average_rotation.cols, 1);
+  BOOST_CHECK_SMALL(std::abs(average_rotation.at<double>(0) - 0.2), 1e-6);
+  BOOST_CHECK_SMALL(std::abs(average_rotation.at<double>(1) + 0.1), 1e-6);
+  BOOST_CHECK_SMALL(std::abs(average_rotation.at<double>(2) - 0.05), 1e-6);
+}
+
+BOOST_AUTO_TEST_CASE(CheckRansacP3PDistortionPerspectiveBranch) {
+  const std::vector<cv::Point3f> scene_points = {
+      {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+      {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, -1.0f, 0.5f}};
+
+  cv::Mat gt_rvec(3, 1, CV_64F);
+  gt_rvec.at<double>(0) = 0.1;
+  gt_rvec.at<double>(1) = -0.05;
+  gt_rvec.at<double>(2) = 0.08;
+  cv::Mat gt_tvec(3, 1, CV_64F);
+  gt_tvec.at<double>(0) = 0.1;
+  gt_tvec.at<double>(1) = -0.2;
+  gt_tvec.at<double>(2) = 5.0;
+
+  cv::Mat camera_matrix(3, 3, CV_64F);
+  camera_matrix.at<double>(0, 0) = 600.0;
+  camera_matrix.at<double>(0, 1) = 0.0;
+  camera_matrix.at<double>(0, 2) = 320.0;
+  camera_matrix.at<double>(1, 0) = 0.0;
+  camera_matrix.at<double>(1, 1) = 600.0;
+  camera_matrix.at<double>(1, 2) = 240.0;
+  camera_matrix.at<double>(2, 0) = 0.0;
+  camera_matrix.at<double>(2, 1) = 0.0;
+  camera_matrix.at<double>(2, 2) = 1.0;
+  const cv::Mat distortion_vector = cv::Mat::zeros(1, 5, CV_64F);
+
+  std::vector<cv::Point2f> image_points;
+  cv::projectPoints(scene_points, gt_rvec, gt_tvec, camera_matrix,
+                    distortion_vector, image_points);
+
+  cv::Mat best_r;
+  cv::Mat best_t;
+  const cv::Mat inliers = McCalib::ransacP3PDistortion(
+      scene_points, image_points, camera_matrix, distortion_vector, best_r,
+      best_t, 1.0f, 100, 0, 0.99, true);
+
+  BOOST_REQUIRE(inliers.empty() == false);
+  BOOST_REQUIRE(best_r.empty() == false);
+  BOOST_REQUIRE(best_t.empty() == false);
+}
+
+BOOST_AUTO_TEST_CASE(CheckRansacP3PDistortionFisheyeAndInvalidBranch) {
+  const std::vector<cv::Point3f> scene_points = {
+      {0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+      {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, -1.0f, 0.5f}};
+
+  cv::Mat gt_rvec(3, 1, CV_64F);
+  gt_rvec.at<double>(0) = 0.03;
+  gt_rvec.at<double>(1) = -0.04;
+  gt_rvec.at<double>(2) = 0.02;
+  cv::Mat gt_tvec(3, 1, CV_64F);
+  gt_tvec.at<double>(0) = -0.1;
+  gt_tvec.at<double>(1) = 0.15;
+  gt_tvec.at<double>(2) = 4.5;
+
+  cv::Mat camera_matrix(3, 3, CV_64F);
+  camera_matrix.at<double>(0, 0) = 500.0;
+  camera_matrix.at<double>(0, 1) = 0.0;
+  camera_matrix.at<double>(0, 2) = 320.0;
+  camera_matrix.at<double>(1, 0) = 0.0;
+  camera_matrix.at<double>(1, 1) = 500.0;
+  camera_matrix.at<double>(1, 2) = 240.0;
+  camera_matrix.at<double>(2, 0) = 0.0;
+  camera_matrix.at<double>(2, 1) = 0.0;
+  camera_matrix.at<double>(2, 2) = 1.0;
+  const cv::Mat fisheye_dist = cv::Mat::zeros(1, 4, CV_64F);
+
+  std::vector<cv::Point2f> image_points;
+  cv::fisheye::projectPoints(scene_points, image_points, gt_rvec, gt_tvec,
+                             camera_matrix, fisheye_dist, 0.0);
+
+  cv::Mat best_r_fisheye;
+  cv::Mat best_t_fisheye;
+  const cv::Mat fisheye_inliers = McCalib::ransacP3PDistortion(
+      scene_points, image_points, camera_matrix, fisheye_dist, best_r_fisheye,
+      best_t_fisheye, 1.0f, 100, 1, 0.99, true);
+  BOOST_REQUIRE(fisheye_inliers.empty() == false);
+
+  cv::Mat best_r_invalid;
+  cv::Mat best_t_invalid;
+  const cv::Mat invalid_inliers = McCalib::ransacP3PDistortion(
+      scene_points, image_points, camera_matrix, fisheye_dist, best_r_invalid,
+      best_t_invalid, 1.0f, 100, 2, 0.99, true);
+  BOOST_CHECK(invalid_inliers.empty() == true);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
