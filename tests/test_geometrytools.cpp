@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(CheckRVecTProjAndProj2RTRoundTrip) {
   BOOST_REQUIRE_EQUAL(proj.cols, reproj.cols);
   for (int i = 0; i < proj.rows; ++i) {
     for (int j = 0; j < proj.cols; ++j) {
-      BOOST_CHECK_SMALL(std::abs(proj.at<double>(i, j) - reproj.at<double>(i, j)),
-                        1e-9);
+      BOOST_CHECK_SMALL(
+          std::abs(proj.at<double>(i, j) - reproj.at<double>(i, j)), 1e-9);
     }
   }
 }
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(CheckInvertRvecTOverloadsAreConsistent) {
   McCalib::invertRvecT(inv_rvec_inplace, inv_tvec_inplace);
 
   for (int i = 0; i < 3; ++i) {
-    BOOST_CHECK_SMALL(std::abs(inv_tvec_ref.at<double>(i) -
-                               inv_tvec_inplace.at<double>(i)),
-                      1e-9);
+    BOOST_CHECK_SMALL(
+        std::abs(inv_tvec_ref.at<double>(i) - inv_tvec_inplace.at<double>(i)),
+        1e-9);
   }
 
   cv::Mat proj_ref = McCalib::RVecT2Proj(inv_rvec_ref, inv_tvec_ref);
@@ -165,8 +165,7 @@ BOOST_AUTO_TEST_CASE(CheckInvertRvecTOverloadsAreConsistent) {
 }
 
 BOOST_AUTO_TEST_CASE(CheckTransform3DPtsIdentity) {
-  std::vector<cv::Point3f> points = {{1.0f, 2.0f, 3.0f},
-                                     {-4.0f, 0.5f, 2.25f}};
+  std::vector<cv::Point3f> points = {{1.0f, 2.0f, 3.0f}, {-4.0f, 0.5f, 2.25f}};
   cv::Mat rvec = cv::Mat::zeros(3, 1, CV_64F);
   cv::Mat tvec = cv::Mat::zeros(3, 1, CV_64F);
 
@@ -175,9 +174,12 @@ BOOST_AUTO_TEST_CASE(CheckTransform3DPtsIdentity) {
 
   BOOST_REQUIRE_EQUAL(points.size(), transformed.size());
   for (std::size_t i = 0; i < points.size(); ++i) {
-    BOOST_CHECK_SMALL(static_cast<double>(std::abs(points[i].x - transformed[i].x)), 1e-6);
-    BOOST_CHECK_SMALL(static_cast<double>(std::abs(points[i].y - transformed[i].y)), 1e-6);
-    BOOST_CHECK_SMALL(static_cast<double>(std::abs(points[i].z - transformed[i].z)), 1e-6);
+    BOOST_CHECK_SMALL(
+        static_cast<double>(std::abs(points[i].x - transformed[i].x)), 1e-6);
+    BOOST_CHECK_SMALL(
+        static_cast<double>(std::abs(points[i].y - transformed[i].y)), 1e-6);
+    BOOST_CHECK_SMALL(
+        static_cast<double>(std::abs(points[i].z - transformed[i].z)), 1e-6);
   }
 }
 
@@ -196,8 +198,7 @@ BOOST_AUTO_TEST_CASE(CheckGetAverageRotationMedianBranch) {
   std::vector<double> r2 = {1.0, 2.0, 3.0};
   std::vector<double> r3 = {-5.0, -2.0, -3.0};
 
-  cv::Mat average_rotation =
-      McCalib::getAverageRotation(r1, r2, r3, false);
+  cv::Mat average_rotation = McCalib::getAverageRotation(r1, r2, r3, false);
 
   BOOST_REQUIRE_EQUAL(average_rotation.rows, 3);
   BOOST_REQUIRE_EQUAL(average_rotation.cols, 1);
@@ -233,11 +234,9 @@ BOOST_AUTO_TEST_CASE(CheckProjectPointsWithDistortionPerspectiveBranch) {
   BOOST_REQUIRE_EQUAL(repro_custom.size(), repro_cv.size());
   for (std::size_t i = 0; i < repro_cv.size(); ++i) {
     BOOST_CHECK_SMALL(
-        static_cast<double>(std::abs(repro_custom[i].x - repro_cv[i].x)),
-        1e-6);
+        static_cast<double>(std::abs(repro_custom[i].x - repro_cv[i].x)), 1e-6);
     BOOST_CHECK_SMALL(
-        static_cast<double>(std::abs(repro_custom[i].y - repro_cv[i].y)),
-        1e-6);
+        static_cast<double>(std::abs(repro_custom[i].y - repro_cv[i].y)), 1e-6);
   }
 }
 
@@ -269,11 +268,9 @@ BOOST_AUTO_TEST_CASE(CheckProjectPointsWithDistortionFisheyeBranch) {
   BOOST_REQUIRE_EQUAL(repro_custom.size(), repro_cv.size());
   for (std::size_t i = 0; i < repro_cv.size(); ++i) {
     BOOST_CHECK_SMALL(
-        static_cast<double>(std::abs(repro_custom[i].x - repro_cv[i].x)),
-        1e-6);
+        static_cast<double>(std::abs(repro_custom[i].x - repro_cv[i].x)), 1e-6);
     BOOST_CHECK_SMALL(
-        static_cast<double>(std::abs(repro_custom[i].y - repro_cv[i].y)),
-        1e-6);
+        static_cast<double>(std::abs(repro_custom[i].y - repro_cv[i].y)), 1e-6);
   }
 }
 

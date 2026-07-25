@@ -57,9 +57,8 @@ BOOST_AUTO_TEST_CASE(CheckCreateCharucoBoardsCountAndIdOffset) {
   const std::vector<int> x_squares = {5, 6};
   const std::vector<int> y_squares = {7, 7};
 
-  const auto boards = McCalib::createCharucoBoards(num_board, x_squares,
-                                                    y_squares, 0.03f, 0.02f,
-                                                    dict);
+  const auto boards = McCalib::createCharucoBoards(
+      num_board, x_squares, y_squares, 0.03f, 0.02f, dict);
 
   BOOST_REQUIRE_EQUAL(boards.size(), num_board);
   BOOST_REQUIRE(boards.count(0) == 1);
@@ -70,8 +69,10 @@ BOOST_AUTO_TEST_CASE(CheckCreateCharucoBoardsCountAndIdOffset) {
   BOOST_REQUIRE(!ids_board_0.empty());
   BOOST_REQUIRE(!ids_board_1.empty());
 
-  const int max_board_0 = *std::max_element(ids_board_0.begin(), ids_board_0.end());
-  const int min_board_1 = *std::min_element(ids_board_1.begin(), ids_board_1.end());
+  const int max_board_0 =
+      *std::max_element(ids_board_0.begin(), ids_board_0.end());
+  const int min_board_1 =
+      *std::min_element(ids_board_1.begin(), ids_board_1.end());
   BOOST_CHECK(min_board_1 > max_board_0);
 }
 
@@ -82,9 +83,9 @@ BOOST_AUTO_TEST_CASE(CheckCreateCharucoBoardsImagesDimensions) {
   const std::vector<int> resolution_x = {640, 800};
   const std::vector<int> resolution_y = {480, 600};
 
-  const std::vector<cv::Mat> images = McCalib::createCharucoBoardsImages(
-      num_board, x_squares, y_squares, 0.03f, 0.02f, resolution_x,
-      resolution_y);
+  const std::vector<cv::Mat> images =
+      McCalib::createCharucoBoardsImages(num_board, x_squares, y_squares, 0.03f,
+                                         0.02f, resolution_x, resolution_y);
 
   BOOST_REQUIRE_EQUAL(images.size(), num_board);
   BOOST_REQUIRE(!images[0].empty());
