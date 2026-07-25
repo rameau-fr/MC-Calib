@@ -20,7 +20,8 @@ std::filesystem::path makeMinimalConfigFile() {
   fs << "number_x_square" << 5;
   fs << "number_y_square" << 7;
   fs << "root_path" << config_path.parent_path().string();
-  fs << "cam_prefix" << "cam_";
+  fs << "cam_prefix"
+     << "cam_";
   fs << "ransac_threshold" << 5.0;
   fs << "number_iterations" << 5;
   fs << "distortion_model" << 0;
@@ -33,9 +34,12 @@ std::filesystem::path makeMinimalConfigFile() {
   fs << "length_square" << 0.03;
   fs << "length_marker" << 0.02;
   fs << "save_path" << config_path.parent_path().string();
-  fs << "camera_params_file_name" << "camera_params_test.yml";
-  fs << "cam_params_path" << "None";
-  fs << "keypoints_path" << "None";
+  fs << "camera_params_file_name"
+     << "camera_params_test.yml";
+  fs << "cam_params_path"
+     << "None";
+  fs << "keypoints_path"
+     << "None";
   fs << "save_reprojection" << 0;
   fs << "save_detection" << 0;
   fs << "square_size_per_board" << empty_double_vec;
@@ -56,7 +60,8 @@ BOOST_AUTO_TEST_SUITE(CheckMcCalibLight)
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationCtorInvalidPathKeepsStructuresEmpty) {
   const std::filesystem::path invalid_cfg =
-      std::filesystem::temp_directory_path() / "definitely_missing_mc_calib_cfg.yml";
+      std::filesystem::temp_directory_path() /
+      "definitely_missing_mc_calib_cfg.yml";
   std::filesystem::remove(invalid_cfg);
 
   McCalib::Calibration calib(invalid_cfg);
@@ -87,9 +92,9 @@ BOOST_AUTO_TEST_CASE(CheckComputeDistanceBetweenPointsNonEmptyAndEmpty) {
       calib.computeDistanceBetweenPoints(obj_pts_2d, repro_pts);
   BOOST_REQUIRE_EQUAL(error_list.rows, 2);
   BOOST_REQUIRE_EQUAL(error_list.cols, 1);
-    BOOST_CHECK_SMALL(
+  BOOST_CHECK_SMALL(
       static_cast<double>(std::abs(error_list.at<float>(0) - 4.0f)), 1e-6);
-    BOOST_CHECK_SMALL(
+  BOOST_CHECK_SMALL(
       static_cast<double>(std::abs(error_list.at<float>(1) - 5.0f)), 1e-6);
 
   const std::vector<cv::Point2f> empty_pts;
