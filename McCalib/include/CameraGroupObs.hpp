@@ -15,10 +15,11 @@ class CameraGroup;
 /**
  * @class CameraGroupObs
  *
- * @brief Contains information related to the camera group observation
+ * @brief Aggregates object observations for one camera-group/frame pair.
  *
- * - 3D object observations from this camera group observation
- * - camera group corresponding to this observation
+ * Stores all object observations associated with a camera group in a specific
+ * frame and maintains one representative object pose per object id, expressed
+ * in the camera-group reference frame.
  */
 class CameraGroupObs final {
 public:
@@ -38,19 +39,93 @@ public:
 
   // Functions
   CameraGroupObs() = delete;
+
+  /**
+   * @brief Destroy the camera-group observation object.
+   */
   ~CameraGroupObs();
+
+  /**
+   * @brief Construct a camera-group observation container.
+   *
+   * @param new_cam_group Camera group associated with this observation.
+   * @param quaternion_averaging If true, average rotations with quaternion
+   * averaging; otherwise use component-wise median fallback.
+   */
   CameraGroupObs(const std::shared_ptr<CameraGroup> new_cam_group,
                  const bool quaternion_averaging);
+
+  /**
+   * @brief Insert one object observation into this camera-group observation.
+   *
+   * @param new_object_observation Object observation to register.
+   */
   void insertObjectObservation(
       const std::shared_ptr<Object3DObs> new_object_observation);
+
+  /**
+   * @brief Compute one representative group pose per observed object id.
+   *
+   * If the reference camera observed the object, that pose is used.
+   * Otherwise, the pose is estimated by averaging all available observations
+   * for this object inside the group.
+   */
   void computeObjectsPose();
+
+  /**
+   * @brief Get the pose of an object as Rodrigues rotation and translation.
+   *
+   * @param object_id Object id in this camera-group observation.
+   * @param r_vec Output rotation vector (3x1, Rodrigues).
+   * @param t_vec Output translation vector (3x1).
+   */
   void getObjectPoseVec(const int object_id, cv::Mat &r_vec, cv::Mat &t_vec);
+
+  /**
+   * @brief Get the pose of an object as a 4x4 homogeneous transform.
+   *
+   * @param object_id Object id in this camera-group observation.
+   * @return 4x4 transform from object frame to camera-group reference frame.
+   */
   cv::Mat getObjectPoseMat(const int object_id);
+
+  /**
+   * @brief Set the pose of an object from a 4x4 homogeneous transform.
+   *
+   * @param pose 4x4 object pose in camera-group reference frame.
+   * @param object_id Object id in this camera-group observation.
+   */
   void setObjectPoseMat(const cv::Mat &pose, const int object_id);
+
+  /**
+   * @brief Set the pose of an object from Rodrigues and translation vectors.
+   *
+   * @param r_vec Rotation vector (3x1, Rodrigues).
+   * @param t_vec Translation vector (3x1).
+   * @param object_id Object id in this camera-group observation.
+   */
   void setObjectPoseVec(const cv::Mat &r_vec, const cv::Mat &t_vec,
                         const int object_id);
+
+  /**
+   * @brief Get only the rotation component of an object pose.
+   *
+   * @param object_id Object id in this camera-group observation.
+   * @return Rotation vector (3x1, Rodrigues).
+   */
   cv::Mat getObjectRotVec(const int object_id);
+
+  /**
+   * @brief Get only the translation component of an object pose.
+   *
+   * @param object_id Object id in this camera-group observation.
+   * @return Translation vector (3x1).
+   */
   cv::Mat getObjectTransVec(const int object_id);
+
+  /**
+   * @brief Propagate group-level object poses back to contained observations.
+   */
   void updateObjObsPose();
 };
 

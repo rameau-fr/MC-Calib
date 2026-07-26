@@ -15,11 +15,10 @@ class Board;
 /**
  * @class BoardObs
  *
- * @brief This class contains information related to this board observation
+ * @brief Observation of one board by one camera in one frame.
  *
- * The board observation contains the 2D points and corresponding 3D board of an
- * observed board. Additionally, it contains the pose of the board w.r.t. the
- * camera observing the board.
+ * It stores matched Charuco detections, links to the corresponding board/camera
+ * entities, and an estimated board-to-camera pose.
  *
  */
 class BoardObs final {
@@ -48,19 +47,86 @@ public:
 
   // Functions
   BoardObs() = delete;
+
+  /**
+   * @brief Destroy the board observation object.
+   */
   ~BoardObs(){};
+
+  /**
+   * @brief Construct one board observation.
+   *
+   * @param camera_id Id of the observing camera.
+   * @param frame_id Frame id where the board is detected.
+   * @param board_id Id of the observed board.
+   * @param pts_2d Detected 2D Charuco corners.
+   * @param charuco_id Charuco corner ids matching pts_2d.
+   * @param cam Camera object owning this observation.
+   * @param board_3d Board object corresponding to board_id.
+   */
   BoardObs(const int camera_id, const int frame_id, const int board_id,
            const std::vector<cv::Point2f> &pts_2d,
            const std::vector<int> &charuco_id,
            const std::shared_ptr<Camera> cam,
            const std::shared_ptr<Board> board_3d);
+
+  /**
+   * @brief Get board pose as Rodrigues rotation and translation vectors.
+   *
+   * @param R Output rotation vector (3x1).
+   * @param T Output translation vector (3x1).
+   */
   void getPoseVec(cv::Mat &R, cv::Mat &T) const;
+
+  /**
+   * @brief Get board pose as a 4x4 homogeneous transform.
+   *
+   * @return 4x4 transform from board frame to camera frame.
+   */
   cv::Mat getPoseMat() const;
+
+  /**
+   * @brief Set board pose from a 4x4 homogeneous transform.
+   *
+   * @param Pose 4x4 board-to-camera transform.
+   */
   void setPoseMat(const cv::Mat &Pose);
+
+  /**
+   * @brief Set board pose from Rodrigues and translation vectors.
+   *
+   * @param Rvec Rotation vector (3x1).
+   * @param T Translation vector (3x1).
+   */
   void setPoseVec(const cv::Mat &Rvec, const cv::Mat &T);
+
+  /**
+   * @brief Estimate pose with a robust PnP pipeline.
+   *
+   * @param ransac_thresh Reprojection threshold in pixels.
+   * @param ransac_iterations Number of RANSAC iterations.
+   */
   void estimatePose(const float ransac_thresh, const int ransac_iterations);
+
+  /**
+   * @brief Compute mean reprojection error for this observation.
+   *
+   * @return Mean per-point reprojection error in pixels.
+   */
   float computeReprojectionError();
+
+  /**
+   * @brief Get only the rotation component of the board pose.
+   *
+   * @return Rotation vector (3x1).
+   */
   cv::Mat getRotVec() const;
+
+  /**
+   * @brief Get only the translation component of the board pose.
+   *
+   * @return Translation vector (3x1).
+   */
   cv::Mat getTransVec() const;
 };
 

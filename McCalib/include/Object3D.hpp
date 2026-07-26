@@ -17,12 +17,10 @@ class Camera;
 /**
  * @class Object3D
  *
- * @brief This class contains the 3D object information
+ * @brief Represents a rigid 3D object composed of multiple boards.
  *
- * - 3D points
- * - local 3D index (0-N)
- * - observation of these objects
- * - frames where these 3D objects are observed
+ * It stores merged object geometry, board-to-object relative poses and all
+ * related observations across frames.
  */
 class Object3D final {
 public:
@@ -55,20 +53,105 @@ public:
 
   // Functions
   Object3D() = delete;
+
+  /**
+   * @brief Destroy the 3D object.
+   */
   ~Object3D(){};
+
+  /**
+   * @brief Construct a 3D object descriptor.
+   *
+   * @param nb_boards Number of boards used to define the object.
+   * @param ref_board_id Board id used as object reference.
+   * @param obj_id Object id.
+   * @param color Display color.
+   */
   Object3D(const int nb_boards, const int ref_board_id, const int obj_id,
            const std::array<int, 3> &color);
+
+  /**
+   * @brief Add a board to this object.
+   *
+   * @param new_board Board to insert.
+   */
   void insertBoardInObject(const std::shared_ptr<Board> new_board);
+
+  /**
+   * @brief Add an object observation.
+   *
+   * @param new_object Observation to insert.
+   */
   void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
+
+  /**
+   * @brief Add a frame where this object is observed.
+   *
+   * @param new_frame Frame to insert.
+   */
   void insertNewFrame(const std::shared_ptr<Frame> new_frame);
+
+  /**
+   * @brief Get board pose in object coordinates as Rodrigues + translation.
+   *
+   * @param board_id Board id in this object.
+   * @param r_vec Output rotation vector (3x1).
+   * @param t_vec Output translation vector (3x1).
+   */
   void getBoardPoseVec(const int board_id, cv::Mat &r_vec, cv::Mat &t_vec);
+
+  /**
+   * @brief Get board pose in object coordinates as a 4x4 transform.
+   *
+   * @param board_id Board id in this object.
+   * @return 4x4 board pose in object frame.
+   */
   cv::Mat getBoardPoseMat(const int board_id);
+
+  /**
+   * @brief Set board pose in object coordinates from a 4x4 transform.
+   *
+   * @param board_id Board id in this object.
+   * @param pose 4x4 board pose in object frame.
+   */
   void setBoardPoseMat(const int board_id, const cv::Mat &pose);
+
+  /**
+   * @brief Set board pose in object coordinates from vector form.
+   *
+   * @param board_id Board id in this object.
+   * @param r_vec Rotation vector (3x1).
+   * @param t_vec Translation vector (3x1).
+   */
   void setBoardPoseVec(const int board_id, const cv::Mat &r_vec,
                        const cv::Mat &t_vec);
+
+  /**
+   * @brief Get only the rotation component of a board pose.
+   *
+   * @param board_id Board id in this object.
+   * @return Rotation vector (3x1).
+   */
   cv::Mat getBoardRotVec(const int board_id);
+
+  /**
+   * @brief Get only the translation component of a board pose.
+   *
+   * @param board_id Board id in this object.
+   * @return Translation vector (3x1).
+   */
   cv::Mat getBoardTransVec(const int board_id);
+
+  /**
+   * @brief Refine object structure and associated observation poses.
+   *
+   * @param nb_iterations Number of optimization iterations.
+   */
   void refineObject(const int nb_iterations);
+
+  /**
+   * @brief Rebuild merged object points from current board poses.
+   */
   void updateObjectPts();
 };
 

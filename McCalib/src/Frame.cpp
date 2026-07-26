@@ -9,6 +9,13 @@
 
 namespace McCalib {
 
+/**
+ * @brief Construct a frame initialized with one camera image path.
+ *
+ * @param frame_idx Global frame index.
+ * @param cam_idx Camera id associated with frame_path.
+ * @param frame_path Image path for this camera/frame pair.
+ */
 Frame::Frame(const int frame_idx, const int cam_idx,
              const std::filesystem::path &frame_path) {
   frame_idx_ = frame_idx;
@@ -16,9 +23,9 @@ Frame::Frame(const int frame_idx, const int cam_idx,
 }
 
 /**
- * @brief Insert new board observation in this frame
+ * @brief Insert a board observation into this frame.
  *
- * @param new_board pointer to the new board
+ * @param new_board Board observation to insert.
  */
 void Frame::insertNewBoard(const std::shared_ptr<BoardObs> new_board) {
   boards_idx_.push_back(new_board->board_id_);
@@ -26,9 +33,9 @@ void Frame::insertNewBoard(const std::shared_ptr<BoardObs> new_board) {
 }
 
 /**
- * @brief Insert new object observation in this frame
+ * @brief Insert an object observation into this frame.
  *
- * @param new_object pointer to the new obj. observation
+ * @param new_object Object observation to insert.
  */
 void Frame::insertNewObject(const std::shared_ptr<Object3DObs> new_object) {
   objects_idx_.push_back(new_object->object_3d_id_);
@@ -36,9 +43,9 @@ void Frame::insertNewObject(const std::shared_ptr<Object3DObs> new_object) {
 }
 
 /**
- * @brief Insert a new camera observation in this frame
+ * @brief Insert a camera-level observation into this frame.
  *
- * @param new_cam_obs pointer to new camera observation
+ * @param new_cam_obs Camera observation to insert.
  */
 void Frame::insertNewCamObs(const std::shared_ptr<CameraObs> new_cam_obs) {
   cam_idx_.push_back(new_cam_obs->cam_idx_);
@@ -46,10 +53,10 @@ void Frame::insertNewCamObs(const std::shared_ptr<CameraObs> new_cam_obs) {
 }
 
 /**
- * @brief Insert new camera group observation
+ * @brief Insert a camera-group observation into this frame.
  *
- * @param new_cam_group_obs pointer to the new camera group observation
- * @param camera_group_idx index of the group to be inserted
+ * @param new_cam_group_obs Camera-group observation to insert.
+ * @param camera_group_idx Index of the associated camera group.
  */
 void Frame::insertNewCameraGroupObs(
     const std::shared_ptr<CameraGroupObs> new_cam_group_obs,

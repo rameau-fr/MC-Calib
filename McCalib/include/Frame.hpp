@@ -18,7 +18,7 @@ namespace McCalib {
 /**
  * @class Frame
  *
- * @brief Contains information related to the each frame
+ * @brief Stores all synchronized observations for one time index.
  *
  * A frame is all the observation from all the synchronized cameras at a given
  * time.
@@ -52,12 +52,49 @@ public:
 
   // Functions
   Frame() = delete;
+
+  /**
+   * @brief Destroy the frame container.
+   */
   ~Frame(){};
+
+  /**
+   * @brief Construct a frame initialized with one camera image path.
+   *
+   * @param frame_idx Global frame index.
+   * @param cam_idx Camera id associated with frame_path.
+   * @param frame_path Path of the image for this camera/frame.
+   */
   Frame(const int frame_idx, const int cam_idx,
         const std::filesystem::path &frame_path);
+
+  /**
+   * @brief Insert a board observation into this frame.
+   *
+   * @param newBoard Board observation to insert.
+   */
   void insertNewBoard(const std::shared_ptr<BoardObs> newBoard);
+
+  /**
+   * @brief Insert a camera-level observation into this frame.
+   *
+   * @param newCamObs Camera observation to insert.
+   */
   void insertNewCamObs(const std::shared_ptr<CameraObs> newCamObs);
+
+  /**
+   * @brief Insert an object observation into this frame.
+   *
+   * @param new_object Object observation to insert.
+   */
   void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
+
+  /**
+   * @brief Insert a camera-group observation into this frame.
+   *
+   * @param new_cam_group_obs Camera-group observation to insert.
+   * @param camera_group_idx Camera-group id for this observation.
+   */
   void insertNewCameraGroupObs(
       const std::shared_ptr<CameraGroupObs> new_cam_group_obs,
       const int camera_group_idx);

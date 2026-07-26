@@ -1,6 +1,6 @@
 /**
  * @file logger.h
- * @breif Global logger borrowed from https://github.com/gklingler/simpleLogger
+ * @brief Global logger borrowed from https://github.com/gklingler/simpleLogger
  */
 
 #ifndef simpleLogger_h__

@@ -17,9 +17,9 @@
 namespace McCalib {
 
 /**
- * @brief Initialize the number of cameras and the 3D Boards
+ * @brief Load calibration configuration and initialize cameras and boards.
  *
- * @param config_path path to the configuration file
+ * @param config_path Path to the YAML configuration file.
  */
 Calibration::Calibration(const std::filesystem::path &config_path) {
   cv::FileStorage fs; // cv::FileStorage to read calibration params from file
@@ -135,7 +135,10 @@ Calibration::Calibration(const std::filesystem::path &config_path) {
 }
 
 /**
- * @brief Detect boards on images with all cameras
+ * @brief Detect boards in every configured camera folder.
+ *
+ * Filters image files by extension, then dispatches one per-camera detection
+ * pass.
  */
 void Calibration::detectBoards() {
   const std::unordered_set<cv::String> allowed_exts = {"jpg",  "png", "bmp",
@@ -169,6 +172,9 @@ void Calibration::detectBoards() {
   }
 }
 
+/**
+ * @brief Load previously saved Charuco detections and rebuild observations.
+ */
 void Calibration::loadDetectedKeypoints() {
   cv::FileStorage fs;
   fs.open(keypoints_path_, cv::FileStorage::READ);
@@ -213,7 +219,7 @@ void Calibration::loadDetectedKeypoints() {
 }
 
 /**
- * @brief Extract necessary boards info from initialized paths
+ * @brief Populate board observations either from cache or fresh detection.
  *
  */
 void Calibration::boardExtraction() {
@@ -226,10 +232,12 @@ void Calibration::boardExtraction() {
 }
 
 /**
- * @brief Detect boards in images with a camera
+ * @brief Detect boards across all frames for one camera.
  *
- * @param fn images paths
- * @param cam_idx camera index which acquire the frame
+ * Uses a thread pool to parallelize frame-level detection.
+ *
+ * @param fn Image paths for this camera.
+ * @param cam_idx Camera index that acquired these frames.
  */
 void Calibration::detectBoardsWithCamera(const std::vector<cv::String> &fn,
                                          const int cam_idx) {
@@ -1144,9 +1152,9 @@ void Calibration::initCameraGroup() {
 }
 
 /**
- * @brief Initialize camera group observation
+ * @brief Build camera-group observations for one group across all frames.
  *
- * @param camera_group_idx camera group index
+ * @param camera_group_idx Camera-group index.
  */
 void Calibration::initCameraGroupObs(const int camera_group_idx) {
   // List of camera idx in the group
@@ -1195,7 +1203,7 @@ void Calibration::initCameraGroupObs(const int camera_group_idx) {
 }
 
 /**
- * @brief Initialize all the camera groups observations
+ * @brief Build camera-group observations for all existing groups.
  *
  */
 void Calibration::initAllCameraGroupObs() {
@@ -1206,8 +1214,7 @@ void Calibration::initAllCameraGroupObs() {
 }
 
 /**
- * @brief Non-linear optimization of the camera pose in the groups and the pose
- * of the observed objects
+ * @brief Refine all camera groups independently and update observation poses.
  *
  */
 void Calibration::refineAllCameraGroup() {
@@ -1222,11 +1229,10 @@ void Calibration::refineAllCameraGroup() {
 }
 
 /**
- * @brief Find the pair of objects to use to calibrate the pairs of camera
- * groups
+ * @brief Select anchor object pairs for each pair of camera groups.
  *
- * The pair of object with the highest number of occurrences are used for
- * calibration.
+ * For each ordered pair of groups, the object pair with the largest number of
+ * shared-frame co-occurrences is retained for later non-overlap calibration.
  */
 void Calibration::findPairObjectForNonOverlap() {
   no_overlap_object_pair_.clear();
@@ -1336,9 +1342,13 @@ void Calibration::findPairObjectForNonOverlap() {
 }
 
 /**
- * @brief Handeye calibration of a pair of non overlapping pair of group of
- * cameras
+ * @brief Estimate the relative pose between two non-overlapping camera groups.
  *
+ * Uses the most frequently co-visible object pair across both groups, then
+ * derives a group-to-group transform from common frames.
+ *
+ * @param cam_group_id1 First camera-group id.
+ * @param cam_group_id2 Second camera-group id.
  */
 void Calibration::initNonOverlapPair(const int cam_group_id1,
                                      const int cam_group_id2) {
@@ -1481,7 +1491,7 @@ void Calibration::initNonOverlapPair(const int cam_group_id1,
 }
 
 /**
- * @brief Initialize the pose between all groups of non-overlaping camera group
+ * @brief Estimate relative poses for every ordered pair of camera groups.
  */
 void Calibration::findPoseNoOverlapAllCamGroup() {
   no_overlap_camgroup_pair_pose_.clear();
@@ -1501,7 +1511,7 @@ void Calibration::findPoseNoOverlapAllCamGroup() {
 }
 
 /**
- * @brief Create graph between nonoverlap camera groups
+ * @brief Build the graph of non-overlapping camera-group constraints.
  *
  */
 void Calibration::initInterCamGroupGraph() {
@@ -1525,7 +1535,7 @@ void Calibration::initInterCamGroupGraph() {
 }
 
 /**
- * @brief Merge all camera groups using non-overlaping pose estimation
+ * @brief Merge connected camera groups into unified global groups.
  *
  */
 void Calibration::mergeCameraGroup() {
@@ -1611,7 +1621,7 @@ void Calibration::mergeCameraGroup() {
 }
 
 /**
- * @brief Merge the camera groups observation
+ * @brief Rebuild camera-group observations after group merging.
  *
  */
 void Calibration::mergeAllCameraGroupObs() {
@@ -1630,7 +1640,7 @@ void Calibration::mergeAllCameraGroupObs() {
 }
 
 /**
- * @brief Compute the 3D object position in the camera group
+ * @brief Compute object poses in each camera-group reference frame.
  *
  */
 void Calibration::computeAllObjPoseInCameraGroup() {
@@ -1645,8 +1655,8 @@ void Calibration::computeAllObjPoseInCameraGroup() {
  * @brief Find all frames where multiple objects are visible and store their
  * relative transformation.
  *
- * If two object appears in a single frames their
- * interpose can be computed and stored.
+ * If two objects appear in the same camera-group observation, their relative
+ * transform is computed and accumulated.
  */
 void Calibration::computeObjectsPairPose() {
   object_pose_pairs_.clear();
@@ -1685,7 +1695,7 @@ void Calibration::computeObjectsPairPose() {
 }
 
 /**
- * @brief Initialize the graph with the poses between objects
+ * @brief Build the object covisibility graph from pairwise object transforms.
  *
  */
 void Calibration::initInterObjectsGraph() {

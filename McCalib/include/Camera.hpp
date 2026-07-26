@@ -16,12 +16,10 @@ namespace McCalib {
 /**
  * @class Camera
  *
- * @brief This class contains camera information
+ * @brief Stores camera intrinsics and all board/object observations.
  *
- * - intrinsics (K + distortion + image size)
- * - frames
- * - boards observation
- * - object observation
+ * The class handles intrinsic initialization/refinement and provides
+ * conversion helpers between internal array storage and OpenCV matrices.
  */
 class Camera final {
 
@@ -51,19 +49,103 @@ public:
 
   // Functions
   Camera() = delete;
+
+  /**
+   * @brief Construct a camera model.
+   *
+   * @param cam_idx Camera id.
+   * @param distortion_model Distortion model id (0: Brown, 1: Kannala).
+   */
   Camera(const int cam_idx, const int distortion_model);
+
+  /**
+   * @brief Destroy the camera object.
+   */
   ~Camera(){};
+
+  /**
+   * @brief Register one board observation for this camera.
+   *
+   * @param newBoard Board observation to insert.
+   */
   void insertNewBoard(const std::shared_ptr<BoardObs> newBoard);
+
+  /**
+   * @brief Register one frame where this camera has valid observations.
+   *
+   * @param newFrame Frame to insert.
+   */
   void insertNewFrame(const std::shared_ptr<Frame> newFrame);
+
+  /**
+   * @brief Register one object observation for this camera.
+   *
+   * @param new_object Object observation to insert.
+   */
   void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
+
+  /**
+   * @brief Estimate initial intrinsic parameters from observed boards.
+   */
   void initializeCalibration();
+
+  /**
+   * @brief Refine intrinsic parameters with non-linear optimization.
+   *
+   * @param nb_iterations Number of optimization iterations.
+   */
   void refineIntrinsicCalibration(const int nb_iterations);
+
+  /**
+   * @brief Get intrinsic matrix K.
+   *
+   * @return 3x3 camera matrix.
+   */
   cv::Mat getCameraMat() const;
+
+  /**
+   * @brief Set intrinsic matrix K.
+   *
+   * @param K 3x3 camera matrix.
+   */
   void setCameraMat(const cv::Mat &K);
+
+  /**
+   * @brief Set distortion coefficients from OpenCV-style vector.
+   *
+   * @param distortion_vector 1x5 (Brown) or 1x4 (Kannala) vector.
+   */
   void setDistortionVector(const cv::Mat &distortion_vector);
+
+  /**
+   * @brief Get distortion coefficients as OpenCV-style row vector.
+   *
+   * @return 1x5 (Brown) or 1x4 (Kannala) distortion vector.
+   */
   cv::Mat getDistortionVectorVector() const;
+
+  /**
+   * @brief Get camera matrix and distortion coefficients.
+   *
+   * @param K Output 3x3 camera matrix.
+   * @param distortion_vector Output distortion vector.
+   */
   void getIntrinsics(cv::Mat &K, cv::Mat &distortion_vector);
+
+  /**
+   * @brief Set camera matrix and distortion coefficients.
+   *
+   * @param K 3x3 camera matrix.
+   * @param distortion_vector Distortion vector.
+   */
   void setIntrinsics(const cv::Mat &K, const cv::Mat &distortion_vector);
+
+  /**
+   * @brief Check if a board observation is sufficiently inside fisheye image.
+   *
+   * @param board_obs Board observation to validate.
+   * @return True if all points satisfy the configured border tolerance.
+   */
   bool checkBorderToleranceFisheye(const std::shared_ptr<BoardObs> board_obs);
 };
 

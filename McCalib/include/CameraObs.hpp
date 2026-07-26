@@ -15,9 +15,10 @@ class Camera;
 /**
  * @class CameraObs
  *
- * @brief Information related to camera observation
+ * @brief Collects all board/object observations for one camera in one frame.
  *
- * A camera observation contains all the board/object observed by the camera
+ * This container groups per-frame detections already associated to a specific
+ * camera id.
  */
 class CameraObs final {
 public:
@@ -34,9 +35,31 @@ public:
 
   // Functions
   CameraObs() = delete;
+
+  /**
+   * @brief Destroy the camera observation.
+   */
   ~CameraObs(){};
+
+  /**
+   * @brief Build a camera observation initialized with one board observation.
+   *
+   * @param new_board First board observation seen by this camera.
+   */
   CameraObs(const std::shared_ptr<BoardObs> new_board);
+
+  /**
+   * @brief Insert a board observation.
+   *
+   * @param new_board Board observation to insert.
+   */
   void insertNewBoard(const std::shared_ptr<BoardObs> new_board);
+
+  /**
+   * @brief Insert an object observation.
+   *
+   * @param new_object Object observation to insert.
+   */
   void insertNewObject(const std::shared_ptr<Object3DObs> new_object);
 };
 

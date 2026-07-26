@@ -15,12 +15,9 @@ class Frame;
 
 /**
  * @class Board
- * @brief This class contains the 3D board information
+ * @brief Represents one Charuco board geometry used for calibration.
  *
- *  - 3D points
- *  - local 3D index (0-N)
- *  - observations of these boards
- *  - frames where these 3D boards are observed
+ * Stores static board geometry and links to all associated observations/frames.
  */
 
 class Board final {
@@ -48,10 +45,34 @@ public:
 
   // Functions
   Board() = delete;
+
+  /**
+   * @brief Destroy the board object.
+   */
   ~Board(){};
+
+  /**
+   * @brief Construct board geometry from YAML configuration.
+   *
+   * @param config Path to calibration configuration file.
+   * @param board_idx Board id to construct.
+   * @param charuco_board OpenCV Charuco board descriptor.
+   */
   Board(const std::filesystem::path &config, const int board_idx,
         const cv::Ptr<cv::aruco::CharucoBoard> charuco_board);
+
+  /**
+   * @brief Register one board observation.
+   *
+   * @param new_board Observation to insert.
+   */
   void insertNewBoard(const std::shared_ptr<BoardObs> new_board);
+
+  /**
+   * @brief Register one frame where the board is visible.
+   *
+   * @param new_frame Frame to insert.
+   */
   void insertNewFrame(const std::shared_ptr<Frame> new_frame);
 };
 

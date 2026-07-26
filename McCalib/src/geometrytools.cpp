@@ -10,7 +10,9 @@
 
 namespace McCalib {
 
-// Tools for rotation and projection matrix
+/**
+ * @brief Convert rotation matrix and translation vector into a 4x4 transform.
+ */
 cv::Mat RT2Proj(const cv::Mat &R, const cv::Mat &T) {
   cv::Mat Proj = cv::Mat::eye(4, 4, CV_64F);
   R.copyTo(Proj(cv::Range(0, 3), cv::Range(0, 3)));
@@ -18,6 +20,9 @@ cv::Mat RT2Proj(const cv::Mat &R, const cv::Mat &T) {
   return Proj;
 }
 
+/**
+ * @brief Convert Rodrigues rotation and translation into a 4x4 transform.
+ */
 cv::Mat RVecT2Proj(const cv::Mat &RVec, const cv::Mat &T) {
   cv::Mat R;
   cv::Rodrigues(RVec, R);
@@ -27,6 +32,9 @@ cv::Mat RVecT2Proj(const cv::Mat &RVec, const cv::Mat &T) {
   return Proj;
 }
 
+/**
+ * @brief Build a camera projection transform using intrinsics and extrinsics.
+ */
 cv::Mat RVecT2ProjInt(const cv::Mat &RVec, const cv::Mat &T, const cv::Mat &K) {
   cv::Mat R;
   cv::Rodrigues(RVec, R);
@@ -38,6 +46,9 @@ cv::Mat RVecT2ProjInt(const cv::Mat &RVec, const cv::Mat &T, const cv::Mat &K) {
   return Proj;
 }
 
+/**
+ * @brief Convert a homogeneous transform into Rodrigues and translation form.
+ */
 void Proj2RT(const cv::Mat &Proj, cv::Mat &R,
              cv::Mat &T) // Rodrigues and translation vector
 {
@@ -45,6 +56,9 @@ void Proj2RT(const cv::Mat &Proj, cv::Mat &R,
   T = Proj(cv::Range(0, 3), cv::Range(3, 4));
 }
 
+/**
+ * @brief Convert a 6-value pose vector into a 4x4 transform.
+ */
 cv::Mat vectorProj(const std::vector<float> &ProjV) // R Rodrigues | T vector
 {
   cv::Mat RV(1, 3, CV_64F);
@@ -63,7 +77,9 @@ cv::Mat vectorProj(const std::vector<float> &ProjV) // R Rodrigues | T vector
   return Proj;
 }
 
-// Projection matrix to float array
+/**
+ * @brief Convert a 4x4 transform into a 6-value pose vector.
+ */
 std::array<float, 6> ProjToVec(const cv::Mat &Proj) {
   cv::Mat R(1, 3, CV_64F);
   cv::Mat T(3, 1, CV_64F);
@@ -75,7 +91,9 @@ std::array<float, 6> ProjToVec(const cv::Mat &Proj) {
   return output;
 }
 
-// Invert vector representation
+/**
+ * @brief Invert a pose given as Rodrigues rotation and translation.
+ */
 void invertRvecT(const cv::Mat &Rvec, const cv::Mat &T, cv::Mat &iR,
                  cv::Mat &iT) {
   cv::Mat Proj = RVecT2Proj(Rvec, T);
@@ -83,14 +101,20 @@ void invertRvecT(const cv::Mat &Rvec, const cv::Mat &T, cv::Mat &iR,
   Proj2RT(Proj, iR, iT);
 }
 
+/**
+ * @brief Invert a pose in place.
+ */
 void invertRvecT(cv::Mat &Rvec, cv::Mat &T) {
   cv::Mat Proj = RVecT2Proj(Rvec, T);
   Proj = Proj.inv();
   Proj2RT(Proj, Rvec, T);
 }
 
-// My SVD triangulation
-// Triangulate a 3D point from multiple observations
+/**
+ * @brief Triangulate one 3D point from multiple calibrated observations.
+ *
+ * Uses a linear SVD-based solver over all provided views.
+ */
 cv::Point3f
 triangulateNViewLinearEigen(const std::vector<cv::Point2f> &Pts2D,
                             const std::vector<cv::Mat> &RotationVec,
@@ -119,7 +143,15 @@ triangulateNViewLinearEigen(const std::vector<cv::Point2f> &Pts2D,
   return PtsTrip;
 }
 
-// Fit the line according to the point set ax + by + c = 0, res is the residual
+/**
+ * @brief Fit a 2D line and return normalized residual statistics.
+ *
+ * @param pts Input 2D points.
+ * @param a Output line coefficient.
+ * @param b Output line coefficient.
+ * @param c Output line coefficient.
+ * @param res Output mean absolute algebraic residual.
+ */
 void calcLinePara(const std::vector<cv::Point2f> &pts, double &a, double &b,
                   double &c, double &res) {
   res = 0;
@@ -141,9 +173,12 @@ void calcLinePara(const std::vector<cv::Point2f> &pts, double &a, double &b,
   res /= pts.size();
 }
 
-// RANSAC algorithm
-// Return Inliers, p = proba (typical = 0.99), Output : Best Pts3D maximizing
-// inliers, Thresh = reprojection tolerance in pixels, it = max iteration
+/**
+ * @brief Robustly triangulate a 3D point with RANSAC.
+ *
+ * Samples two views at a time, triangulates a candidate point, and keeps the
+ * solution with the largest reprojection-consistent inlier set.
+ */
 void ransacTriangulation(const std::vector<cv::Point2f> &point2d,
                          const std::vector<cv::Mat> &rotation_vec,
                          const std::vector<cv::Mat> &translation_vec,
@@ -223,9 +258,11 @@ void ransacTriangulation(const std::vector<cv::Point2f> &point2d,
   }
 }
 
-// RANSAC algorithm
-// Return Inliers, p = proba (typical = 0.99), Output : Rot and Trans Mat,
-// Thresh = reprojection tolerance in pixels, it = max iteration
+/**
+ * @brief Estimate camera pose from 3D-2D correspondences with RANSAC P3P.
+ *
+ * @return Inlier index matrix for the best pose.
+ */
 cv::Mat ransacP3P(const std::vector<cv::Point3f> &scenePoints,
                   const std::vector<cv::Point2f> &imagePoints,
                   const cv::Mat Intrinsic, const cv::Mat Disto, cv::Mat &BestR,
@@ -321,6 +358,14 @@ cv::Mat ransacP3P(const std::vector<cv::Point3f> &scenePoints,
   return InliersR;
 }
 
+/**
+ * @brief Apply a rigid transform to a set of 3D points.
+ *
+ * @param pts3D Input 3D points.
+ * @param Rot Rodrigues rotation vector.
+ * @param Trans Translation vector.
+ * @return Transformed 3D points.
+ */
 std::vector<cv::Point3f> transform3DPts(const std::vector<cv::Point3f> &pts3D,
                                         const cv::Mat &Rot,
                                         const cv::Mat &Trans) {
@@ -351,9 +396,13 @@ std::vector<cv::Point3f> transform3DPts(const std::vector<cv::Point3f> &pts3D,
 }
 
 /**
- * @brief Calibrate 2 cameras with handeye calibration
+ * @brief Estimate the rigid transform between two camera-group trajectories.
  *
-
+ * Uses OpenCV hand-eye calibration on paired absolute poses.
+ *
+ * @param pose_abs_1 Absolute poses from the first trajectory.
+ * @param pose_abs_2 Absolute poses from the second trajectory.
+ * @return 4x4 transform from group 1 to group 2.
  */
 cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
                            const std::vector<cv::Mat> &pose_abs_2) {
@@ -391,11 +440,11 @@ cv::Mat handeyeCalibration(const std::vector<cv::Mat> &pose_abs_1,
 }
 
 /**
- * @brief Prepare the translational component of the cameras to be clustered
+ * @brief Build clustering features from paired translation vectors.
  *
- * @param pose_abs_1 poses of the first camera in the input pair
- * @param pose_abs_2 poses of the second camera in the input pair
- * @return matrix [6 x num_poses] that contains concatenated translation vectors
+ * @param pose_abs_1 Poses of the first trajectory.
+ * @param pose_abs_2 Poses of the second trajectory.
+ * @return Matrix with one row per pose pair and concatenated translations.
  */
 cv::Mat getTranslationsForClustering(const std::vector<cv::Mat> &pose_abs_1,
                                      const std::vector<cv::Mat> &pose_abs_2) {
@@ -414,11 +463,11 @@ cv::Mat getTranslationsForClustering(const std::vector<cv::Mat> &pose_abs_1,
 }
 
 /**
- * @brief Kmeans clustering of translation vectors
+ * @brief Cluster paired translations to diversify hand-eye samples.
  *
- * @param position_1_2 concatenated translation vectors [6 x num_poses]
- * @param num_clusters number of clusters
- * @return cluster indexes [1 x num_poses]
+ * @param position_1_2 Concatenated translation rows.
+ * @param num_clusters Number of clusters.
+ * @return Cluster label per input row.
  */
 cv::Mat clusterTranslations(const cv::Mat &position_1_2,
                             const unsigned int num_clusters) {
@@ -435,11 +484,11 @@ cv::Mat clusterTranslations(const cv::Mat &position_1_2,
 }
 
 /**
- * @brief Select subset of total clusters
+ * @brief Randomly select a subset of cluster ids.
  *
- * @param num_clusters total number of clusters
- * @param nb_clust_pick number of clusters to select
- * @return indexes of selected clusters
+ * @param num_clusters Total number of clusters.
+ * @param nb_clust_pick Number of clusters to select.
+ * @return Selected cluster ids.
  */
 std::vector<unsigned int> selectClusters(const unsigned int num_clusters,
                                          const unsigned int nb_clust_pick) {
@@ -462,11 +511,11 @@ std::vector<unsigned int> selectClusters(const unsigned int num_clusters,
 }
 
 /**
- * @brief Select poses given cluster indixes
+ * @brief Pick one pose index from each selected cluster.
  *
- * @param clusters_lables clusters labels
- * @param selected_cluster_idxs selected cluster labels
- * @return selected poses indexes
+ * @param clusters_lables Cluster label per pose.
+ * @param selected_cluster_idxs Cluster ids selected for sampling.
+ * @return Pose indices chosen for the current bootstrap iteration.
  */
 std::vector<unsigned int>
 selectPoses(const cv::Mat &clusters_lables,
@@ -494,13 +543,15 @@ selectPoses(const cv::Mat &clusters_lables,
 }
 
 /**
- * @brief Get rotation and translation vectors for handeye calibration given
- * selected indexes
+ * @brief Convert selected absolute poses into hand-eye calibration inputs.
  *
- * @param pose_abs_1 poses of camera #1 in a pair
- * @param pose_abs_2 poses of camera #2 in a pair
- * @param selected_poses_idxs selected poses indexes
- * @return returns inplace
+ * @param pose_abs_1 Poses of trajectory 1.
+ * @param pose_abs_2 Poses of trajectory 2.
+ * @param selected_poses_idxs Selected pose indices.
+ * @param r_cam_group_1 Output rotation matrices for trajectory 1.
+ * @param t_cam_group_1 Output translations for trajectory 1.
+ * @param r_cam_group_2 Output rotation matrices for trajectory 2.
+ * @param t_cam_group_2 Output translations for trajectory 2.
  */
 void preparePosesForHandEyeCalibration(
     const std::vector<cv::Mat> &pose_abs_1,
@@ -533,15 +584,18 @@ void preparePosesForHandEyeCalibration(
 }
 
 /**
- * @brief Get rotation and translation vectors for handeye calibration
+ * @brief Sample clustered pose pairs and prepare hand-eye calibration inputs.
  *
- * @param pose_abs_1 poses of camera #1 in a pair
- * @param pose_abs_2 poses of camera #2 in a pair
- * @param clusters_labels clusters labels
- * @param num_clusters number of clusters
- * @param nb_clust_pick number of clusters to pick
- * @return returns rotation and translation vectors as well as selected poses
- * indexes
+ * @param pose_abs_1 Poses of trajectory 1.
+ * @param pose_abs_2 Poses of trajectory 2.
+ * @param clusters_labels Cluster labels for all pose pairs.
+ * @param num_clusters Number of available clusters.
+ * @param nb_clust_pick Number of clusters to sample.
+ * @param r_cam_group_1 Output rotation matrices for trajectory 1.
+ * @param t_cam_group_1 Output translations for trajectory 1.
+ * @param r_cam_group_2 Output rotation matrices for trajectory 2.
+ * @param t_cam_group_2 Output translations for trajectory 2.
+ * @param selected_poses_idxs Output selected pose indices.
  */
 void getPosesForHandeyeCalibration(
     const std::vector<cv::Mat> &pose_abs_1,
@@ -561,13 +615,13 @@ void getPosesForHandeyeCalibration(
 }
 
 /**
- * @brief Check rotational solution
+ * @brief Evaluate rotational consistency of a hand-eye solution.
  *
- * @param pose_abs_1 poses of camera #1 in a pair
- * @param pose_abs_2 poses of camera #2 in a pair
- * @param selected_poses_idxs selected poses indexes
- * @param pose_g1_g2 pose from handeye calibration solution
- * @return returns max rotation error
+ * @param pose_abs_1 Poses of trajectory 1.
+ * @param pose_abs_2 Poses of trajectory 2.
+ * @param selected_poses_idxs Pose indices used in the trial.
+ * @param pose_g1_g2 Candidate transform from trajectory 1 to trajectory 2.
+ * @return Maximum pairwise rotational inconsistency in degrees.
  */
 double checkSetConsistency(const std::vector<cv::Mat> &pose_abs_1,
                            const std::vector<cv::Mat> &pose_abs_2,
@@ -599,19 +653,16 @@ double checkSetConsistency(const std::vector<cv::Mat> &pose_abs_1,
 }
 
 /**
- * @brief Calibrate 2 cameras with handeye calibration
+ * @brief Estimate a hand-eye transform with clustered bootstrap sampling.
  *
- * In this function only N pairs of images are used
- * These pair of images are selected with a clustering technique
- * The clustering is achieved via the translation of cameras
- * The process is repeated multiple time on subset of the poses
- * A test of consistency is performed, all potentially valid poses are saved
+ * Only a subset of diverse pose pairs is used per iteration. Valid solutions
+ * are filtered by a consistency check and aggregated into a final estimate.
  *
- * @param nb_cluster number of clusters
- * @param nb_it number of iteraration for handeye calibration
- * @param pose_abs_1 poses of the first camera in the input pair
- * @param pose_abs_2 poses of the second camera in the input pair
- * @return The mean value of valid poses is returned
+ * @param nb_cluster Number of translation clusters.
+ * @param nb_it Number of bootstrap iterations.
+ * @param pose_abs_1 Absolute poses of the first trajectory.
+ * @param pose_abs_2 Absolute poses of the second trajectory.
+ * @return Robust 4x4 transform estimate between the two trajectories.
  */
 cv::Mat handeyeBootstraptTranslationCalibration(
     const unsigned int nb_cluster, const unsigned int nb_it,
@@ -682,12 +733,12 @@ cv::Mat handeyeBootstraptTranslationCalibration(
 }
 
 /**
- * @brief Median of a vector
+ * @brief Compute the median of a vector.
  *
- * Note, it modifies original vector
+ * Note: this function sorts and therefore modifies the input vector.
  *
- * @param v input vector
- * @return median of the vector
+ * @param v Input vector.
+ * @return Median value.
  */
 double median(std::vector<double> &v) {
   const std::size_t n_elements = v.size();
@@ -698,10 +749,23 @@ double median(std::vector<double> &v) {
   return n_elements % 2 == 0 ? (v[mid] + v[mid - 1]) / 2 : v[mid];
 }
 
-// RANSAC algorithm
-// Return Inliers, p = proba (typical = 0.99), Output : Rot and Trans Mat,
-// Thresh = reprojection tolerance in pixels, it = max iteration
-// distortion_type: 0 (perspective), 1 (fisheye)
+/**
+ * @brief Dispatch robust P3P pose estimation for the configured distortion
+ * model.
+ *
+ * @param scene_points Input 3D points.
+ * @param image_points Input 2D image points.
+ * @param intrinsic Camera intrinsic matrix.
+ * @param distortion_vector Distortion coefficients.
+ * @param best_R Output best Rodrigues rotation vector.
+ * @param best_T Output best translation vector.
+ * @param thresh Reprojection threshold in pixels.
+ * @param it Maximum RANSAC iterations.
+ * @param distortion_type Distortion model id: 0 perspective, 1 fisheye.
+ * @param p Target confidence.
+ * @param refine If true, refine best candidate on inliers.
+ * @return Inlier index matrix for the best solution.
+ */
 cv::Mat ransacP3PDistortion(const std::vector<cv::Point3f> &scene_points,
                             const std::vector<cv::Point2f> &image_points,
                             const cv::Mat &intrinsic,

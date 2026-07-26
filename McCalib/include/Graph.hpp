@@ -30,11 +30,50 @@ public:
       typename boost::graph_traits<GraphUndirectedWeighted>::vertex_descriptor
           Vertex;
 
+  /**
+   * @brief Add a vertex if it does not already exist.
+   *
+   * @param vertex User-defined vertex id.
+   */
   void addVertex(const int vertex);
+
+  /**
+   * @brief Add an undirected weighted edge between two vertices.
+   *
+   * Missing vertices are created automatically.
+   *
+   * @param v1 First vertex id.
+   * @param v2 Second vertex id.
+   * @param weight Edge weight.
+   */
   void addEdge(const int v1, const int v2, const double weight);
+
+  /**
+   * @brief Access the underlying Boost graph object.
+   *
+   * @return Internal weighted undirected graph.
+   */
   GraphUndirectedWeighted getGraph();
+
+  /**
+   * @brief Compute connected components.
+   *
+   * @return Vector of components, each component is a list of vertex ids.
+   */
   std::vector<std::vector<int>> connectedComponents();
+
+  /**
+   * @brief Compute shortest path between two vertices.
+   *
+   * @param v1 Source vertex id.
+   * @param v2 Destination vertex id.
+   * @return Ordered list of vertex ids forming the shortest path.
+   */
   std::vector<int> shortestPathBetween(const int v1, const int v2);
+
+  /**
+   * @brief Remove all vertices and edges.
+   */
   void clearGraph();
 
 private:

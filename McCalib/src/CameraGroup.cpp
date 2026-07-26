@@ -12,20 +12,18 @@
 namespace McCalib {
 
 /**
- * @brief Initialize the camera group object
+ * @brief Construct a camera group.
  *
- * Set the index of the reference camera and the index of the camera group.
- *
- * @param id_ref_cam index of the reference camera
- * @param cam_group_idx index of the camera group
+ * @param id_ref_cam Index of the reference camera.
+ * @param cam_group_idx Index of the camera group.
  */
 CameraGroup::CameraGroup(const int id_ref_cam, const int cam_group_idx)
     : id_ref_cam_(id_ref_cam), cam_group_idx_(cam_group_idx) {}
 
 /**
- * @brief Insert a new camera in the group
+ * @brief Add a camera to the group.
  *
- * @param new_camera pointer to the new camera
+ * @param new_camera Camera to insert.
  */
 void CameraGroup::insertCamera(const std::shared_ptr<Camera> new_camera) {
   cameras_[new_camera->cam_idx_] = new_camera;
@@ -33,9 +31,9 @@ void CameraGroup::insertCamera(const std::shared_ptr<Camera> new_camera) {
 }
 
 /**
- * @brief Insert a new object observation in the data structure
+ * @brief Register an object observation for this group.
  *
- * @param new_object_observation pointer to the object observation
+ * @param new_object_observation Object observation to insert.
  */
 void CameraGroup::insertNewObjectObservation(
     const std::shared_ptr<Object3DObs> new_object_observation) {
@@ -43,9 +41,9 @@ void CameraGroup::insertNewObjectObservation(
 }
 
 /**
- * @brief Insert new frame in the data structure
+ * @brief Register a frame associated with this group.
  *
- * @param new_frame pointer to the new frame
+ * @param new_frame Frame to insert.
  */
 void CameraGroup::insertNewFrame(const std::shared_ptr<Frame> new_frame) {
   frames_[new_frame->frame_idx_] = new_frame;
@@ -147,7 +145,7 @@ cv::Mat CameraGroup::getCameraTransVec(const int id_cam) {
 }
 
 /**
- * @brief Compute the pose of each visible 3D object for the camera group
+ * @brief Express each visible object observation in group coordinates.
  *
  */
 void CameraGroup::computeObjPoseInCameraGroup() {
@@ -183,9 +181,9 @@ void CameraGroup::computeObjPoseInCameraGroup() {
 }
 
 /**
- * @brief Refine the objects pose and camera pose in the group
+ * @brief Refine relative camera poses and per-frame object poses in the group.
  *
- * @param nb_iterations number of iterations for non-linear refinement
+ * @param nb_iterations Number of iterations for non-linear refinement.
  *
  */
 void CameraGroup::refineCameraGroup(const int nb_iterations) {

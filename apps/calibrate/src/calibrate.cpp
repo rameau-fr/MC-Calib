@@ -6,6 +6,11 @@
 #include "McCalib.hpp"
 #include "logger.h"
 
+/**
+ * @brief Execute the full MC-Calib pipeline for one configuration file.
+ *
+ * @param config_path Path to the YAML configuration file.
+ */
 void runCalibrationWorkflow(const std::filesystem::path &config_path) {
   // Instantiate the calibration and initialize the parameters
   McCalib::Calibration Calib(config_path);
@@ -84,6 +89,11 @@ void runCalibrationWorkflow(const std::filesystem::path &config_path) {
   Calib.saveDetectedKeypoints();
 }
 
+/**
+ * @brief Entry point for the calibration application.
+ *
+ * Expects a single YAML configuration path as argument.
+ */
 int main(int argc, char *argv[]) {
   (void)argc; // casting to fix -Werror=unused-parameter
   const std::filesystem::path config_path = argv[1];

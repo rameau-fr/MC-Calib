@@ -4,11 +4,23 @@
 
 namespace McCalib {
 
+/**
+ * @brief Convert a string path representation to std::filesystem::path.
+ *
+ * @param item_name Input path string.
+ * @return Filesystem path with the same content.
+ */
 std::filesystem::path convertStrToPath(const std::string &item_name) {
   const std::filesystem::path path(item_name);
   return path;
 }
 
+/**
+ * @brief Convert a vector of strings into filesystem paths.
+ *
+ * @param input Input vector of path strings.
+ * @return Converted vector of filesystem paths.
+ */
 std::vector<std::filesystem::path>
 convertVecStrToVecPath(const std::vector<std::string> &input) {
   std::vector<std::filesystem::path> out;
@@ -22,6 +34,20 @@ convertVecStrToVecPath(const std::vector<std::string> &input) {
 
 #if MC_CALIB_USE_LEGACY_ARUCO_API
 
+/**
+ * @brief Create one Charuco board descriptor per configured board id.
+ *
+ * Marker ids are offset from one board to the next so multiple boards can be
+ * detected in the same dataset without id collisions.
+ *
+ * @param num_board Number of boards to generate.
+ * @param number_x_square_per_board Number of squares along x for each board.
+ * @param number_y_square_per_board Number of squares along y for each board.
+ * @param length_square Square side length.
+ * @param length_marker Marker side length.
+ * @param dict ArUco dictionary shared by all boards.
+ * @return Map of board ids to allocated Charuco board descriptors.
+ */
 std::map<int, cv::Ptr<cv::aruco::CharucoBoard>>
 createCharucoBoards(const unsigned int num_board,
                     const std::vector<int> &number_x_square_per_board,
@@ -49,6 +75,18 @@ createCharucoBoards(const unsigned int num_board,
   return charuco_boards;
 }
 
+/**
+ * @brief Render one printable image per configured Charuco board.
+ *
+ * @param num_board Number of boards to render.
+ * @param number_x_square_per_board Number of squares along x for each board.
+ * @param number_y_square_per_board Number of squares along y for each board.
+ * @param length_square Square side length.
+ * @param length_marker Marker side length.
+ * @param resolution_x_per_board Output width per board.
+ * @param resolution_y_per_board Output height per board.
+ * @return Rendered board images.
+ */
 std::vector<cv::Mat>
 createCharucoBoardsImages(const unsigned int num_board,
                           const std::vector<int> &number_x_square_per_board,
@@ -77,6 +115,20 @@ createCharucoBoardsImages(const unsigned int num_board,
 
 #else
 
+/**
+ * @brief Create one Charuco board descriptor per configured board id.
+ *
+ * Marker ids are offset from one board to the next so multiple boards can be
+ * detected in the same dataset without id collisions.
+ *
+ * @param num_board Number of boards to generate.
+ * @param number_x_square_per_board Number of squares along x for each board.
+ * @param number_y_square_per_board Number of squares along y for each board.
+ * @param length_square Square side length.
+ * @param length_marker Marker side length.
+ * @param dict ArUco dictionary shared by all boards.
+ * @return Map of board ids to allocated Charuco board descriptors.
+ */
 std::map<int, cv::Ptr<cv::aruco::CharucoBoard>>
 createCharucoBoards(const unsigned int num_board,
                     const std::vector<int> &number_x_square_per_board,
@@ -115,6 +167,18 @@ createCharucoBoards(const unsigned int num_board,
   return charuco_boards;
 }
 
+/**
+ * @brief Render one printable image per configured Charuco board.
+ *
+ * @param num_board Number of boards to render.
+ * @param number_x_square_per_board Number of squares along x for each board.
+ * @param number_y_square_per_board Number of squares along y for each board.
+ * @param length_square Square side length.
+ * @param length_marker Marker side length.
+ * @param resolution_x_per_board Output width per board.
+ * @param resolution_y_per_board Output height per board.
+ * @return Rendered board images.
+ */
 std::vector<cv::Mat>
 createCharucoBoardsImages(const unsigned int num_board,
                           const std::vector<int> &number_x_square_per_board,

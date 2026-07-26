@@ -7,6 +7,11 @@
 #include "McCalib.hpp"
 #include "utilities.hpp"
 
+/**
+ * @brief Save rendered Charuco board images to the local output directory.
+ *
+ * @param boards Rendered board images ordered by board id.
+ */
 void saveBoards(const std::vector<cv::Mat> boards) {
   std::filesystem::path charuco_boards_path = "charuco_boards";
   std::string char_name = "charuco_board_";
@@ -26,6 +31,11 @@ void saveBoards(const std::vector<cv::Mat> boards) {
   }
 }
 
+/**
+ * @brief Entry point for the board-generation utility.
+ *
+ * Reads a calibration YAML file and writes one printable image per board.
+ */
 int main(int argc, char *argv[]) {
 
   if (argc != 2) {

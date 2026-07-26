@@ -11,9 +11,10 @@
 namespace McCalib {
 
 /**
- * @brief Associate this observation with its respective camera group
+ * @brief Construct a camera-group observation container.
  *
- * @param new_cam_group camera group to be added
+ * @param new_cam_group Camera group associated with this observation.
+ * @param quaternion_averaging If true, use quaternion averaging for rotations.
  */
 CameraGroupObs::CameraGroupObs(const std::shared_ptr<CameraGroup> new_cam_group,
                                const bool quaternion_averaging) {
@@ -23,9 +24,9 @@ CameraGroupObs::CameraGroupObs(const std::shared_ptr<CameraGroup> new_cam_group,
 }
 
 /**
- * @brief Insert a new object observation into the camera group obs
+ * @brief Insert one object observation into this camera-group observation.
  *
- * @param new_object_observation observation to be added
+ * @param new_object_observation Observation to register.
  */
 void CameraGroupObs::insertObjectObservation(
     const std::shared_ptr<Object3DObs> new_object_observation) {
@@ -36,8 +37,11 @@ void CameraGroupObs::insertObjectObservation(
 CameraGroupObs::~CameraGroupObs() {}
 
 /**
- * @brief Compute pose of object in the camera obs
+ * @brief Compute one representative group-frame pose per observed object id.
  *
+ * If the reference camera sees the object, its pose is used directly.
+ * Otherwise, the pose is estimated from the average of all available
+ * observations in the group.
  */
 void CameraGroupObs::computeObjectsPose() {
 
@@ -202,7 +206,7 @@ cv::Mat CameraGroupObs::getObjectTransVec(const int object_id) {
 }
 
 /**
- * @brief Update the object observation pose
+ * @brief Propagate stored group-frame object poses back to each observation.
  *
  */
 void CameraGroupObs::updateObjObsPose() {
