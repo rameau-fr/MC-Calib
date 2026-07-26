@@ -96,7 +96,12 @@ createCharucoBoards(const unsigned int num_board,
       int id_offset = charuco_boards[i - 1]->getIds().size() + offset_count;
       offset_count = id_offset;
 
-      const std::size_t num_idxs = charuco_boards[i - 1]->getIds().size();
+      // Build a temporary board to query how many marker IDs are required
+      // for the current geometry. This allows mixed board sizes.
+      const cv::aruco::CharucoBoard current_board_geometry(
+          cv::Size(number_x_square_per_board[i], number_y_square_per_board[i]),
+          length_square, length_marker, dict);
+      const std::size_t num_idxs = current_board_geometry.getIds().size();
       std::vector<int> cur_ids(num_idxs);
       std::iota(cur_ids.begin(), cur_ids.end(), id_offset);
 

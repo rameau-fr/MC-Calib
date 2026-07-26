@@ -2241,6 +2241,10 @@ double Calibration::computeAvgReprojectionError() {
     }
   }
 
+  if (number_of_adds == 0) {
+    return 0.0;
+  }
+
   return total_avg_error_sum.val[0] / number_of_adds;
 }
 

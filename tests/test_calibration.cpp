@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <math.h>
 #include <stdio.h>
+#include <string>
+#include <vector>
 
 #include <boost/test/unit_test.hpp>
 #include <opencv2/opencv.hpp>
@@ -128,6 +130,98 @@ void calibrateAndCheckGt(const std::filesystem::path &config_path,
   }
 }
 
+void createDerivedScenario2Config(const std::filesystem::path &out_config_path,
+                                  const std::filesystem::path &save_path,
+                                  const std::string &keypoints_path,
+                                  const std::string &root_path_override) {
+  const std::filesystem::path base_config_path =
+      "../tests/configs_for_end2end_tests/calib_param_synth_Scenario2.yml";
+  BOOST_REQUIRE_EQUAL(std::filesystem::exists(base_config_path), true);
+
+  cv::FileStorage fs_in(base_config_path.string(), cv::FileStorage::READ);
+
+  int number_x_square, number_y_square, resolution_x, resolution_y;
+  double length_square, length_marker, square_size;
+  int number_board, distortion_model, number_camera;
+  int refine_corner, fix_intrinsic, save_detection, save_reprojection;
+  double min_perc_pts, ransac_threshold;
+  int number_iterations, he_approach;
+  std::string root_path, cam_prefix, cam_params_path, camera_params_file_name;
+  std::vector<int> boards_index, distortion_per_camera;
+  std::vector<int> number_x_square_per_board, number_y_square_per_board;
+  std::vector<double> square_size_per_board;
+
+  fs_in["number_x_square"] >> number_x_square;
+  fs_in["number_y_square"] >> number_y_square;
+  fs_in["resolution_x"] >> resolution_x;
+  fs_in["resolution_y"] >> resolution_y;
+  fs_in["length_square"] >> length_square;
+  fs_in["length_marker"] >> length_marker;
+  fs_in["number_board"] >> number_board;
+  fs_in["boards_index"] >> boards_index;
+  fs_in["square_size"] >> square_size;
+  fs_in["number_x_square_per_board"] >> number_x_square_per_board;
+  fs_in["number_y_square_per_board"] >> number_y_square_per_board;
+  fs_in["square_size_per_board"] >> square_size_per_board;
+  fs_in["distortion_model"] >> distortion_model;
+  fs_in["distortion_per_camera"] >> distortion_per_camera;
+  fs_in["number_camera"] >> number_camera;
+  fs_in["refine_corner"] >> refine_corner;
+  fs_in["min_perc_pts"] >> min_perc_pts;
+  fs_in["cam_params_path"] >> cam_params_path;
+  fs_in["fix_intrinsic"] >> fix_intrinsic;
+  fs_in["root_path"] >> root_path;
+  fs_in["cam_prefix"] >> cam_prefix;
+  fs_in["ransac_threshold"] >> ransac_threshold;
+  fs_in["number_iterations"] >> number_iterations;
+  fs_in["he_approach"] >> he_approach;
+  fs_in["save_detection"] >> save_detection;
+  fs_in["save_reprojection"] >> save_reprojection;
+  fs_in["camera_params_file_name"] >> camera_params_file_name;
+  fs_in.release();
+
+  std::filesystem::create_directories(out_config_path.parent_path());
+  std::filesystem::create_directories(save_path);
+
+  cv::FileStorage fs_out(out_config_path.string(), cv::FileStorage::WRITE);
+  fs_out << "number_x_square" << number_x_square;
+  fs_out << "number_y_square" << number_y_square;
+  fs_out << "resolution_x" << resolution_x;
+  fs_out << "resolution_y" << resolution_y;
+  fs_out << "length_square" << length_square;
+  fs_out << "length_marker" << length_marker;
+  fs_out << "number_board" << number_board;
+  fs_out << "boards_index" << boards_index;
+  fs_out << "square_size" << square_size;
+  fs_out << "number_x_square_per_board" << number_x_square_per_board;
+  fs_out << "number_y_square_per_board" << number_y_square_per_board;
+  fs_out << "square_size_per_board" << square_size_per_board;
+
+  fs_out << "distortion_model" << distortion_model;
+  fs_out << "distortion_per_camera" << distortion_per_camera;
+  fs_out << "number_camera" << number_camera;
+  fs_out << "refine_corner" << refine_corner;
+  fs_out << "min_perc_pts" << min_perc_pts;
+  fs_out << "cam_params_path" << cam_params_path;
+  fs_out << "fix_intrinsic" << fix_intrinsic;
+
+  const std::string root_path_for_test =
+      root_path_override.empty() ? root_path : root_path_override;
+  fs_out << "root_path" << root_path_for_test;
+  fs_out << "cam_prefix" << cam_prefix;
+  fs_out << "keypoints_path" << keypoints_path;
+
+  fs_out << "ransac_threshold" << ransac_threshold;
+  fs_out << "number_iterations" << number_iterations;
+  fs_out << "he_approach" << he_approach;
+
+  fs_out << "save_path" << save_path.string();
+  fs_out << "save_detection" << save_detection;
+  fs_out << "save_reprojection" << save_reprojection;
+  fs_out << "camera_params_file_name" << camera_params_file_name;
+  fs_out.release();
+}
+
 BOOST_AUTO_TEST_SUITE(CheckCalibration)
 
 BOOST_AUTO_TEST_CASE(CheckBlenderDatasetIsPlacedCorrectly) {
@@ -156,6 +250,51 @@ BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario2) {
   BOOST_REQUIRE_EQUAL(std::filesystem::exists(gt_path), true);
   calibrateAndCheckGt(config_path, gt_path, INTRINSICS_TOLERANCE,
                       TRANSLATION_ERROR_TOLERANCE, ROTATION_ERROR_TOLERANCE);
+}
+
+BOOST_AUTO_TEST_CASE(CheckScenario2DetectSaveThenLoadKeypoints) {
+  const std::filesystem::path temp_root =
+      std::filesystem::temp_directory_path() /
+      "mc_calib_scenario2_keypoints_roundtrip";
+  std::filesystem::remove_all(temp_root);
+  std::filesystem::create_directories(temp_root);
+
+  const std::filesystem::path detect_save_path = temp_root / "results_detect";
+  const std::filesystem::path load_save_path = temp_root / "results_load";
+  const std::filesystem::path detect_cfg = temp_root / "scenario2_detect.yml";
+  const std::filesystem::path load_cfg = temp_root / "scenario2_load.yml";
+  const std::filesystem::path keypoints_file_path =
+      detect_save_path / "detected_keypoints_data.yml";
+
+  createDerivedScenario2Config(detect_cfg, detect_save_path, "None", "");
+
+  McCalib::Calibration detect_calib(detect_cfg);
+  calibrate(detect_calib);
+
+  BOOST_REQUIRE_EQUAL(std::filesystem::exists(keypoints_file_path), true);
+  BOOST_REQUIRE(detect_calib.board_observations_.size() > 0);
+  BOOST_REQUIRE(detect_calib.frames_.size() > 0);
+
+  createDerivedScenario2Config(
+      load_cfg, load_save_path, keypoints_file_path.string(),
+      "/tmp/mc_calib_non_existing_images_root_for_keypoint_loading");
+
+  McCalib::Calibration load_calib(load_cfg);
+  calibrate(load_calib);
+
+  BOOST_REQUIRE(load_calib.board_observations_.size() > 0);
+  BOOST_REQUIRE(load_calib.frames_.size() > 0);
+  BOOST_CHECK_EQUAL(load_calib.board_observations_.size(),
+                    detect_calib.board_observations_.size());
+  BOOST_CHECK_EQUAL(load_calib.frames_.size(), detect_calib.frames_.size());
+
+  const std::filesystem::path loaded_keypoints_saved_again =
+      load_save_path / "detected_keypoints_data.yml";
+  const std::filesystem::path reprojection_saved =
+      load_save_path / "reprojection_error_data.yml";
+  BOOST_CHECK_EQUAL(std::filesystem::exists(loaded_keypoints_saved_again),
+                    true);
+  BOOST_CHECK_EQUAL(std::filesystem::exists(reprojection_saved), true);
 }
 
 BOOST_AUTO_TEST_CASE(CheckCalibrationSyntheticScenario3) {
