@@ -49,9 +49,9 @@ public:
   void addEdge(const int v1, const int v2, const double weight);
 
   /**
-   * @brief Access the underlying Boost graph object.
+   * @brief Return a copy of the underlying Boost graph object.
    *
-   * @return Internal weighted undirected graph.
+   * @return Copy of the internal weighted undirected graph.
    */
   GraphUndirectedWeighted getGraph();
 

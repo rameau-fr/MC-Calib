@@ -95,7 +95,11 @@ void runCalibrationWorkflow(const std::filesystem::path &config_path) {
  * Expects a single YAML configuration path as argument.
  */
 int main(int argc, char *argv[]) {
-  (void)argc; // casting to fix -Werror=unused-parameter
+  if (argc != 2) {
+    LOG_FATAL << "Usage: " << argv[0] << " <config.yml>";
+    return -1;
+  }
+
   const std::filesystem::path config_path = argv[1];
   const bool is_file_available = std::filesystem::exists(config_path) &&
                                  config_path.has_filename() &&

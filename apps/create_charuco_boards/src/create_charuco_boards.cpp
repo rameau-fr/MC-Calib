@@ -12,7 +12,7 @@
  *
  * @param boards Rendered board images ordered by board id.
  */
-void saveBoards(const std::vector<cv::Mat> boards) {
+void saveBoards(const std::vector<cv::Mat> &boards) {
   std::filesystem::path charuco_boards_path = "charuco_boards";
   std::string char_name = "charuco_board_";
   std::string ext_name = ".bmp";

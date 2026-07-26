@@ -18,14 +18,14 @@ cv::Mat RT2Proj(const cv::Mat &R, const cv::Mat &T);
  * translation. */
 cv::Mat RVecT2Proj(const cv::Mat &RVec, const cv::Mat &T);
 
-/** @brief Build a 3x4 projection matrix including intrinsics K. */
+/** @brief Build a 4x4 transform whose top block contains K*R and K*T. */
 cv::Mat RVecT2ProjInt(const cv::Mat &RVec, const cv::Mat &T, const cv::Mat &K);
 
 /** @brief Decompose a projection matrix into Rodrigues rotation and
  * translation. */
 void Proj2RT(const cv::Mat &Proj, cv::Mat &R, cv::Mat &T);
 
-/** @brief Convert a flat 12-value projection vector into a 3x4 matrix. */
+/** @brief Convert a 6-value pose vector [rvec, tvec] into a 4x4 transform. */
 cv::Mat vectorProj(const std::vector<float> &ProjV);
 
 /** @brief Convert a projection matrix into a 6-value pose vector [rvec, tvec].
