@@ -566,6 +566,18 @@ void CameraGroup::refineCameraGroupAndObjectsAndIntrinsics(
       }
     }
   }
+
+  // Set parameter bounds for Double Sphere cameras
+  for (const auto &it_cam : cameras_) {
+    auto cam = it_cam.second.lock();
+    if (cam && cam->distortion_model_ == 2) {
+      problem.SetParameterLowerBound(cam->intrinsics_.data(), 4, -1.0);
+      problem.SetParameterUpperBound(cam->intrinsics_.data(), 4, 1.0);
+      problem.SetParameterLowerBound(cam->intrinsics_.data(), 5, 0.0);
+      problem.SetParameterUpperBound(cam->intrinsics_.data(), 5, 1.0);
+    }
+  }
+
   // Run the optimization
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::SPARSE_SCHUR;
