@@ -8,17 +8,20 @@
 
 namespace {
 
-std::filesystem::path makeMinimalConfigFile() {
+std::filesystem::path makeMinimalConfigFile(const int number_of_boards = 1) {
   const std::filesystem::path config_path =
       std::filesystem::temp_directory_path() / "mc_calib_light_test_config.yml";
 
   cv::FileStorage fs(config_path.string(), cv::FileStorage::WRITE);
   fs << "number_camera" << 1;
-  fs << "number_board" << 1;
+  fs << "number_board" << number_of_boards;
   fs << "refine_corner" << true;
   fs << "min_perc_pts" << 0.2;
   fs << "number_x_square" << 5;
   fs << "number_y_square" << 7;
+  fs << "resolution_x" << 500;
+  fs << "resolution_y" << 500;
+  fs << "square_size" << 0.03;
   fs << "root_path" << config_path.parent_path().string();
   fs << "cam_prefix"
      << "cam_";
@@ -108,6 +111,45 @@ BOOST_AUTO_TEST_CASE(CheckComputeAvgReprojectionErrorEmptyState) {
   McCalib::Calibration calib(cfg);
 
   BOOST_CHECK_SMALL(std::abs(calib.computeAvgReprojectionError()), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(CheckMergeAllObjectObsInitializesEachObjectOnce) {
+  const std::filesystem::path cfg = makeMinimalConfigFile(2);
+  McCalib::Calibration calib(cfg);
+
+  const std::array<int, 3> color = {0, 0, 0};
+  const auto camera = calib.cams_.at(0);
+  const std::vector<cv::Point2f> points = {{0.0f, 0.0f}};
+  const std::vector<int> point_ids = {0};
+  const auto board_obs_0 = std::make_shared<McCalib::BoardObs>(
+      0, 0, 0, points, point_ids, camera, calib.boards_3d_.at(0));
+  const auto board_obs_1 = std::make_shared<McCalib::BoardObs>(
+      0, 0, 1, points, point_ids, camera, calib.boards_3d_.at(1));
+  const auto camera_obs = std::make_shared<McCalib::CameraObs>(board_obs_0);
+  camera_obs->insertNewBoard(board_obs_1);
+  const auto frame = std::make_shared<McCalib::Frame>(0, 0, "frame.png");
+  frame->insertNewBoard(board_obs_0);
+  frame->insertNewBoard(board_obs_1);
+  frame->insertNewCamObs(camera_obs);
+  calib.cams_obs_[{0, 0}] = camera_obs;
+  calib.frames_[0] = frame;
+
+  for (int object_id = 0; object_id < 2; ++object_id) {
+    auto object =
+        std::make_shared<McCalib::Object3D>(1, object_id, object_id, color);
+    object->boards_[object_id] = calib.boards_3d_.at(object_id);
+    object->pts_board_2_obj_[{object_id, 0}] = 0;
+    calib.object_3d_[object_id] = object;
+  }
+
+  calib.mergeAllObjectObs();
+
+  BOOST_CHECK_EQUAL(calib.object_observations_.size(), 2);
+  for (const auto &object : calib.object_3d_)
+    BOOST_CHECK_EQUAL(object.second->object_observations_.size(), 1);
+  BOOST_CHECK_EQUAL(camera_obs->object_observations_.size(), 2);
+  BOOST_CHECK_EQUAL(frame->object_observations_.size(), 2);
+  BOOST_CHECK_EQUAL(camera->object_observations_.size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(CheckBoardExtractionWithNoImagesKeepsObservationsEmpty) {
