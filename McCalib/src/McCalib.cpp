@@ -1860,13 +1860,8 @@ void Calibration::mergeAllObjectObs() {
 
   object_observations_.clear();
 
-  // Reinitialize all the 3D object
-  for (const auto &it_object : object_3d_) {
-    (void)it_object;
-    // Reinitialize all object obserations
-    for (const auto &it : object_3d_)
-      this->init3DObjectObs(it.first);
-  }
+  // Reinitialize all the 3D object observations once.
+  this->initAll3DObjectObs();
 }
 
 /**
